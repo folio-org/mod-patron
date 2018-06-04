@@ -1,0 +1,86 @@
+{
+    "totalCharges": {
+        "amount": 0.0,
+        "isoCurrenryCode": "USD"
+    },
+    "totalChargesCount": 0,
+    "totalLoans": 3,
+    "totalHolds": 3,
+    "charges": [
+        
+    ],
+    "holds": [
+        {
+            "requestId": "8bbac557-d66f-4571-bbbf-47a107cc1589",
+            "item": {
+                "instanceId": "255f82f3-5b1b-4239-93e4-ec6acf03ad9d",
+                "itemId": "26670295-716a-4f84-8f65-2ef31707c017",
+                "title": "I Want to Hold Your Hand",
+                "author": "John Lennon; Paul McCartney"
+            },
+            "fulfillmentPreference": "Hold Shelf",
+            "status": "Open - Not yet filled"
+        },
+        {
+            "requestId": "24a5de73-859b-491f-825d-a96ea47297fb",
+            "item": {
+                "instanceId": "0b559683-9059-4b6d-bb6a-c55aa3518df3",
+                "itemId": "dbdcb2b5-b302-4254-a55d-3c429794a4bb",
+                "title": "Hold On",
+                "author": "Jon Anderson; Trevor Rabin; Chris Squire"
+            },
+            "fulfillmentPreference": "Hold Shelf",
+            "status": "Open - Awaiting pickup"
+        },
+        {
+            "requestId": "69273dca-eacf-4225-9065-c05bbffc9d7d",
+            "item": {
+                "instanceId": "4bb0fffc-fe55-4445-819d-9bc5b8cd47ef",
+                "itemId": "c3cfcb01-4f5d-40df-856a-c86ffe8f2d5f",
+                "title": "Hold On, I'm Comin'",
+                "author": "Isaac Hayes; David Porter"
+            },
+            "expirationDate": "2020-01-31",
+            "fulfillmentPreference": "Hold Shelf",
+            "status": "Open - Not yet filled"
+        }
+    ],
+    "loans": [
+        {
+            "id": "9a171a89-baca-4f1a-b2c4-d7253854864e",
+            "item": {
+                "instanceId": "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+                "itemId": "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+                "title": "Some Book About Something",
+                "author": "Some Guy; Another Guy"
+            },
+            "loanDate": "2018-06-01T11:12:00.000+0000",
+            "dueDate": "2525-01-01T11:12:00.000+0000",
+            "overdue": false
+        },
+        {
+            "id": "76d957eb-df99-41b8-a495-d03541d079fb",
+            "item": {
+                "instanceId": "b3f5ef6d-2309-4935-858d-870cd7801632",
+                "itemId": "7d4bfd9c-dc46-46a1-89bd-160c61fe46d8",
+                "title": "This Book Is Overdue!",
+                "author": "Tempus Fugit"
+            },
+            "loanDate": "2018-03-05T22:01:00.000+0000",
+            "dueDate": "2018-04-01T09:50:00.000+0000",
+            "overdue": true
+        },
+        {
+            "id": "947b9387-892a-4d60-a854-a6395d0f03f0",
+            "item": {
+                "instanceId": "b3f5ef6d-2309-4935-858d-870cd7801632",
+                "itemId": "688be386-5522-4505-ad8e-60d84385d43f",
+                "title": "風の谷のナウシカ",
+                "author": "宮崎 駿"
+            },
+            "loanDate": "2018-06-10T16:30:00.000+0000",
+            "dueDate": "2086-07-01T04:20:00.000+0000",
+            "overdue": false
+        }
+    ]
+}

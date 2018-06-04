@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Patron Charge Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "item": {
+      "type": "object",
+      "description": "The item that is accruing the charge",
+      "$ref": "item.json"
+    },
+    "chargeAmount": {
+      "type": "object",
+      "description": "The outstanding balance on the item",
+      "$ref": "money.json"
+    },
+    "accrualDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The date when charges begin to accrue"
+    },
+    "description": {
+      "type": "string",
+      "description": "A description of the charge"
+    },
+    "state": {
+      "type": "string",
+      "description": "The current state of the charge"
+    },
+    "reason": {
+      "type": "string",
+      "description": "The reason for this charge"
+    }
+  }
+}

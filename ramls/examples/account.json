@@ -1,0 +1,38 @@
+{
+  "totalCharges": {
+    "amount": 0.0,
+    "isoCurrenryCode": "USD"
+  },
+  "totalChargesCount": 0,
+  "totalLoans": 1,
+  "totalHolds": 1,
+  "charges": [
+  ],
+  "holds": [
+    {
+      "requestId": "8bbac557-d66f-4571-bbbf-47a107cc1589",
+      "item": {
+        "instanceId": "255f82f3-5b1b-4239-93e4-ec6acf03ad9d",
+        "itemId": "26670295-716a-4f84-8f65-2ef31707c017",
+        "title": "I Want to Hold Your Hand",
+        "author": "John Lennon; Paul McCartney"
+      },
+      "fulfillmentPreference": "Hold Shelf",
+      "status": "Open - Not yet filled"
+    }
+  ],
+  "loans": [
+    {
+      "id": "9a171a89-baca-4f1a-b2c4-d7253854864e",
+      "item": {
+        "instanceId": "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+        "itemId": "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+        "title": "Some Book About Something",
+        "author": "Some Guy; Another Guy"
+      },
+      "loanDate": "2018-06-01T11:12:00.000+0000",
+      "dueDate": "2525-01-01T11:12:00.000+0000",
+      "overdue": false
+    }
+  ]
+}

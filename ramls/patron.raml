@@ -1,0 +1,229 @@
+#%RAML 0.8
+title: Patron Services
+baseUri: https://github.com/folio-org/mod-patron
+protocols: [ HTTPS ]
+version: v1
+
+documentation:
+  - title: Patron Services
+    content: This module allows 3rd party discovery services to perform patron actions in FOLIO
+
+schemas:
+  - account: !include account.json
+  - hold.json: !include hold.json
+  - loan.json: !include loan.json
+  - charge.json: !include charge.json
+  - money.json: !include money.json
+  - item.json: !include item.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
+
+traits:
+  - secured: !include raml-util/traits/auth.raml
+  - validate: !include raml-util/traits/validation.raml
+
+/patron:
+  displayName: Patron Services
+  /account:
+    displayName: Account Retrieval
+    /{id}:
+      displayName: Retrieve Account by ID
+      uriParameters:
+        id:
+          description: "The UUID of a FOLIO user"
+          type: string
+          pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+      get:
+        is: [secured]
+        queryParameters:
+          includeLoans:
+            description: |
+              "Indicates whether or not to include the loans array in
+               the response"
+            required: false
+            type: boolean
+            default: false
+          includeCharges:
+            description: |
+              "Indicates whether or not to include the charges array in
+               the response"
+            required: false
+            type: boolean
+            default: false
+          includeHolds:
+            description: |
+              "Indicates whether or not to include the holds array in
+               the response"
+            required: false
+            type: boolean
+            default: false
+        responses:
+          200:
+            description: "Returns item with a given ID"
+            body:
+              application/json:
+                schema: account
+                example: !include examples/account.json
+          400:
+            description: "Bad request"
+            body:
+              text/plain:
+                example: |
+                  "unable to process request -- constraint violation"
+          401:
+            description: "Not authorized to perform requested action"
+            body:
+              text/plain:
+                example: "unable to get retrieve <<resourcePathName|!singularize>> -- unauthorized"
+          404:
+            description: "Item with a given ID not found"
+            body:
+              text/plain:
+                example: |
+                  "<<resourcePathName|!singularize>> not found"
+          403:
+            description: "Access Denied"
+            body:
+              text/plain:
+                example: "Access Denied"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "internal server error, contact administrator"
+      /item:
+        /{itemId}:
+          uriParameters:
+            itemId:
+              description: "The UUID of a FOLIO item"
+              type: "string"
+              pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          /renew:
+            displayName: Renew a Loan - Not yet implemented
+            post:
+              is: [secured]
+              responses:
+                201:
+                  description: "Returns the renewed loan data"
+                  body:
+                    application/json:
+                      schema: loan.json
+                      example: !include examples/loan.json
+                400:
+                  description: "Bad request"
+                  body:
+                    text/plain:
+                      example: |
+                        "unable to process request -- constraint violation"
+                401:
+                  description: "Not authorized to perform requested action"
+                  body:
+                    text/plain:
+                      example: "unable to get retrieve <<resourcePathName|!singularize>> -- unauthorized"
+                404:
+                  description: "Item with a given ID not found"
+                  body:
+                    text/plain:
+                      example: |
+                        "<<resourcePathName|!singularize>> not found"
+                403:
+                  description: "Access Denied"
+                  body:
+                    text/plain:
+                      example: "Access Denied"
+                500:
+                  description: "Internal server error, e.g. due to misconfiguration"
+                  body:
+                    text/plain:
+                      example: "internal server error, contact administrator"
+                501:
+                  description: "Not implemented"
+          /hold:
+            displayName: Hold Management
+            post:
+              is: [secured, validate]
+              body:
+                application/json:
+                  schema: hold.json
+                  example: !include examples/hold.json
+              responses:
+                201:
+                  description: |
+                    "Returns data for a new hold request on the specified item
+                  body:
+                    application/json:
+                      schema: hold.json
+                      example: !include examples/hold.json
+                400:
+                  description: "Bad request"
+                  body:
+                    text/plain:
+                      example: |
+                        "unable to process request -- constraint violation"
+                401:
+                  description: "Not authorized to perform requested action"
+                  body:
+                    text/plain:
+                      example: "unable to get retrieve <<resourcePathName|!singularize>> -- unauthorized"
+                404:
+                  description: "Item with a given ID not found"
+                  body:
+                    text/plain:
+                      example: |
+                        "<<resourcePathName|!singularize>> not found"
+                403:
+                  description: "Access Denied"
+                  body:
+                    text/plain:
+                      example: "Access Denied"
+                500:
+                  description: "Internal server error, e.g. due to misconfiguration"
+                  body:
+                    text/plain:
+                      example: "internal server error, contact administrator"
+            /{holdId}:
+              displayName: Hold Management
+              uriParameters:
+                holdId:
+                  description: "The UUID of a FOLIO hold request"
+                  type: "string"
+                  pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+              put:
+                is: [secured]
+                description: "Not implemented"
+                responses:
+                  501:
+                    description: "Not implemented"
+              delete:
+                is: [secured]
+                responses:
+                  204:
+                    description: "Removes the specified hold request"
+                  400:
+                    description: "Bad request"
+                    body:
+                      text/plain:
+                        example: |
+                          "unable to process request -- constraint violation"
+                  401:
+                    description: "Not authorized to perform requested action"
+                    body:
+                      text/plain:
+                        example: "unable to get retrieve <<resourcePathName|!singularize>> -- unauthorized"
+                  404:
+                    description: "Item with a given ID not found"
+                    body:
+                      text/plain:
+                        example: |
+                          "<<resourcePathName|!singularize>> not found"
+                  403:
+                    description: "Access Denied"
+                    body:
+                      text/plain:
+                        example: "Access Denied"
+                  500:
+                    description: "Internal server error, e.g. due to misconfiguration"
+                    body:
+                      text/plain:
+                        example: "internal server error, contact administrator"

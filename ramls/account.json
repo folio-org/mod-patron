@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Patron Account Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "The FOLIO id of the patron"
+    },
+    "totalCharges": {
+      "type": "object",
+      "description": "A patron's total outstanding fines and charges",
+      "$ref": "money.json"
+    },
+    "totalChargesCount": {
+      "type": "integer",
+      "description": "The total number of fines and charges for the patron",
+      "example": "10"
+    },
+    "totalLoans": {
+      "type": "integer",
+      "description": "The total number of items loaned to the patron",
+      "example": "10"
+    },
+    "totalHolds": {
+      "type": "integer",
+      "description": "The total number of requested items for the patron",
+      "example": "10"
+    },
+    "charges": {
+      "type": "array",
+      "description": "A list of the patron's charges and fines",
+      "items": {
+        "type": "object",
+        "$ref": "charge.json"
+      }
+    },
+    "holds": {
+      "type": "array",
+      "description": "A list of the patron's item holds",
+      "items": {
+        "type": "object",
+        "$ref": "hold.json"
+      }
+    },
+    "loans": {
+      "type": "array",
+      "description": "A list of the patron's item checked out items",
+      "items": {
+        "type": "object",
+        "$ref": "loan.json"
+      }
+    }
+  },
+  "required": [
+    "totalCharges",
+    "totalChargesCount",
+    "totalCheckouts",
+    "totalHolds",
+    "charges",
+    "holds",
+    "loans"
+  ]
+}

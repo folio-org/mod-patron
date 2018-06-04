@@ -1,0 +1,12 @@
+{
+  "requestId": "dd238b5b-01fc-4205-83b8-ce27a650d827",
+  "item": {
+    "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
+    "itemId": "32e5757d-6566-466e-b69d-994eb33d2b62",
+    "title": "Something's Got a Hold on Me",
+    "author": "Etta James; Leroy Kirkland; Pearl Woods"
+  },
+  "expirationDate": "3000-01-30",
+  "fulfillmentPreference": "Hold Shelf",
+  "status": "Open - Not yet filled"
+}

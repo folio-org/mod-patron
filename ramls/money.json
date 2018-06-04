@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Patron Money Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "amount": {
+      "type": "number",
+      "description": "The amount of the fine or charge",
+      "example": "3.14"
+    },
+    "isoCurrenryCode": {
+      "type": "string",
+      "description": "An ISO 4217 standard currency code",
+      "example": "USD"
+    }
+  },
+  "required": [
+    "amount",
+    "isoCurrencyCode"
+  ]
+}

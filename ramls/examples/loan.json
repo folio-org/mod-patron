@@ -1,0 +1,12 @@
+{
+  "id": "9a171a89-baca-4f1a-b2c4-d7253854864e",
+  "item": {
+    "instanceId": "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+    "itemId": "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+    "title": "Some Book About Something",
+    "author": "Some Guy; Another Guy"
+  },
+  "loanDate": "2018-06-01T11:12:00.000+0000",
+  "dueDate": "2525-01-01T11:12:00.000+0000",
+  "overdue": false
+}

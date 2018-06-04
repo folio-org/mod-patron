@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Patron Item Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "instanceId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "The FOLIO id of the instance"
+    },
+    "itemId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "The FOLIO id of the item"
+    },
+    "title": {
+      "type": "string",
+      "description": "The title of the item"
+    },
+    "author": {
+      "type": "string",
+      "description": "The author of the item"
+    },
+    "isbn": {
+      "type": "string",
+      "description": "The ISBN of the item"
+    }
+  },
+  "required": [
+    "instanceId"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "loans": [
+    {
+      "id": "9a171a89-baca-4f1a-b2c4-d7253854864e",
+      "userId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "itemId": "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+      "loanDate": "2018-06-01T11:12:00.000Z",
+      "dueDate": "2525-01-01T11:12:00.000Z",
+      "action": "checkedout",
+      "item": {
+        "instanceId": "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+        "title": "Some Book About Something",
+        "contributors" : [
+          {"name": "Some Guy"},
+          {"name": "Another Guy"}
+        ]
+      }
+    },
+    {
+      "id": "76d957eb-df99-41b8-a495-d03541d079fb",
+      "userId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "itemId": "7d4bfd9c-dc46-46a1-89bd-160c61fe46d8",
+      "loanDate": "2018-03-05T22:01:00.000Z",
+      "dueDate": "2018-04-01T09:50:00.000Z",
+      "action": "checkedout",
+      "item": {
+        "instanceId": "b3f5ef6d-2309-4935-858d-870cd7801632",
+        "title": "This Book Is Overdue!",
+        "contributors" : [
+          {"name": "Tempus Fugit"}
+        ]
+      }
+    },
+    {
+      "id": "947b9387-892a-4d60-a854-a6395d0f03f0",
+      "userId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "itemId": "688be386-5522-4505-ad8e-60d84385d43f",
+      "loanDate": "2018-06-10T16:30:00.000Z",
+      "dueDate": "2086-07-01T04:20:00.000Z",
+      "action": "checkedout",
+      "item": {
+        "instanceId": "b3f5ef6d-2309-4935-858d-870cd7801632",
+        "title": "風の谷のナウシカ",
+        "contributors" : [
+          {"name": "宮崎 駿"}
+        ]
+      }
+    }
+  ],
+  "totalRecords": 3
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Patron Loan Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "The id of the loan"
+    },
+    "item": {
+      "type": "object",
+      "description": "The item that is loaned out",
+      "$ref": "item.json"
+    },
+    "loanDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The date the item was loaned out"
+    },
+    "dueDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The date the item is due"
+    },
+    "overdue": {
+      "type": "boolean",
+      "description": "Indicates if the item is overdue"
+    }
+  },
+  "required": [
+    "item",
+    "loanDate",
+    "dueDate",
+    "overdue"
+  ]
+}
