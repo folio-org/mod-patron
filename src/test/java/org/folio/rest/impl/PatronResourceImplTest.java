@@ -197,7 +197,7 @@ public class PatronResourceImplTest {
 
     JsonObject money = json.getJsonObject("totalCharges");
     context.assertEquals(0.0, money.getDouble("amount"));
-    context.assertEquals("USD", money.getString("isoCurrenryCode"));
+    context.assertEquals("USD", money.getString("isoCurrencyCode"));
     context.assertEquals(0, json.getInteger("totalChargesCount"));
     context.assertEquals(0, json.getJsonArray("charges").size());
 
@@ -270,7 +270,7 @@ public class PatronResourceImplTest {
 
     JsonObject money = json.getJsonObject("totalCharges");
     context.assertEquals(0.0, money.getDouble("amount"));
-    context.assertEquals("USD", money.getString("isoCurrenryCode"));
+    context.assertEquals("USD", money.getString("isoCurrencyCode"));
     context.assertEquals(0, json.getInteger("totalChargesCount"));
     context.assertEquals(0, json.getJsonArray("charges").size());
 

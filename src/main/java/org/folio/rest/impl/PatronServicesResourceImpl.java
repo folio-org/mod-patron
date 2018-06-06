@@ -51,7 +51,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
           try {
             final Account account = new Account();
 
-            account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrenryCode("USD"));
+            account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrencyCode("USD"));
             account.setTotalChargesCount(0);
             // TODO: When mod-feesfines is available, do something here
 //            if (includeCharges) {

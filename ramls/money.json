@@ -9,7 +9,7 @@
       "description": "The amount of the fine or charge",
       "example": "3.14"
     },
-    "isoCurrenryCode": {
+    "isoCurrencyCode": {
       "type": "string",
       "description": "An ISO 4217 standard currency code",
       "example": "USD"

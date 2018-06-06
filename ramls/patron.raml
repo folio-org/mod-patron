@@ -30,8 +30,6 @@ traits:
   description: |
     Services that allow patron empowerment from 3rd party discovery services
   /account:
-    displayName: Account Management
-    description: Service that allow discovery services to manage FOLIO accounts
     /{id}:
       displayName: Manage Accounts By Id
       description: Service endpoints that manage accounts by an existing Id
@@ -98,15 +96,7 @@ traits:
               text/plain:
                 example: internal server error, contact administrator
       /item:
-        displayName: Item Management
-        description: |
-          Service that allow discovery services to perform actions on
-          FOLIO items
         /{itemId}:
-          displayName: Item By Id Management
-          description: |
-            Services that allow discovery services to perform actions on
-            FOLIO items by Id
           uriParameters:
             itemId:
               description: The UUID of a FOLIO item
@@ -247,15 +237,7 @@ traits:
                       text/plain:
                         example: internal server error, contact administrator
       /instance:
-        displayName: Instance Management
-        description: |
-          Service that allow discovery services to perform actions on
-          FOLIO instances
         /{instanceId}:
-          displayName: Instance By Id Management
-          description: |
-            Services that allow discovery services to perform actions on
-            FOLIO instances by Id
           uriParameters:
             instanceId:
               description: The UUID of a FOLIO instance

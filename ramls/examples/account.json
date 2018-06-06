@@ -1,7 +1,7 @@
 {
   "totalCharges": {
     "amount": 0.0,
-    "isoCurrenryCode": "USD"
+    "isoCurrencyCode": "USD"
   },
   "totalChargesCount": 0,
   "totalLoans": 1,
