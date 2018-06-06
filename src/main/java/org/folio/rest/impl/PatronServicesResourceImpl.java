@@ -172,6 +172,38 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     }
   }
 
+  @Validate
+  @Override
+  public void postPatronAccountByIdInstanceByInstanceIdHold(String instanceId,
+      String id, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
+      Context vertxContext) throws Exception {
+    // TODO Implement once FOLIO can perform hold management on instances
+    asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdInstanceByInstanceIdHoldResponse.withNotImplemented()));
+  }
+
+  @Validate
+  @Override
+  public void putPatronAccountByIdInstanceByInstanceIdHoldByHoldId(
+      String holdId, String instanceId, String id,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
+      Context vertxContext) throws Exception {
+    // TODO Implement once FOLIO can perform hold management on instances
+    asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountByIdInstanceByInstanceIdHoldByHoldIdResponse.withNotImplemented()));
+  }
+
+  @Validate
+  @Override
+  public void deletePatronAccountByIdInstanceByInstanceIdHoldByHoldId(
+      String holdId, String instanceId, String id,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
+      Context vertxContext) throws Exception {
+    // TODO Implement once FOLIO can perform hold management on instances
+    asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountByIdInstanceByInstanceIdHoldByHoldIdResponse.withNotImplemented()));
+  }
+
   private HttpClientInterface getHttpClient(Map<String, String> okapiHeaders) {
     final String okapiURL;
     if (okapiHeaders.containsKey("X-Okapi-Url")) {

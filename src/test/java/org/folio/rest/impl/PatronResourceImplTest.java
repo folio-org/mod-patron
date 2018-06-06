@@ -44,6 +44,7 @@ public class PatronResourceImplTest {
   private final String mockDataFolder = "PatronServicesResourceImpl";
   private final String accountPath = "/patron/account/{accountId}";
   private final String itemPath = "/item/{itemId}";
+  private final String instancePath = "/instance/{instanceId}";
   private final String holdPath = "/hold";
   private final String holdIdPath = "/{holdId}";
   private final String renewPath = "/renew";
@@ -52,6 +53,8 @@ public class PatronResourceImplTest {
   private final String inactiveUserId = "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4";
   private final String badUserId = "3ed07e77-a5c9-47c8-bb0b-381099e10a42";
   private final String goodItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
+  private final String goodInstanceId = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
+  private final String badInstanceId = "114a048c-916a-43fd-a8cb-8eacc296fe01";
   private final String goodHoldId = "dd238b5b-01fc-4205-83b8-ce27a650d827";
   private final String badHoldId = "1745628c-f424-4b50-a116-e18be37cd599";
 
@@ -437,6 +440,74 @@ public class PatronResourceImplTest {
       .delete(accountPath + itemPath + holdPath + holdIdPath)
         .then()
           .statusCode(404);
+
+    asyncLocal.complete();
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testPostPatronAccountByIdInstanceByInstanceIdHold(TestContext context) {
+    logger.info("Testing creating a hold on an instance for the specified user (501)");
+    final Async asyncLocal = context.async();
+
+    RestAssured
+      .given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .pathParam("instanceId", goodInstanceId)
+      .post(accountPath + instancePath + holdPath)
+        .then()
+          .statusCode(501);
+
+    asyncLocal.complete();
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testPutPatronAccountByIdInstanceByInstanceIdHoldByHoldId(TestContext context) {
+    logger.info("Testing edit hold (instance) for 501");
+    final Async asyncLocal = context.async();
+
+    RestAssured
+      .given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", badUserId)
+        .pathParam("instanceId", badInstanceId)
+        .pathParam("holdId", "1745628c-f424-4b50-a116-e18be37cd599")
+      .put(accountPath + instancePath + holdPath + holdIdPath)
+        .then()
+          .statusCode(501);
+
+    asyncLocal.complete();
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testDeletePatronAccountByIdInstanceByInstanceIdHoldByHoldId(TestContext context) {
+    logger.info("Testing delete hold (instance) by id");
+    final Async asyncLocal = context.async();
+
+    RestAssured
+      .given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .pathParam("instanceId", goodInstanceId)
+        .pathParam("holdId", goodHoldId)
+      .delete(accountPath + instancePath + holdPath + holdIdPath)
+        .then()
+          .statusCode(501);
 
     asyncLocal.complete();
 

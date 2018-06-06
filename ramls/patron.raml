@@ -6,7 +6,9 @@ version: v1
 
 documentation:
   - title: Patron Services
-    content: This module allows 3rd party discovery services to perform patron actions in FOLIO
+    content: |
+      This module allows 3rd party discovery services to perform patron
+      actions in FOLIO
 
 schemas:
   - account: !include account.json
@@ -25,123 +27,139 @@ traits:
 
 /patron:
   displayName: Patron Services
+  description: |
+    Services that allow patron empowerment from 3rd party discovery services
   /account:
-    displayName: Account Retrieval
+    displayName: Account Management
+    description: Service that allow discovery services to manage FOLIO accounts
     /{id}:
-      displayName: Retrieve Account by ID
+      displayName: Manage Accounts By Id
+      description: Service endpoints that manage accounts by an existing Id
       uriParameters:
         id:
-          description: "The UUID of a FOLIO user"
+          description: The UUID of a FOLIO user
           type: string
-          pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
       get:
+        description: Return account details for the specified FOLIO user id
         is: [secured]
         queryParameters:
           includeLoans:
             description: |
-              "Indicates whether or not to include the loans array in
-               the response"
+              Indicates whether or not to include the loans array in
+              the response
             required: false
             type: boolean
             default: false
           includeCharges:
             description: |
-              "Indicates whether or not to include the charges array in
-               the response"
+              Indicates whether or not to include the charges array in
+              the response
             required: false
             type: boolean
             default: false
           includeHolds:
             description: |
-              "Indicates whether or not to include the holds array in
-               the response"
+              Indicates whether or not to include the holds array in
+              the response
             required: false
             type: boolean
             default: false
         responses:
           200:
-            description: "Returns item with a given ID"
+            description: Returns the user account info
             body:
               application/json:
                 schema: account
                 example: !include examples/account.json
           400:
-            description: "Bad request"
+            description: Bad request
             body:
               text/plain:
-                example: |
-                  "unable to process request -- constraint violation"
+                example: unable to process request -- constraint violation
           401:
-            description: "Not authorized to perform requested action"
+            description: Not authorized to perform requested action
             body:
               text/plain:
-                example: "unable to get retrieve <<resourcePathName|!singularize>> -- unauthorized"
+                example: unable to get account -- unauthorized
           404:
-            description: "Item with a given ID not found"
+            description: Item with a given ID not found
             body:
               text/plain:
-                example: |
-                  "<<resourcePathName|!singularize>> not found"
+                example: account not found
           403:
-            description: "Access Denied"
+            description: Access Denied
             body:
               text/plain:
-                example: "Access Denied"
+                example: Access Denied
           500:
-            description: "Internal server error, e.g. due to misconfiguration"
+            description: Internal server error, e.g. due to misconfiguration
             body:
               text/plain:
-                example: "internal server error, contact administrator"
+                example: internal server error, contact administrator
       /item:
+        displayName: Item Management
+        description: |
+          Service that allow discovery services to perform actions on
+          FOLIO items
         /{itemId}:
+          displayName: Item By Id Management
+          description: |
+            Services that allow discovery services to perform actions on
+            FOLIO items by Id
           uriParameters:
             itemId:
-              description: "The UUID of a FOLIO item"
-              type: "string"
-              pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+              description: The UUID of a FOLIO item
+              type: string
+              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
           /renew:
             displayName: Renew a Loan - Not yet implemented
+            description: |
+              Renews a loan on the item for the user - Not yet implemented
             post:
+              description: Not yet implemented
               is: [secured]
               responses:
                 201:
-                  description: "Returns the renewed loan data"
+                  description: Returns the renewed loan data
                   body:
                     application/json:
                       schema: loan.json
                       example: !include examples/loan.json
                 400:
-                  description: "Bad request"
+                  description: Bad request
                   body:
                     text/plain:
-                      example: |
-                        "unable to process request -- constraint violation"
+                      example: unable to process request -- constraint violation
                 401:
-                  description: "Not authorized to perform requested action"
+                  description: Not authorized to perform requested action
                   body:
                     text/plain:
-                      example: "unable to get retrieve <<resourcePathName|!singularize>> -- unauthorized"
+                      example: unable to renew loan -- unauthorized
                 404:
-                  description: "Item with a given ID not found"
+                  description: Item with a given ID not found
                   body:
                     text/plain:
-                      example: |
-                        "<<resourcePathName|!singularize>> not found"
+                      example: item not found
                 403:
-                  description: "Access Denied"
+                  description: Access Denied
                   body:
                     text/plain:
-                      example: "Access Denied"
+                      example: Access Denied
                 500:
-                  description: "Internal server error, e.g. due to misconfiguration"
+                  description: |
+                    Internal server error, e.g. due to misconfiguration
                   body:
                     text/plain:
-                      example: "internal server error, contact administrator"
+                      example: internal server error, contact administrator
                 501:
-                  description: "Not implemented"
+                  description: Not implemented
           /hold:
             displayName: Hold Management
+            description: Services that provide hold management
             post:
+              description: |
+                Creates a hold request on an existing item for the user
               is: [secured, validate]
               body:
                 application/json:
@@ -150,80 +168,125 @@ traits:
               responses:
                 201:
                   description: |
-                    "Returns data for a new hold request on the specified item
+                    Returns data for a new hold request on the specified item
                   body:
                     application/json:
                       schema: hold.json
                       example: !include examples/hold.json
                 400:
-                  description: "Bad request"
+                  description: Bad request
                   body:
                     text/plain:
-                      example: |
-                        "unable to process request -- constraint violation"
+                      example: unable to process request -- constraint violation
                 401:
-                  description: "Not authorized to perform requested action"
+                  description: Not authorized to perform requested action
                   body:
                     text/plain:
-                      example: "unable to get retrieve <<resourcePathName|!singularize>> -- unauthorized"
+                      example: unable to create hold -- unauthorized
                 404:
-                  description: "Item with a given ID not found"
+                  description: Item with a given ID not found
                   body:
                     text/plain:
-                      example: |
-                        "<<resourcePathName|!singularize>> not found"
+                      example: item not found
                 403:
-                  description: "Access Denied"
+                  description: Access Denied
                   body:
                     text/plain:
-                      example: "Access Denied"
+                      example: Access Denied
                 500:
-                  description: "Internal server error, e.g. due to misconfiguration"
+                  description: |
+                    Internal server error, e.g. due to misconfiguration
                   body:
                     text/plain:
-                      example: "internal server error, contact administrator"
+                      example: internal server error, contact administrator
             /{holdId}:
-              displayName: Hold Management
+              displayName: Hold Management By Id
+              description: Services that provide hold management by Id
               uriParameters:
                 holdId:
-                  description: "The UUID of a FOLIO hold request"
-                  type: "string"
-                  pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                  description: The UUID of a FOLIO hold request
+                  type: string
+                  pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
               put:
                 is: [secured]
-                description: "Not implemented"
+                description: Not implemented
                 responses:
                   501:
-                    description: "Not implemented"
+                    description: Not implemented
               delete:
                 is: [secured]
+                description: Removes the specified hold request
                 responses:
                   204:
-                    description: "Removes the specified hold request"
+                    description: The specified hold request was removed
                   400:
-                    description: "Bad request"
+                    description: Bad request
                     body:
                       text/plain:
                         example: |
-                          "unable to process request -- constraint violation"
+                          unable to process request -- constraint violation
                   401:
-                    description: "Not authorized to perform requested action"
+                    description: Not authorized to perform requested action
                     body:
                       text/plain:
-                        example: "unable to get retrieve <<resourcePathName|!singularize>> -- unauthorized"
+                        example: unable to delete hold -- unauthorized
                   404:
-                    description: "Item with a given ID not found"
+                    description: Item with a given ID not found
                     body:
                       text/plain:
-                        example: |
-                          "<<resourcePathName|!singularize>> not found"
+                        example: hold not found
                   403:
-                    description: "Access Denied"
+                    description: Access Denied
                     body:
                       text/plain:
-                        example: "Access Denied"
+                        example: Access Denied
                   500:
-                    description: "Internal server error, e.g. due to misconfiguration"
+                    description: |
+                      Internal server error, e.g. due to misconfiguration
                     body:
                       text/plain:
-                        example: "internal server error, contact administrator"
+                        example: internal server error, contact administrator
+      /instance:
+        displayName: Instance Management
+        description: |
+          Service that allow discovery services to perform actions on
+          FOLIO instances
+        /{instanceId}:
+          displayName: Instance By Id Management
+          description: |
+            Services that allow discovery services to perform actions on
+            FOLIO instances by Id
+          uriParameters:
+            instanceId:
+              description: The UUID of a FOLIO instance
+              type: string
+              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+          /hold:
+            displayName: Hold Management
+            description: Services that provide hold management
+            post:
+              is: [secured, validate]
+              description: Not implemented
+              responses:
+                501:
+                  description: Not implemented
+            /{holdId}:
+              displayName: Hold Management By Id
+              description: Services that provide hold management by Id
+              uriParameters:
+                holdId:
+                  description: The UUID of a FOLIO hold request
+                  type: string
+                  pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+              put:
+                is: [secured]
+                description: Not implemented
+                responses:
+                  501:
+                    description: Not implemented
+              delete:
+                is: [secured]
+                description: Not implemented
+                responses:
+                  501:
+                    description: Not implemented
