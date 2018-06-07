@@ -57,7 +57,7 @@
   "required": [
     "totalCharges",
     "totalChargesCount",
-    "totalCheckouts",
+    "totalLoans",
     "totalHolds",
     "charges",
     "holds",
