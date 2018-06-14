@@ -58,6 +58,24 @@ public class PatronResourceImplTest {
   private final String goodHoldId = "dd238b5b-01fc-4205-83b8-ce27a650d827";
   private final String badHoldId = "1745628c-f424-4b50-a116-e18be37cd599";
 
+  private final String chargeItemBook1Id = "e785f572-c5d4-4bbc-91ba-c0d62ebebc20";
+  private final String chargeItemBook2Id = "cb958743-ddcd-4bf6-907a-e6962b66bfe9";
+  private final String chargeItemBook3Id = "95546593-f846-4df2-8f34-9bf5debbcd10";
+  private final String chargeItemCameraId = "5531b437-349c-4453-9361-69082324949f";
+  private final String holdingsBook1Id = "ace20b0f-1b35-41ae-8ce2-2c7cc9a98819";
+  private final String holdingsBook2Id = "75d0799a-66d8-46cf-a7e3-ed7390425112";
+  private final String holdingsBook3Id = "39a2de0a-95a3-4870-9320-57476afc2faf";
+  private final String instanceBook1Id = "6e024cd5-c19a-4fe0-a2cd-64ce5814c694";
+  private final String instanceBook2Id = "b3f5ef6d-2309-4935-858d-870cd7801632";
+  private final String instanceBook3Id = "f3482bed-a7e9-4f07-beb0-ebd693331350";
+  private final String book1Barcode = "1234567890";
+  private final String book2Barcode = "1234567891";
+  private final String book3Barcode = "1234567892";
+  private final String cameraBarcode = "1234567893";
+  private final String feeFineOverdueId = "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0";
+  private final String feeFineDamageBookId = "881c628b-e1c4-4711-b9d7-090af40f6a8f";
+  private final String feeFineDamageEquipmentId = "ca295e87-223f-403c-9eee-a152c47bf67f";
+
   @Before
   public void setUp(TestContext context) throws Exception {
     vertx = Vertx.vertx();
@@ -147,6 +165,104 @@ public class PatronResourceImplTest {
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
+      } else if (req.path().equals("/accounts")) {
+        if (req.query().equals(String.format("limit=%d&query=%%28userId%%3D%%3D%s%%20and%%20status.name%%3D%%3DOpen%%29", Integer.MAX_VALUE, goodUserId))) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/accounts_all.json"));
+        } else {
+          req.response().setStatusCode(500).end("Unexpected call: " + req.path());
+        }
+      } else if (req.path().equals("/chargeitem/" + chargeItemBook1Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/chargeitem_book1.json"));
+      } else if (req.path().equals("/chargeitem/" + chargeItemBook2Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/chargeitem_book2.json"));
+      } else if (req.path().equals("/chargeitem/" + chargeItemBook3Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/chargeitem_book3.json"));
+      } else if (req.path().equals("/chargeitem/" + chargeItemCameraId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/chargeitem_camera.json"));
+      } else if (req.path().equals("/holdings-storage/holdings/" + holdingsBook1Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/holdings_book1.json"));
+      } else if (req.path().equals("/holdings-storage/holdings/" + holdingsBook2Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/holdings_book2.json"));
+      } else if (req.path().equals("/holdings-storage/holdings/" + holdingsBook3Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/holdings_book3.json"));
+      } else if (req.path().equals("/inventory/instances/" + instanceBook1Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/instance_book1.json"));
+      } else if (req.path().equals("/inventory/instances/" + instanceBook2Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/instance_book2.json"));
+      } else if (req.path().equals("/inventory/instances/" + instanceBook3Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/instance_book3.json"));
+      } else if (req.path().equals("/inventory/items")) {
+        if (req.query().equals(String.format("query=barcode%%3D%%3D%s", book1Barcode))) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/item_book1.json"));
+        } else if (req.query().equals(String.format("query=barcode%%3D%%3D%s", book2Barcode))) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/item_book2.json"));
+        } else if (req.query().equals(String.format("query=barcode%%3D%%3D%s", book3Barcode))) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/item_book3.json"));
+        } else if (req.query().equals(String.format("query=barcode%%3D%%3D%s", cameraBarcode))) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/item_camera.json"));
+        } else {
+          req.response().setStatusCode(500).end("Unexpected call: " + req.path());
+        }
+      } else if (req.path().equals("/feefines/" + feeFineOverdueId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/feefine_overdue.json"));
+      } else if (req.path().equals("/feefines/" + feeFineDamageBookId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/feefine_damage_book.json"));
+      } else if (req.path().equals("/feefines/" + feeFineDamageEquipmentId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/feefine_damage_equipment.json"));
       } else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
@@ -196,10 +312,27 @@ public class PatronResourceImplTest {
     context.assertEquals(3, json.getJsonArray("holds").size());
 
     JsonObject money = json.getJsonObject("totalCharges");
-    context.assertEquals(0.0, money.getDouble("amount"));
+    context.assertEquals(155.0, money.getDouble("amount"));
     context.assertEquals("USD", money.getString("isoCurrencyCode"));
-    context.assertEquals(0, json.getInteger("totalChargesCount"));
-    context.assertEquals(0, json.getJsonArray("charges").size());
+    context.assertEquals(4, json.getInteger("totalChargesCount"));
+    context.assertEquals(4, json.getJsonArray("charges").size());
+
+    for (int i = 0; i < 4; i++) {
+      final JsonObject jo = json.getJsonArray("charges").getJsonObject(i);
+
+      boolean found = false;
+      for (int j = 0; j < 4; j++) {
+        final JsonObject expectedJO = expectedJson.getJsonArray("charges").getJsonObject(j);
+        if (verifyCharge(expectedJO, jo, context)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (found == false) {
+        context.fail("Unexpected charge: " + jo.toString());
+      }
+    }
 
     for (int i = 0; i < 3; i++) {
       final JsonObject jo = json.getJsonArray("holds").getJsonObject(i);
@@ -269,9 +402,9 @@ public class PatronResourceImplTest {
     context.assertEquals(0, json.getJsonArray("holds").size());
 
     JsonObject money = json.getJsonObject("totalCharges");
-    context.assertEquals(0.0, money.getDouble("amount"));
+    context.assertEquals(155.0, money.getDouble("amount"));
     context.assertEquals("USD", money.getString("isoCurrencyCode"));
-    context.assertEquals(0, json.getInteger("totalChargesCount"));
+    context.assertEquals(4, json.getInteger("totalChargesCount"));
     context.assertEquals(0, json.getJsonArray("charges").size());
 
     asyncLocal.complete();
@@ -513,6 +646,26 @@ public class PatronResourceImplTest {
 
     // Test done
     logger.info("Test done");
+  }
+
+  private boolean verifyCharge(JsonObject expectedCharge, JsonObject actualCharge, TestContext context) {
+    // Bad check, but each date is unique in the mock data.
+    if (expectedCharge.getString("accrualDate").equals(actualCharge.getString("accrualDate"))) {
+      context.assertEquals(expectedCharge.getString("state"), actualCharge.getString("state"));
+      context.assertEquals(expectedCharge.getString("reason"), actualCharge.getString("reason"));
+      context.assertEquals(expectedCharge.getString("feeFineId"), actualCharge.getString("feeFineId"));
+
+      verifyAmount(expectedCharge.getJsonObject("chargeAmount"), actualCharge.getJsonObject("chargeAmount"), context);
+
+      return verifyItem(expectedCharge.getJsonObject("item"), actualCharge.getJsonObject("item"), context);
+    }
+
+    return false;
+  }
+
+  private void verifyAmount(JsonObject expectedAmount, JsonObject actualAmount, TestContext context) {
+    context.assertEquals(expectedAmount.getDouble("amount"), actualAmount.getDouble("amount"));
+    context.assertEquals(expectedAmount.getString("isoCurrencyCode"), actualAmount.getString("isoCurrencyCode"));
   }
 
   private boolean verifyHold(JsonObject expectedHold, JsonObject actualHold, TestContext context) {

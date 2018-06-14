@@ -1,0 +1,8 @@
+{
+  "instance": "Some Book About Something",
+  "callNumber": "Book 1 call number",
+  "barcode": "1234567890",
+  "itemStatus": "Checked out",
+  "location": "Main Library",
+  "id": "e785f572-c5d4-4bbc-91ba-c0d62ebebc20"
+}

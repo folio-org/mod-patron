@@ -1,0 +1,8 @@
+{
+  "instance": "This Book Is Overdue",
+  "callNumber": "Book 2 call number",
+  "barcode": "1234567891",
+  "itemStatus": "Checked out",
+  "location": "Main Library",
+  "id": "cb958743-ddcd-4bf6-907a-e6962b66bfe9"
+}

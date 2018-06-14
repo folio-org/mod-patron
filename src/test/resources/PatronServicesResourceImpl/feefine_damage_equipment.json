@@ -1,0 +1,8 @@
+{
+  "feeFineType": "damage - camera",
+  "id": "ca295e87-223f-403c-9eee-a152c47bf67f",
+  "defaultAmount": 1000,
+  "allowManualCreation": true,
+  "taxVat": 7,
+  "ownerId": "cfebe06e-d4f8-4d4e-8f5c-4d70595d74f8"
+}

@@ -1,13 +1,71 @@
 {
     "totalCharges": {
-        "amount": 0.0,
+        "amount": 155.0,
         "isoCurrencyCode": "USD"
     },
-    "totalChargesCount": 0,
+    "totalChargesCount": 4,
     "totalLoans": 3,
     "totalHolds": 3,
     "charges": [
-        
+      {
+        "item" : {
+          "instanceId" : "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+          "itemId" : "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+          "title" : "Some Book About Something",
+          "author" : "Some Guy; Another Guy"
+        },
+        "chargeAmount" : {
+          "amount" : 50.0,
+          "isoCurrencyCode" : "USD"
+        },
+        "accrualDate" : "2018-01-31T00:00:01.000+0000",
+        "state" : "Paid Partially",
+        "reason" : "damage - rebinding",
+        "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
+      }, {
+        "item" : {
+          "instanceId" : "75d0799a-66d8-46cf-a7e3-ed7390425112",
+          "itemId" : "7d4bfd9c-dc46-46a1-89bd-160c61fe46d8",
+          "title" : "This Book Is Overdue!",
+          "author" : "Tempus Fugit"
+        },
+        "chargeAmount" : {
+          "amount" : 25.0,
+          "isoCurrencyCode" : "USD"
+        },
+        "accrualDate" : "2018-04-30T00:00:01.000+0000",
+        "state" : "Unpaid",
+        "reason" : "overdue",
+        "feeFineId" : "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0"
+      }, {
+        "item" : {
+          "instanceId" : "f3482bed-a7e9-4f07-beb0-ebd693331350",
+          "itemId" : "688be386-5522-4505-ad8e-60d84385d43f",
+          "title" : "風の谷のナウシカ",
+          "author" : "宮崎 駿"
+        },
+        "chargeAmount" : {
+          "amount" : 5.0,
+          "isoCurrencyCode" : "USD"
+        },
+        "accrualDate" : "2018-05-31T00:00:01.000+0000",
+        "state" : "Paid Partially",
+        "reason" : "overdue",
+        "feeFineId" : "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0"
+      }, {
+        "item" : {
+          "itemId" : "5531b437-349c-4453-9361-69082324949f",
+          "title" : "Awesome Digital Camera"
+        },
+        "chargeAmount" : {
+          "amount" : 75.0,
+          "isoCurrencyCode" : "USD"
+        },
+        "accrualDate" : "2018-06-01T00:00:01.000+0000",
+        "state" : "Paid Partially",
+        "reason" : "damage - camera",
+        "feeFineId" : "ca295e87-223f-403c-9eee-a152c47bf67f"
+      }
     ],
     "holds": [
         {
@@ -73,7 +131,7 @@
         {
             "id": "947b9387-892a-4d60-a854-a6395d0f03f0",
             "item": {
-                "instanceId": "b3f5ef6d-2309-4935-858d-870cd7801632",
+                "instanceId": "f3482bed-a7e9-4f07-beb0-ebd693331350",
                 "itemId": "688be386-5522-4505-ad8e-60d84385d43f",
                 "title": "風の谷のナウシカ",
                 "author": "宮崎 駿"

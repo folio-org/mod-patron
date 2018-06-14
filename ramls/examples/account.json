@@ -1,12 +1,28 @@
 {
   "totalCharges": {
-    "amount": 0.0,
+    "amount": 50.0,
     "isoCurrencyCode": "USD"
   },
-  "totalChargesCount": 0,
+  "totalChargesCount": 1,
   "totalLoans": 1,
   "totalHolds": 1,
   "charges": [
+    {
+      "item" : {
+        "instanceId" : "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+        "itemId" : "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+        "title" : "Some Book About Something",
+        "author" : "Some Guy; Another Guy"
+      },
+      "chargeAmount" : {
+        "amount" : 50.0,
+        "isoCurrencyCode" : "USD"
+      },
+      "accrualDate" : "2018-01-31T00:00:01.000+0000",
+      "state" : "Paid Partially",
+      "reason" : "damage - rebinding",
+      "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
+    }
   ],
   "holds": [
     {

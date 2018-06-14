@@ -13,7 +13,13 @@
           "modulePermissions": [
             "users.item.get",
             "circulation.loans.collection.get",
-            "circulation.requests.collection.get"
+            "circulation.requests.collection.get",
+            "accounts.collection.get",
+            "chargeitem.item.get",
+            "inventory.items.collection.get",
+            "inventory-storage.holdings.item.get",
+            "inventory.instances.item.get",
+            "feefines.item.get"
           ]
         },
         {
@@ -56,6 +62,18 @@
     {
       "id": "circulation",
       "version": "3.1"
+    },
+    {
+      "id": "feesfines",
+      "version": "14.0"
+    },
+    {
+      "id": "inventory",
+      "version": "5.2"
+    },
+    {
+      "id": "holdings-storage",
+      "version": "1.2"
     }
   ],
   "permissionSets": [

@@ -1,4 +1,5 @@
 ## 1.0.0 Unreleased
+ * Integrate patron account charges with data from mod-feesfines - WIP.
  * Removed some RAML descriptions causing the generated API doc to include
    endpoints that don't exist.
  * Fixed a field name typo in the JSON schema
