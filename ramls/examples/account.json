@@ -18,7 +18,7 @@
         "amount" : 50.0,
         "isoCurrencyCode" : "USD"
       },
-      "accrualDate" : "2018-01-31T00:00:01.000+0000",
+      "accrualDate" : "2018-01-31T00:00:01Z",
       "state" : "Paid Partially",
       "reason" : "damage - rebinding",
       "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
@@ -33,6 +33,7 @@
         "title": "I Want to Hold Your Hand",
         "author": "John Lennon; Paul McCartney"
       },
+      "requestDate": "2018-06-02T08:16:30Z",
       "fulfillmentPreference": "Hold Shelf",
       "status": "Open - Not yet filled"
     }
@@ -46,8 +47,8 @@
         "title": "Some Book About Something",
         "author": "Some Guy; Another Guy"
       },
-      "loanDate": "2018-06-01T11:12:00.000+0000",
-      "dueDate": "2525-01-01T11:12:00.000+0000",
+      "loanDate": "2018-06-01T11:12:00Z",
+      "dueDate": "2525-01-01T11:12:00Z",
       "overdue": false
     }
   ]
