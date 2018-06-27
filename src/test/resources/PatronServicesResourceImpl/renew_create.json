@@ -1,0 +1,40 @@
+{
+  "id": "e15ab05e-e06f-4f31-952b-4eb9933b20e1",
+  "userId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+  "itemId": "32e5757d-6566-466e-b69d-994eb33d2b62",
+  "status": {
+      "name": "Open"
+  },
+  "loanDate": "2018-06-11T21:13:03Z",
+  "dueDate": "2025-08-11T21:13:03.000+0000",
+  "action": "renewed",
+  "renewalCount": 1,
+  "loanPolicyId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
+  "metadata": {
+      "createdDate": "2018-06-25T15:50:00.000+0000",
+      "createdByUserId": "ef676db9-d231-479a-aa91-f65eb4b17872",
+      "updatedDate": "2018-06-27T16:08:10.533+0000",
+      "updatedByUserId": "9eda8815-5e5b-460f-9033-c9298fde5092"
+  },
+  "item": {
+      "holdingsRecordId": "9bbfccc0-2527-43ee-aa47-87bb999c7904",
+      "instanceId": "85860515-dff2-4506-be78-1b4e104d0305",
+      "title": "I Am Renewed!",
+      "barcode": "8675309",
+      "contributors": [
+          {
+              "name": "McBoatface, Boaty"
+          }
+      ],
+      "callNumber": "This is a call number",
+      "status": {
+          "name": "Checked out"
+      },
+      "location": {
+          "name": "Annex"
+      },
+      "materialType": {
+          "name": "book"
+      }
+  }
+}

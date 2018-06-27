@@ -25,7 +25,10 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{occountId}/item/{itemId}/renew",
-          "permissionsRequired": ["patron.renew.item.post"]
+          "permissionsRequired": ["patron.renew.item.post"],
+          "modulePermissions": [
+            "circulation.renew-by-id.post"
+          ]
         },
         {
           "methods": ["POST"],
@@ -61,7 +64,7 @@
     },
     {
       "id": "circulation",
-      "version": "3.1"
+      "version": "3.3"
     },
     {
       "id": "feesfines",

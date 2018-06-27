@@ -54,8 +54,10 @@
         "feeFineId" : "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0"
       }, {
         "item" : {
-          "itemId" : "5531b437-349c-4453-9361-69082324949f",
-          "title" : "Awesome Digital Camera"
+          "instanceId" : "c394b514-9fd0-496d-ab9a-aec777facc1b",
+          "itemId" : "240e521c-12df-4744-a5ab-313862ec1752",
+          "title" : "Awesome Digital Camera",
+          "author" : "Canon"
         },
         "chargeAmount" : {
           "amount" : 75.0,
