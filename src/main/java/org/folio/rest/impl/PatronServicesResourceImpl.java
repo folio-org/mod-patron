@@ -13,6 +13,7 @@ import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Charge;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.jaxrs.model.Hold.FulfillmentPreference;
 import org.folio.rest.jaxrs.model.Hold.Status;
@@ -32,6 +33,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -75,8 +77,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
                   if (includeCharges) {
                     List<CompletableFuture<Account>> cfs = new ArrayList<>();
                     for (Charge charge: account.getCharges()) {
-                      cfs.add(lookupChargeItem(httpClient, charge, account, okapiHeaders));
-                      cfs.add(lookupFeeFine(httpClient, charge, account, okapiHeaders));
+                      cfs.add(lookupItem(httpClient, charge, account, okapiHeaders));
                     }
                     return CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
                         .thenApply(done -> account);
@@ -111,8 +112,30 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext)
       throws Exception {
-    // TODO Implement when https://issues.folio.org/browse/CIRC-100 is complete
-    asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withNotImplemented()));
+    final JsonObject renewalJSON = new JsonObject()
+        .put("itemId", itemId)
+        .put("userId", id);
+
+    final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+    try {
+      httpClient.request(HttpMethod.POST, Buffer.buffer(renewalJSON.toString()), "/circulation/renew-by-id", okapiHeaders)
+          .thenAccept(response -> {
+            verifyExists(response);
+            JsonObject body = response.getBody();
+            final Item item = getItem(itemId, body.getJsonObject("item"));
+            final Loan hold = getLoan(body, item);
+            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withJsonCreated(hold)));
+            httpClient.closeClient();
+          })
+          .exceptionally(throwable -> {
+            asyncResultHandler.handle(handleRenewPOSTError(throwable));
+            httpClient.closeClient();
+            return null;
+          });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainInternalServerError(e.getMessage())));
+      httpClient.closeClient();
+    }
   }
 
   @Validate
@@ -290,14 +313,25 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
   }
 
   private Loan getLoan(JsonObject loan, Item item) {
-    final Date dueDate = new DateTime(loan.getString("dueDate")).toDate();
+    final String dueDateString = loan.getString("dueDate");
+    final boolean overdue;
+    final Date dueDate;
+
+    if (dueDateString == null) {
+      dueDate = null;
+      overdue = false;
+    } else {
+      // This should be more sophisticated, or actually reported by
+      // the circulation module. What is "overdue" can vary as some
+      // libraries have a grace period, don't count holidays, etc.
+      dueDate = new DateTime(dueDateString).toDate();
+      overdue = new Date().after(dueDate);
+    }
+
     return new Loan()
         .withId(loan.getString("id"))
         .withItem(item)
-        // This should be more sophisticated, or actually reported by
-        // the circulation module. What is "overdue" can vary as some
-        // libraries have a grace period, don't count holidays, etc.
-        .withOverdue(new Date().after(dueDate))
+        .withOverdue(overdue)
         .withDueDate(dueDate)
         .withLoanDate(new DateTime(loan.getString("loanDate")).toDate());
   }
@@ -346,7 +380,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
       final JsonArray accountsJson = response.getBody().getJsonArray("accounts");
       for (Object o : accountsJson) {
         if (o instanceof JsonObject) {
-          JsonObject accountJson = (JsonObject) o;
+          final JsonObject accountJson = (JsonObject) o;
           final Item item = new Item().withItemId(accountJson.getString("itemId"));
           final Charge charge = getCharge(accountJson, item);
           amount += charge.getChargeAmount().getAmount().doubleValue();
@@ -370,52 +404,24 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         .withAccrualDate(new DateTime(chargeJson.getString("dateCreated")).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
         .withState(chargeJson.getJsonObject("paymentStatus", new JsonObject().put("name",  "Unknown")).getString("name"))
-        .withFeeFineId(chargeJson.getString("feeFineId"));
+        .withReason(chargeJson.getString("feeFineType"));
   }
 
-  private CompletableFuture<Account> lookupChargeItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
-    return getChargeItem(charge, httpClient, okapiHeaders)
+  private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
+    return getItem(charge, httpClient, okapiHeaders)
         .thenApply(this::verifyAndExtractBody)
-        .thenCompose(chargeItem ->
-          itemLookup(chargeItem, charge, account, httpClient, okapiHeaders)
-        );
+        .thenCompose(item ->getHoldingsRecord(item, httpClient, okapiHeaders))
+        .thenApply(this::verifyAndExtractBody)
+        .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
+        .thenApply(this::verifyAndExtractBody)
+        .thenApply(instance -> getItem(charge, instance))
+        .thenApply(item -> updateItem(charge, item, account));
   }
 
-  private CompletableFuture<Account> itemLookup(JsonObject chargeItem, Charge charge,
-      Account account, HttpClientInterface httpClient,
-      Map<String, String> okapiHeaders) {
-    try {
-      final String barcode = chargeItem.getString("barcode");
-
-      return httpClient.request("/inventory/items?query=barcode%3D%3D" + barcode, okapiHeaders)
-          .thenCompose(invResponse -> {
-            if (Response.isSuccess(invResponse.getCode())) {
-              if (invResponse.getBody().getInteger("totalRecords").intValue() > 0) {
-                final JsonObject item = invResponse.getBody().getJsonArray("items").getJsonObject(0);
-                return getHoldingsRecord(item, httpClient, okapiHeaders)
-                  .thenApply(this::verifyAndExtractBody)
-                  .thenCompose(holdingsRecord -> getInstance(holdingsRecord, httpClient, okapiHeaders))
-                  .thenApply(this::verifyAndExtractBody)
-                  .thenApply(instance -> getItem(item, instance))
-                  .thenApply(itemObject -> updateChargeItem(charge, itemObject, account));
-              } else {
-                charge.getItem().withTitle(chargeItem.getString("instance"));
-                return CompletableFuture.completedFuture(account);
-              }
-            } else {
-              charge.getItem().withTitle(chargeItem.getString("instance"));
-              return CompletableFuture.completedFuture(account);
-            }
-          });
-    } catch (Exception e) {
-      throw new CompletionException(e);
-    }
-  }
-
-  private CompletableFuture<Response> getChargeItem(Charge charge,
+  private CompletableFuture<Response> getItem(Charge charge,
       HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
     try {
-      return httpClient.request("/chargeitem/" + charge.getItem().getItemId(), okapiHeaders);
+      return httpClient.request("/inventory/items/" + charge.getItem().getItemId(), okapiHeaders);
     } catch (Exception e) {
       throw new CompletionException(e);
     }
@@ -447,8 +453,8 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     return response.getBody();
   }
 
-  private Item getItem(JsonObject item, JsonObject instance) {
-    final String itemId = item.getString("id");
+  private Item getItem(Charge charge, JsonObject instance) {
+    final String itemId = charge.getItem().getItemId();
     final JsonObject composite = new JsonObject()
         .put("contributors", instance.getJsonArray("contributors"))
         .put("instanceId", instance.getString("id"))
@@ -457,30 +463,8 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     return getItem(itemId, composite);
   }
 
-  private Account updateChargeItem(Charge charge, Item item, Account account) {
+  private Account updateItem(Charge charge, Item item, Account account) {
     charge.withItem(item);
-
-    return account;
-  }
-
-  private CompletableFuture<Account> lookupFeeFine(HttpClientInterface httpClient,
-      Charge charge, Account account, Map<String, String> okapiHeaders) {
-    return getFeeFine(charge, httpClient, okapiHeaders)
-        .thenApply(this::verifyAndExtractBody)
-        .thenApply(feefine -> updateChargeWithFeeFine(feefine, charge, account));
-  }
-
-  private CompletableFuture<Response> getFeeFine(Charge charge,
-      HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
-    try {
-      return httpClient.request("/feefines/" + charge.getFeeFineId(), okapiHeaders);
-    } catch (Exception e) {
-      throw new CompletionException(e);
-    }
-  }
-
-  private Account updateChargeWithFeeFine(JsonObject feeFine, Charge charge, Account account) {
-    charge.withReason(feeFine.getString("feeFineType"));
 
     return account;
   }
@@ -565,6 +549,45 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
       }
     } else {
       result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withPlainInternalServerError(throwable.getMessage()));
+    }
+
+    return result;
+  }
+
+  private Future<javax.ws.rs.core.Response> handleRenewPOSTError(Throwable throwable) {
+    final Future<javax.ws.rs.core.Response> result;
+
+    final Throwable t = throwable.getCause();
+    if (t instanceof HttpException) {
+      final int code = ((HttpException) t).getCode();
+      final String message = ((HttpException) t).getMessage();
+      switch (code) {
+      case 400:
+        // This means that we screwed up something in the request to another
+        // module. This API takes UUIDs, so a client side 400 is not
+        // possible here, only server side, which the client won't be able to
+        // do anything about.
+        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainInternalServerError(message));
+        break;
+      case 401:
+        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainUnauthorized(message));
+        break;
+      case 403:
+        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainForbidden(message));
+        break;
+      case 404:
+        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainNotFound(message));
+        break;
+      case 422:
+        final JsonObject response = new JsonObject(message);
+        final Errors errors = Json.decodeValue(response.getString("errorMessage"), Errors.class);
+        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withJsonUnprocessableEntity(errors));
+        break;
+      default:
+        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainInternalServerError(message));
+      }
+    } else {
+      result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainInternalServerError(throwable.getMessage()));
     }
 
     return result;

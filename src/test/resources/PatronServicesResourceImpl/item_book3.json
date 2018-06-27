@@ -1,10 +1,5 @@
 {
-  "items": [
-    {
-      "id": "688be386-5522-4505-ad8e-60d84385d43f",
-      "holdingsRecordId": "39a2de0a-95a3-4870-9320-57476afc2faf",
-      "barcode": "1234567892"
-    }
-  ],
-  "totalRecords": 1
+  "id": "688be386-5522-4505-ad8e-60d84385d43f",
+  "holdingsRecordId": "39a2de0a-95a3-4870-9320-57476afc2faf",
+  "barcode": "1234567892"
 }

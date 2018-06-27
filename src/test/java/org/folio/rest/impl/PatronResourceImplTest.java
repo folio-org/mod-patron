@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static org.folio.rtac.utils.Utils.readMockFile;
 
 import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.tools.PomReader;
 import org.folio.rtac.utils.Utils;
 import org.junit.After;
@@ -18,6 +19,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -53,6 +55,7 @@ public class PatronResourceImplTest {
   private final String inactiveUserId = "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4";
   private final String badUserId = "3ed07e77-a5c9-47c8-bb0b-381099e10a42";
   private final String goodItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
+  private final String badItemId = "3dda4eb9-a156-474c-829f-bd5a386f382c";
   private final String goodInstanceId = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
   private final String badInstanceId = "114a048c-916a-43fd-a8cb-8eacc296fe01";
   private final String goodHoldId = "dd238b5b-01fc-4205-83b8-ce27a650d827";
@@ -62,12 +65,18 @@ public class PatronResourceImplTest {
   private final String chargeItemBook2Id = "cb958743-ddcd-4bf6-907a-e6962b66bfe9";
   private final String chargeItemBook3Id = "95546593-f846-4df2-8f34-9bf5debbcd10";
   private final String chargeItemCameraId = "5531b437-349c-4453-9361-69082324949f";
+  private final String itemBook1Id = "7d9dfe70-0158-489d-a7ed-2789eac277b3";
+  private final String itemBook2Id = "7d4bfd9c-dc46-46a1-89bd-160c61fe46d8";
+  private final String itemBook3Id = "688be386-5522-4505-ad8e-60d84385d43f";
+  private final String itemCameraId = "240e521c-12df-4744-a5ab-313862ec1752";
   private final String holdingsBook1Id = "ace20b0f-1b35-41ae-8ce2-2c7cc9a98819";
   private final String holdingsBook2Id = "75d0799a-66d8-46cf-a7e3-ed7390425112";
   private final String holdingsBook3Id = "39a2de0a-95a3-4870-9320-57476afc2faf";
+  private final String holdingsCameraId = "29c35636-08d2-46d8-bb37-c1209a0db638";
   private final String instanceBook1Id = "6e024cd5-c19a-4fe0-a2cd-64ce5814c694";
   private final String instanceBook2Id = "b3f5ef6d-2309-4935-858d-870cd7801632";
   private final String instanceBook3Id = "f3482bed-a7e9-4f07-beb0-ebd693331350";
+  private final String instanceCameraId = "c394b514-9fd0-496d-ab9a-aec777facc1b";
   private final String book1Barcode = "1234567890";
   private final String book2Barcode = "1234567891";
   private final String book3Barcode = "1234567892";
@@ -209,6 +218,11 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/holdings_book3.json"));
+      } else if (req.path().equals("/holdings-storage/holdings/" + holdingsCameraId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/holdings_camera.json"));
       } else if (req.path().equals("/inventory/instances/" + instanceBook1Id)) {
         req.response()
           .setStatusCode(200)
@@ -224,7 +238,32 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/instance_book3.json"));
-      } else if (req.path().equals("/inventory/items")) {
+      } else if (req.path().equals("/inventory/instances/" + instanceCameraId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/instance_camera.json"));
+      } else if (req.path().equals("/inventory/items/" + itemBook1Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/item_book1.json"));
+      } else if (req.path().equals("/inventory/items/" + itemBook2Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/item_book2.json"));
+      } else if (req.path().equals("/inventory/items/" + itemBook3Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/item_book3.json"));
+      } else if (req.path().equals("/inventory/items/" + itemCameraId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/item_camera.json"));
+      } else if (req.path().equals("/inventory/items/")) {
         if (req.query().equals(String.format("query=barcode%%3D%%3D%s", book1Barcode))) {
           req.response()
             .setStatusCode(200)
@@ -263,6 +302,23 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/feefine_damage_equipment.json"));
+      } else if (req.path().equals("/circulation/renew-by-id")) {
+        if (req.getHeader("x-okapi-bad-user-id") != null) {
+          req.response()
+            .setStatusCode(422)
+            .putHeader("content-type", "application/json")
+            .sendFile(mockDataFolder + "/renew_bad_user_id.json");
+        } else if (req.getHeader("x-okapi-bad-item-id") != null) {
+          req.response()
+          .setStatusCode(422)
+          .putHeader("content-type", "application/json")
+          .sendFile(mockDataFolder + "/renew_bad_item_id.json");
+        } else {
+          req.response()
+            .setStatusCode(201)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/renew_create.json"));
+        }
       } else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
@@ -459,19 +515,104 @@ public class PatronResourceImplTest {
 
   @Test
   public final void testPostPatronAccountByIdItemByItemIdRenew(TestContext context) {
-    logger.info("Testing renew for 501");
+    logger.info("Testing renew for 201");
     final Async asyncLocal = context.async();
 
-    RestAssured
+    final Response r = RestAssured
       .given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
-        .pathParam("accountId", badUserId)
-        .pathParam("itemId", "c9b8958e-dea6-4547-843f-02001d5265ff")
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", goodItemId)
       .post(accountPath + itemPath + renewPath)
         .then()
-          .statusCode(501);
+          .contentType(ContentType.JSON)
+          .statusCode(201)
+          .extract()
+            .response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdRenew.json"));
+
+    verifyLoan(expectedJson, json, context);
+
+    asyncLocal.complete();
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testPostPatronAccountByIdItemByItemIdRenew422BadUserId(TestContext context) {
+    logger.info("Testing renew for 422 due to a bad user id");
+    final Async asyncLocal = context.async();
+
+    final Response r = RestAssured
+      .given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .header(new Header("x-okapi-bad-user-id", badUserId))
+        .pathParam("accountId", badUserId)
+        .pathParam("itemId", goodItemId)
+      .post(accountPath + itemPath + renewPath)
+        .then()
+          .contentType(ContentType.JSON)
+          .statusCode(422)
+          .extract()
+            .response();
+
+    final String body = r.getBody().asString();
+    final Errors errors = Json.decodeValue(body, Errors.class);
+
+    context.assertNotNull(errors);
+    context.assertNotNull(errors.getErrors());
+    context.assertEquals(1, errors.getErrors().size());
+    context.assertEquals("Cannot renew item checked out to different user", errors.getErrors().get(0).getMessage());
+    context.assertNotNull(errors.getErrors().get(0).getParameters());
+    context.assertEquals(1, errors.getErrors().get(0).getParameters().size());
+    context.assertEquals("userId", errors.getErrors().get(0).getParameters().get(0).getKey());
+    context.assertEquals(badUserId, errors.getErrors().get(0).getParameters().get(0).getValue());
+
+    asyncLocal.complete();
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testPostPatronAccountByIdItemByItemIdRenew422BadItemId(TestContext context) {
+    logger.info("Testing renew for 422 due to a bad item id");
+    final Async asyncLocal = context.async();
+
+    final Response r = RestAssured
+      .given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .header(new Header("x-okapi-bad-item-id", badItemId))
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", badItemId)
+      .post(accountPath + itemPath + renewPath)
+        .then()
+          .contentType(ContentType.JSON)
+          .statusCode(422)
+          .extract()
+            .response();
+
+    final String body = r.getBody().asString();
+    final Errors errors = Json.decodeValue(body, Errors.class);
+
+    context.assertNotNull(errors);
+    context.assertNotNull(errors.getErrors());
+    context.assertEquals(1, errors.getErrors().size());
+    context.assertEquals("No item with ID " + badItemId + " exists", errors.getErrors().get(0).getMessage());
+    context.assertNotNull(errors.getErrors().get(0).getParameters());
+    context.assertEquals(1, errors.getErrors().get(0).getParameters().size());
+    context.assertEquals("itemId", errors.getErrors().get(0).getParameters().get(0).getKey());
+    context.assertEquals(badItemId, errors.getErrors().get(0).getParameters().get(0).getValue());
 
     asyncLocal.complete();
 
@@ -653,7 +794,6 @@ public class PatronResourceImplTest {
     if (expectedCharge.getString("accrualDate").equals(actualCharge.getString("accrualDate"))) {
       context.assertEquals(expectedCharge.getString("state"), actualCharge.getString("state"));
       context.assertEquals(expectedCharge.getString("reason"), actualCharge.getString("reason"));
-      context.assertEquals(expectedCharge.getString("feeFineId"), actualCharge.getString("feeFineId"));
 
       verifyAmount(expectedCharge.getJsonObject("chargeAmount"), actualCharge.getJsonObject("chargeAmount"), context);
 
