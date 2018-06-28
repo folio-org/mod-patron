@@ -58,6 +58,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     try {
       // Look up the user to ensure that the user exists and is enabled
       httpClient.request("/users/" + id, okapiHeaders)
+        .thenApply(this::verifyAndExtractBody)
         .thenAccept(this::verifyUserEnabled)
         .thenCompose(v -> {
           try {
@@ -67,22 +68,17 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
             account.setTotalChargesCount(0);
 
             final CompletableFuture<Account> cf1 = httpClient.request("/circulation/loans?limit=" + getLimit(includeLoans) + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
-                .thenApply(response -> {
-                  verifyExists(response);
-                  return addLoans(account, response, includeLoans);
-                });
+                .thenApply(this::verifyAndExtractBody)
+                .thenApply(body -> addLoans(account, body, includeLoans));
 
             final CompletableFuture<Account> cf2 = httpClient.request("/circulation/requests?limit=" + getLimit(includeHolds) + "&query=%28requesterId%3D%3D" + id + "%20and%20requestType%3D%3DHold%20and%20status%3D%3DOpen%2A%29", okapiHeaders)
-                .thenApply(response -> {
-                  verifyExists(response);
-                  return addHolds(account, response, includeHolds);
-                });
+                .thenApply(this::verifyAndExtractBody)
+                .thenApply(body -> addHolds(account, body, includeHolds));
 
             final CompletableFuture<Account> cf3 = httpClient.request("/accounts?limit=" + getLimit(true) + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
-                .thenApply(response -> {
-                  verifyExists(response);
-                  return addCharges(account, response, includeCharges);
-                }).thenCompose(charges -> {
+                .thenApply(this::verifyAndExtractBody)
+                .thenApply(body -> addCharges(account, body, includeCharges))
+                .thenCompose(charges -> {
                   if (includeCharges) {
                     List<CompletableFuture<Account>> cfs = new ArrayList<>();
                     for (Charge charge: account.getCharges()) {
@@ -128,9 +124,8 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
     try {
       httpClient.request(HttpMethod.POST, Buffer.buffer(renewalJSON.toString()), "/circulation/renew-by-id", okapiHeaders)
-          .thenAccept(response -> {
-            verifyExists(response);
-            JsonObject body = response.getBody();
+          .thenApply(this::verifyAndExtractBody)
+          .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(JSON_FIELD_ITEM));
             final Loan hold = getLoan(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withJsonCreated(hold)));
@@ -164,9 +159,8 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
     try {
       httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()), "/circulation/requests", okapiHeaders)
-          .thenAccept(response -> {
-            verifyExists(response);
-            JsonObject body = response.getBody();
+          .thenApply(this::verifyAndExtractBody)
+          .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(JSON_FIELD_ITEM));
             final Hold hold = getHold(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withJsonCreated(hold)));
@@ -203,10 +197,8 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
     try {
       httpClient.request(HttpMethod.DELETE, "/circulation/requests/" + holdId, okapiHeaders)
-          .thenAccept(response -> {
-            verifyExists(response);
-            asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withNoContent()));
-          })
+          .thenApply(this::verifyAndExtractBody)
+          .thenAccept(body -> asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withNoContent())))
           .exceptionally(throwable -> {
             asyncResultHandler.handle(handleHoldDELETEError(throwable));
             httpClient.closeClient();
@@ -257,32 +249,23 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     return HttpClientFactory.getHttpClient(okapiURL, tenantId);
   }
 
-  private void verifyExists(Response response) {
-    if (!Response.isSuccess(response.getCode())) {
-      throw new CompletionException(new HttpException(response.getCode(), response.getError().toString()));
-    }
-  }
+  private void verifyUserEnabled(JsonObject body) {
+    final boolean active = body.getBoolean("active");
 
-  private void verifyUserEnabled(Response response) {
-    verifyExists(response);
-
-    final JsonObject responseBody = response.getBody();
-
-    boolean active = responseBody.getBoolean("active");
     if (!active) {
       throw new CompletionException(new ModuleGeneratedHttpException(400, "User is not active"));
     }
   }
 
-  private Account addLoans(Account account, Response response, boolean includeLoans) {
-    final int totalLoans = response.getBody().getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+  private Account addLoans(Account account, JsonObject body, boolean includeLoans) {
+    final int totalLoans = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Loan> loans = new ArrayList<>();
 
     account.setTotalLoans(totalLoans);
     account.setLoans(loans);
 
     if (totalLoans > 0 && includeLoans) {
-      final JsonArray loansArray = response.getBody().getJsonArray("loans");
+      final JsonArray loansArray = body.getJsonArray("loans");
       for (Object o : loansArray) {
         if (o instanceof JsonObject) {
           JsonObject loanObject = (JsonObject) o;
@@ -340,15 +323,15 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         .withLoanDate(new DateTime(loan.getString("loanDate")).toDate());
   }
 
-  private Account addHolds(Account account, Response response, boolean includeHolds) {
-    final int totalHolds = response.getBody().getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+  private Account addHolds(Account account, JsonObject body, boolean includeHolds) {
+    final int totalHolds = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Hold> holds = new ArrayList<>();
 
     account.setTotalHolds(totalHolds);
     account.setHolds(holds);
 
     if (totalHolds > 0 && includeHolds) {
-      final JsonArray holdsJson = response.getBody().getJsonArray("requests");
+      final JsonArray holdsJson = body.getJsonArray("requests");
       for (Object o : holdsJson) {
         if (o instanceof JsonObject) {
           JsonObject holdJson = (JsonObject) o;
@@ -371,8 +354,8 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         .withStatus(Status.fromValue(holdJson.getString("status")));
   }
 
-  private Account addCharges(Account account, Response response, boolean includeCharges) {
-    final int totalCharges = response.getBody().getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+  private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
+    final int totalCharges = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
 
     account.setTotalChargesCount(totalCharges);
@@ -381,7 +364,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
     double amount = 0.0;
 
     if (totalCharges > 0) {
-      final JsonArray accountsJson = response.getBody().getJsonArray("accounts");
+      final JsonArray accountsJson = body.getJsonArray("accounts");
       for (Object o : accountsJson) {
         if (o instanceof JsonObject) {
           final JsonObject accountJson = (JsonObject) o;
