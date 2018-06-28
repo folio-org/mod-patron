@@ -1,0 +1,19 @@
+{
+  "id": "dd238b5b-01fc-4205-83b8-ce27a650d827",
+  "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+  "itemId": "32e5757d-6566-466e-b69d-994eb33d2b62",
+  "requestType": "Hold",
+  "requestDate": "2018-05-30T08:01:30Z",
+  "requestExpirationDate": "3000-01-30",
+  "fulfilmentPreference": "Trash Can",
+  "status": "Open - Not yet filled",
+  "item" :{
+    "title": "Something's Got a Hold on Me",
+    "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
+    "contributors": [
+      {"name": "Etta James"},
+      {"name": "Leroy Kirkland"},
+      {"name": "Pearl Woods"}
+    ]
+  }
+}

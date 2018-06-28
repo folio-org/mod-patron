@@ -139,10 +139,17 @@ public class PatronResourceImplTest {
         }
       } else if (req.path().equals("/circulation/requests")) {
         if (req.method() == HttpMethod.POST) {
-          req.response()
-            .setStatusCode(201)
-            .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/holds_create.json"));
+          if (req.getHeader("x-okapi-bad-data") != null) {
+              req.response()
+                .setStatusCode(201)
+                .putHeader("content-type", "application/json")
+                .sendFile(mockDataFolder + "/holds_create_bad_data.json");
+          } else {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/holds_create.json"));
+          }
         } else {
           if (req.query().equals(String.format("limit=%d&query=%%28requesterId%%3D%%3D%s%%20and%%20requestType%%3D%%3DHold%%20and%%20status%%3D%%3DOpen%%2A%%29", Integer.MAX_VALUE, goodUserId))) {
             req.response()
@@ -645,6 +652,30 @@ public class PatronResourceImplTest {
     final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHold.json"));
 
     verifyHold(expectedJson, json, context);
+
+    asyncLocal.complete();
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testPostPatronAccountByIdItemByItemIdHold500(TestContext context) {
+    logger.info("Testing creating a hold on an item for the specified user");
+    final Async asyncLocal = context.async();
+
+    RestAssured
+      .given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .header(new Header("x-okapi-bad-data", "Data... bad!"))
+        .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", goodItemId)
+      .post(accountPath + itemPath + holdPath)
+        .then()
+          .statusCode(500);
 
     asyncLocal.complete();
 
