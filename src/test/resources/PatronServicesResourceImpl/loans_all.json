@@ -36,7 +36,6 @@
       "userId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
       "itemId": "688be386-5522-4505-ad8e-60d84385d43f",
       "loanDate": "2018-06-10T16:30:00.000Z",
-      "dueDate": "2086-07-01T04:20:00.000Z",
       "action": "checkedout",
       "item": {
         "instanceId": "f3482bed-a7e9-4f07-beb0-ebd693331350",
