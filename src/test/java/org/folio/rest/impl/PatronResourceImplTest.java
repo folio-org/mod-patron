@@ -1,11 +1,11 @@
 package org.folio.rest.impl;
 
-import static org.folio.rtac.utils.Utils.readMockFile;
+import static org.folio.patron.utils.Utils.readMockFile;
 
+import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.tools.PomReader;
-import org.folio.rtac.utils.Utils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
