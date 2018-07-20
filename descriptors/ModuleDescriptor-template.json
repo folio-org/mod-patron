@@ -15,8 +15,7 @@
             "circulation.loans.collection.get",
             "circulation.requests.collection.get",
             "accounts.collection.get",
-            "chargeitem.item.get",
-            "inventory.items.collection.get",
+            "inventory.items.item.get",
             "inventory-storage.holdings.item.get",
             "inventory.instances.item.get",
             "feefines.item.get"
