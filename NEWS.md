@@ -1,3 +1,5 @@
+## 1.0.1 Unreleased
+
 ## 1.0.0 2018-08-17
  * Update the circulation dependency to 3.3 that contains the loan renew by id
    functionality and implement the patron initiated loan renewal endpoint.
