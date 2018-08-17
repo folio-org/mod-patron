@@ -14,7 +14,7 @@ actions via the discovery service's UI.
 
 ### Issue tracker
 
-See project [FOLIO](https://issues.folio.org/browse/FOLIO)
+See project [MODPATRON](https://issues.folio.org/browse/MODPATRON)
 at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker).
 
 ### Other documentation

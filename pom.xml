@@ -20,7 +20,7 @@
   </scm>
   <issueManagement>
     <system>JIRA</system>
-    <url>https://issues.folio.org/projects/FOLIO</url>
+    <url>https://issues.folio.org/projects/MODPATRON</url>
   </issueManagement>
   <ciManagement>
     <system>Jenkins</system>
