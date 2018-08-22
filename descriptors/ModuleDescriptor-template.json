@@ -16,6 +16,7 @@
             "circulation.requests.collection.get",
             "accounts.collection.get",
             "inventory.items.item.get",
+            "inventory-storage.items.collection.get",
             "inventory-storage.holdings.item.get",
             "inventory.instances.item.get",
             "feefines.item.get"
@@ -23,7 +24,7 @@
         },
         {
           "methods": ["POST"],
-          "pathPattern": "/patron/account/{occountId}/item/{itemId}/renew",
+          "pathPattern": "/patron/account/{accountId}/item/{itemId}/renew",
           "permissionsRequired": ["patron.renew.item.post"],
           "modulePermissions": [
             "circulation.renew-by-id.post"
@@ -31,7 +32,7 @@
         },
         {
           "methods": ["POST"],
-          "pathPattern": "/patron/account/{occountId}/item/{itemId}/hold",
+          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold",
           "permissionsRequired": ["patron.hold.item.post"],
           "modulePermissions": [
             "circulation.requests.item.post"
@@ -39,7 +40,7 @@
         },
         {
           "methods": ["PUT"],
-          "pathPattern": "/patron/account/{occountId}/item/{itemId}/hold/{holdId}",
+          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
           "permissionsRequired": ["patron.hold.item.put"],
           "modulePermissions": [
             "circulation.requests.item.put"
@@ -47,7 +48,7 @@
         },
         {
           "methods": ["DELETE"],
-          "pathPattern": "/patron/account/{occountId}/item/{itemId}/hold/{holdId}",
+          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
           "permissionsRequired": ["patron.hold.item.delete"],
           "modulePermissions": [
             "circulation.requests.item.delete"
