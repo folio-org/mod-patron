@@ -1,4 +1,6 @@
-## 1.0.1 Unreleased
+## 1.1.0 Unreleased
+
+* Requires either `circulation` 3.3 or 4.0 (MODPATRON-9, CIRC-136)
 
 ## 1.0.0 2018-08-17
  * Update the circulation dependency to 3.3 that contains the loan renew by id
