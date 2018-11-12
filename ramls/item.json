@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Patron Item Schema",
   "type": "object",
+  "description": "Item schema for patron portal integration",
   "additionalProperties": false,
   "properties": {
     "instanceId": {

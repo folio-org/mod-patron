@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Patron Charge Schema",
   "type": "object",
+  "description": "Charge schema for patron portal integration",
   "additionalProperties": false,
   "properties": {
     "item": {

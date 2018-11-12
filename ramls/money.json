@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Patron Money Schema",
   "type": "object",
+  "description": "Money schema for patron portal integration",
   "additionalProperties": false,
   "properties": {
     "amount": {
