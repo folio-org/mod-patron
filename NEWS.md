@@ -1,3 +1,6 @@
+## 1.2.0 Unreleased
+ * Requires either `circulation` 3.3, 4.0 or 5.0 (MODPATRON-12)
+
 ## 1.1.0 2018-09-07
  * Requires either `circulation` 3.3 or 4.0 (MODPATRON-9, CIRC-136)
 
