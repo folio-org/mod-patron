@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Patron Hold Schema",
   "type": "object",
+    "description": "Hold schema for patron portal integration",
   "additionalProperties": false,
   "properties": {
     "requestId": {
