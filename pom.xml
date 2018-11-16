@@ -11,6 +11,12 @@
     <name>The Open Library Foundation</name>
     <url>https://dev.folio.org/</url>
   </organization>
+  <licenses>
+    <license>
+      <name>Apache License 2.0</name>
+      <url>https://spdx.org/licenses/Apache-2.0</url>
+    </license>
+  </licenses>
   <scm>
     <url>https://github.com/folio-org/mod-patron.git</url>
     <connection>scm:git:git://github.com/folio-org/mod-patron.git</connection>
