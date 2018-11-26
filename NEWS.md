@@ -1,6 +1,7 @@
 ## 1.2.0 Unreleased
  * Update schema files with a top level description (MODPATRON-11)
  * Requires either `circulation` 3.3, 4.0 or 5.0 (MODPATRON-12)
+ * Requires `inventory` `5.2 6.0 7.0 8.0` (MODPATRON-14)
 
 ## 1.1.0 2018-09-07
  * Requires either `circulation` 3.3 or 4.0 (MODPATRON-9, CIRC-136)
