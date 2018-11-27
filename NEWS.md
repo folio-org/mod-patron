@@ -1,6 +1,7 @@
 ## 1.2.0 Unreleased
  * Update schema files with a top level description (MODPATRON-11)
  * Requires either `circulation` 3.3, 4.0 or 5.0 (MODPATRON-12)
+ * Requires `holdings-storage` version `1.2 2.0 3.0` (MODPATRON-15)
 
 ## 1.1.0 2018-09-07
  * Requires either `circulation` 3.3 or 4.0 (MODPATRON-9, CIRC-136)
