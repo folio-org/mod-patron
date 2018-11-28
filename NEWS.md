@@ -1,4 +1,5 @@
 ## 1.2.0 Unreleased
+ * Requires either `feesfines` 14.0 or 15.0 (MODPATRON-16)
  * Update schema files with a top level description (MODPATRON-11)
  * Requires either `circulation` 3.3, 4.0 or 5.0 (MODPATRON-12)
 
