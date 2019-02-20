@@ -26,6 +26,7 @@ import org.folio.rest.tools.client.Response;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
 import org.folio.rest.tools.utils.TenantTool;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -46,6 +47,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
   private static final String JSON_FIELD_INSTANCE_ID = "instanceId";
   private static final String JSON_FIELD_USER_ID = "userId";
   private static final String JSON_FIELD_ITEM_ID = "itemId";
+  private static final String JSON_FIELD_REQUEST_EXPIRATION_DATE = "requestExpirationDate";
 
   @Validate
   @Override
@@ -152,9 +154,14 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         .put(JSON_FIELD_ITEM_ID, itemId)
         .put("requesterId", id)
         .put("requestType", "Hold")
-        .put("requestDate", new DateTime(entity.getRequestId()).toString())
-        .put("fulfilmentPreference", entity.getFulfillmentPreference().toString())
-        .put("requestExpirationDate", entity.getExpirationDate());
+        // TODO: we don't appear to be using this field at all... look into this
+        .put("requestDate", new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+        .put("fulfilmentPreference", entity.getFulfillmentPreference().toString());
+
+    if (entity.getExpirationDate() != null) {
+      holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
+          new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
+    }
 
     final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
     try {
@@ -311,8 +318,9 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
       // This should be more sophisticated, or actually reported by
       // the circulation module. What is "overdue" can vary as some
       // libraries have a grace period, don't count holidays, etc.
-      dueDate = new DateTime(dueDateString).toDate();
-      overdue = new Date().after(dueDate);
+      final DateTime dueDateTime = new DateTime(dueDateString, DateTimeZone.UTC); 
+      dueDate = dueDateTime.toDate();
+      overdue = dueDateTime.isBeforeNow();
     }
 
     return new Loan()
@@ -320,7 +328,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         .withItem(item)
         .withOverdue(overdue)
         .withDueDate(dueDate)
-        .withLoanDate(new DateTime(loan.getString("loanDate")).toDate());
+        .withLoanDate(new DateTime(loan.getString("loanDate"), DateTimeZone.UTC).toDate());
   }
 
   private Account addHolds(Account account, JsonObject body, boolean includeHolds) {
@@ -348,7 +356,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
   private Hold getHold(JsonObject holdJson, Item item) {
     return new Hold()
         .withItem(item)
-        .withExpirationDate(holdJson.getString("requestExpirationDate"))
+        .withExpirationDate(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE) == null ? null : new DateTime(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
         .withRequestId(holdJson.getString("id"))
         .withFulfillmentPreference(FulfillmentPreference.fromValue(holdJson.getString("fulfilmentPreference")))
         .withStatus(Status.fromValue(holdJson.getString("status")));
@@ -388,7 +396,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
   private Charge getCharge(JsonObject chargeJson, Item item) {
     return new Charge()
         .withItem(item)
-        .withAccrualDate(new DateTime(chargeJson.getString("dateCreated")).toDate())
+        .withAccrualDate(new DateTime(chargeJson.getString("dateCreated"), DateTimeZone.UTC).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
         .withState(chargeJson.getJsonObject("paymentStatus", new JsonObject().put(JSON_FIELD_NAME,  "Unknown")).getString(JSON_FIELD_NAME))
         .withReason(chargeJson.getString("feeFineType"));
