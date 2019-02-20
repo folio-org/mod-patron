@@ -154,7 +154,8 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         .put(JSON_FIELD_ITEM_ID, itemId)
         .put("requesterId", id)
         .put("requestType", "Hold")
-        // TODO: we don't appear to be using this field at all... look into this
+        // We don't appear to be using this field at all... look into this when
+        // implementing title level holds or other mod-patron features.
         .put("requestDate", new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
         .put("fulfilmentPreference", entity.getFulfillmentPreference().toString());
 
