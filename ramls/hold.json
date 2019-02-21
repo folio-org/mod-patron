@@ -22,7 +22,7 @@
     },
     "expirationDate": {
       "type": "string",
-      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date-time",
       "description": "The date when the request expires"
     },
     "fulfillmentPreference": {
@@ -36,7 +36,9 @@
       "enum": [
         "Open - Not yet filled",
         "Open - Awaiting pickup",
-        "Closed - Filled"
+        "Open - In transit",
+        "Closed - Filled",
+        "Closed - Cancelled"
       ]
     },
     "queueLength": {

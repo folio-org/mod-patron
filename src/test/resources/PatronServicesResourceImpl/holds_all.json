@@ -43,7 +43,7 @@
       "requestDate": "2018-04-01T15:22:12Z",
       "fulfilmentPreference": "Hold Shelf",
       "status": "Open - Not yet filled",
-      "requestExpirationDate": "2020-01-31",
+      "requestExpirationDate": "2020-01-31T15:22:12Z",
       "item" :{
         "title": "Hold On, I'm Comin'",
         "instanceId": "4bb0fffc-fe55-4445-819d-9bc5b8cd47ef",

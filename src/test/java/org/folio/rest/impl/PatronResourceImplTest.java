@@ -6,6 +6,8 @@ import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.tools.PomReader;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -346,10 +348,10 @@ public class PatronResourceImplTest {
   @Test
   public final void testGetPatronAccountById(TestContext context) {
     logger.info("Testing for successful patron services account retrieval by id");
-    final Async asyncLocal = context.async();
 
     final Response r = RestAssured
       .given()
+        .log().all()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
@@ -357,8 +359,10 @@ public class PatronResourceImplTest {
         .queryParam("includeLoans", "true")
         .queryParam("includeHolds", "true")
         .queryParam("includeCharges", "true")
-      .get(accountPath)
-        .then()
+      .when()
+        .get(accountPath)
+      .then()
+          .log().all()
           .contentType(ContentType.JSON)
           .statusCode(200)
           .extract()
@@ -431,8 +435,6 @@ public class PatronResourceImplTest {
       }
     }
 
-    asyncLocal.complete();
-
     // Test done
     logger.info("Test done");
   }
@@ -440,7 +442,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testGetPatronAccountByIdNoLists(TestContext context) {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
-    final Async asyncLocal = context.async();
 
     final Response r = RestAssured
       .given()
@@ -450,6 +451,7 @@ public class PatronResourceImplTest {
         .pathParam("accountId", goodUserId)
       .get(accountPath)
         .then()
+          .log().all()
           .contentType(ContentType.JSON)
           .statusCode(200)
           .extract()
@@ -470,8 +472,6 @@ public class PatronResourceImplTest {
     context.assertEquals(4, json.getInteger("totalChargesCount"));
     context.assertEquals(0, json.getJsonArray("charges").size());
 
-    asyncLocal.complete();
-
     // Test done
     logger.info("Test done");
   }
@@ -479,7 +479,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testGetPatronAccountById400UserNotActive(TestContext context) {
     logger.info("Testing for 400 due to patron account not active");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -489,10 +488,9 @@ public class PatronResourceImplTest {
         .pathParam("accountId", inactiveUserId)
       .get(accountPath)
         .then()
+          .log().all()
           .contentType(ContentType.TEXT)
           .statusCode(400);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -501,7 +499,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testGetPatronAccountById404(TestContext context) {
     logger.info("Testing for 404 due to unknown user id");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -511,10 +508,9 @@ public class PatronResourceImplTest {
         .pathParam("accountId", badUserId)
       .get(accountPath)
         .then()
+          .log().all()
           .contentType(ContentType.TEXT)
           .statusCode(404);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -523,7 +519,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testPostPatronAccountByIdItemByItemIdRenew(TestContext context) {
     logger.info("Testing renew for 201");
-    final Async asyncLocal = context.async();
 
     final Response r = RestAssured
       .given()
@@ -534,6 +529,7 @@ public class PatronResourceImplTest {
         .pathParam("itemId", goodItemId)
       .post(accountPath + itemPath + renewPath)
         .then()
+          .log().all()
           .contentType(ContentType.JSON)
           .statusCode(201)
           .extract()
@@ -545,8 +541,6 @@ public class PatronResourceImplTest {
 
     verifyLoan(expectedJson, json, context);
 
-    asyncLocal.complete();
-
     // Test done
     logger.info("Test done");
   }
@@ -554,7 +548,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testPostPatronAccountByIdItemByItemIdRenew422BadUserId(TestContext context) {
     logger.info("Testing renew for 422 due to a bad user id");
-    final Async asyncLocal = context.async();
 
     final Response r = RestAssured
       .given()
@@ -566,6 +559,7 @@ public class PatronResourceImplTest {
         .pathParam("itemId", goodItemId)
       .post(accountPath + itemPath + renewPath)
         .then()
+          .log().all()
           .contentType(ContentType.JSON)
           .statusCode(422)
           .extract()
@@ -583,8 +577,6 @@ public class PatronResourceImplTest {
     context.assertEquals("userId", errors.getErrors().get(0).getParameters().get(0).getKey());
     context.assertEquals(badUserId, errors.getErrors().get(0).getParameters().get(0).getValue());
 
-    asyncLocal.complete();
-
     // Test done
     logger.info("Test done");
   }
@@ -592,7 +584,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testPostPatronAccountByIdItemByItemIdRenew422BadItemId(TestContext context) {
     logger.info("Testing renew for 422 due to a bad item id");
-    final Async asyncLocal = context.async();
 
     final Response r = RestAssured
       .given()
@@ -604,6 +595,7 @@ public class PatronResourceImplTest {
         .pathParam("itemId", badItemId)
       .post(accountPath + itemPath + renewPath)
         .then()
+          .log().all()
           .contentType(ContentType.JSON)
           .statusCode(422)
           .extract()
@@ -621,8 +613,6 @@ public class PatronResourceImplTest {
     context.assertEquals("itemId", errors.getErrors().get(0).getParameters().get(0).getKey());
     context.assertEquals(badItemId, errors.getErrors().get(0).getParameters().get(0).getValue());
 
-    asyncLocal.complete();
-
     // Test done
     logger.info("Test done");
   }
@@ -630,10 +620,10 @@ public class PatronResourceImplTest {
   @Test
   public final void testPostPatronAccountByIdItemByItemIdHold(TestContext context) {
     logger.info("Testing creating a hold on an item for the specified user");
-    final Async asyncLocal = context.async();
 
     final Response r = RestAssured
       .given()
+        .log().all()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
@@ -642,6 +632,7 @@ public class PatronResourceImplTest {
         .pathParam("itemId", goodItemId)
       .post(accountPath + itemPath + holdPath)
         .then()
+          .log().all()
           .contentType(ContentType.JSON)
           .statusCode(201)
           .extract()
@@ -653,8 +644,6 @@ public class PatronResourceImplTest {
 
     verifyHold(expectedJson, json, context);
 
-    asyncLocal.complete();
-
     // Test done
     logger.info("Test done");
   }
@@ -662,7 +651,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testPostPatronAccountByIdItemByItemIdHold500(TestContext context) {
     logger.info("Testing creating a hold on an item for the specified user");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -675,9 +663,8 @@ public class PatronResourceImplTest {
         .pathParam("itemId", goodItemId)
       .post(accountPath + itemPath + holdPath)
         .then()
+          .log().all()
           .statusCode(500);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -686,7 +673,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testPutPatronAccountByIdItemByItemIdHoldByHoldId(TestContext context) {
     logger.info("Testing edit hold for 501");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -698,9 +684,8 @@ public class PatronResourceImplTest {
         .pathParam("holdId", "1745628c-f424-4b50-a116-e18be37cd599")
       .put(accountPath + itemPath + holdPath + holdIdPath)
         .then()
+          .log().all()
           .statusCode(501);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -709,7 +694,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId(TestContext context) {
     logger.info("Testing delete hold by id");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -721,9 +705,8 @@ public class PatronResourceImplTest {
         .pathParam("holdId", goodHoldId)
       .delete(accountPath + itemPath + holdPath + holdIdPath)
         .then()
+          .log().all()
           .statusCode(204);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -732,7 +715,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId404(TestContext context) {
     logger.info("Testing delete hold by with an unknown id");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -744,9 +726,8 @@ public class PatronResourceImplTest {
         .pathParam("holdId", badHoldId)
       .delete(accountPath + itemPath + holdPath + holdIdPath)
         .then()
+          .log().all()
           .statusCode(404);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -755,7 +736,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testPostPatronAccountByIdInstanceByInstanceIdHold(TestContext context) {
     logger.info("Testing creating a hold on an instance for the specified user (501)");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -766,9 +746,8 @@ public class PatronResourceImplTest {
         .pathParam("instanceId", goodInstanceId)
       .post(accountPath + instancePath + holdPath)
         .then()
+          .log().all()
           .statusCode(501);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -777,7 +756,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testPutPatronAccountByIdInstanceByInstanceIdHoldByHoldId(TestContext context) {
     logger.info("Testing edit hold (instance) for 501");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -789,9 +767,8 @@ public class PatronResourceImplTest {
         .pathParam("holdId", "1745628c-f424-4b50-a116-e18be37cd599")
       .put(accountPath + instancePath + holdPath + holdIdPath)
         .then()
+          .log().all()
           .statusCode(501);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -800,7 +777,6 @@ public class PatronResourceImplTest {
   @Test
   public final void testDeletePatronAccountByIdInstanceByInstanceIdHoldByHoldId(TestContext context) {
     logger.info("Testing delete hold (instance) by id");
-    final Async asyncLocal = context.async();
 
     RestAssured
       .given()
@@ -812,9 +788,8 @@ public class PatronResourceImplTest {
         .pathParam("holdId", goodHoldId)
       .delete(accountPath + instancePath + holdPath + holdIdPath)
         .then()
+          .log().all()
           .statusCode(501);
-
-    asyncLocal.complete();
 
     // Test done
     logger.info("Test done");
@@ -843,7 +818,8 @@ public class PatronResourceImplTest {
     if (expectedHold.getString("requestId").equals(actualHold.getString("requestId"))) {
       context.assertEquals(expectedHold.getString("fulfillmentPreference"), actualHold.getString("fulfillmentPreference"));
       context.assertEquals(expectedHold.getString("status"), actualHold.getString("status"));
-      context.assertEquals(expectedHold.getString("expirationDate"), actualHold.getString("expirationDate"));
+      context.assertEquals(expectedHold.getString("expirationDate") == null ? null : new DateTime(expectedHold.getString("expirationDate"), DateTimeZone.UTC),
+          actualHold.getString("expirationDate") == null ? null : new DateTime(actualHold.getString("expirationDate"), DateTimeZone.UTC));
 
       return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"), context);
     }
