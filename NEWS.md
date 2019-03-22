@@ -1,4 +1,4 @@
-## 2.0.0 Unreleased
+## 2.0.0 2019-03-22
  * [MODPATRON-18](https://issues.folio.org/browse/MODPATRON-18): Support for
    `circulation` 7.0. This interface update includes potentially breaking
     changes in the `expirationDate` field in the `hold` schema. A time
