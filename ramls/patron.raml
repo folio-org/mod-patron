@@ -22,7 +22,6 @@ types:
   parameters: !include raml-util/schemas/parameters.schema
 
 traits:
-  secured: !include raml-util/traits/auth.raml
   validate: !include raml-util/traits/validation.raml
 
 /patron:
@@ -40,7 +39,6 @@ traits:
           pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
       get:
         description: Return account details for the specified FOLIO user id
-        is: [secured]
         queryParameters:
           includeLoans:
             description: |
@@ -107,7 +105,7 @@ traits:
             description: Service endpoint for loan renewal
             post:
               description: Renews a loan on the item for the user
-              is: [secured, validate]
+              is: [validate]
               responses:
                 201:
                   description: Returns the renewed loan data
@@ -147,7 +145,7 @@ traits:
             post:
               description: |
                 Creates a hold request on an existing item for the user
-              is: [secured, validate]
+              is: [validate]
               body:
                 application/json:
                   schema: hold
@@ -195,13 +193,11 @@ traits:
                   type: string
                   pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
               put:
-                is: [secured]
                 description: Not implemented
                 responses:
                   501:
                     description: Not implemented
               delete:
-                is: [secured]
                 description: Removes the specified hold request
                 responses:
                   204:
@@ -244,7 +240,7 @@ traits:
             displayName: Hold Management
             description: Services that provide hold management
             post:
-              is: [secured, validate]
+              is: [validate]
               description: Not implemented
               responses:
                 501:
@@ -258,13 +254,11 @@ traits:
                   type: string
                   pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
               put:
-                is: [secured]
                 description: Not implemented
                 responses:
                   501:
                     description: Not implemented
               delete:
-                is: [secured]
                 description: Not implemented
                 responses:
                   501:
