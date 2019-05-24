@@ -20,7 +20,7 @@ import org.folio.rest.jaxrs.model.Hold.Status;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.TotalCharges;
-import org.folio.rest.jaxrs.resource.PatronServicesResource;
+import org.folio.rest.jaxrs.resource.Patron;
 import org.folio.rest.tools.client.HttpClientFactory;
 import org.folio.rest.tools.client.Response;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
@@ -38,7 +38,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class PatronServicesResourceImpl implements PatronServicesResource {
+public class PatronServicesResourceImpl implements Patron {
   private static final String JSON_FIELD_NAME = "name";
   private static final String JSON_FIELD_ITEM = "item";
   private static final String JSON_FIELD_TOTAL_RECORDS = "totalRecords";
@@ -54,8 +54,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
   public void getPatronAccountById(String id, boolean includeLoans,
       boolean includeCharges, boolean includeHolds,
       Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
     try {
       // Look up the user to ensure that the user exists and is enabled
@@ -99,7 +98,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
           }
         })
         .thenAccept(account -> {
-          asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.withJsonOK(account)));
+          asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
           httpClient.closeClient();
         })
         .exceptionally(throwable -> {
@@ -108,17 +107,16 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
           return null;
         });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.withPlainInternalServerError(e.getMessage())));
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
       httpClient.closeClient();
     }
   }
 
   @Validate
   @Override
-  public void postPatronAccountByIdItemByItemIdRenew(String itemId, String id,
+  public void postPatronAccountItemRenewByIdAndItemId(String id, String itemId,
       Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final JsonObject renewalJSON = new JsonObject()
         .put(JSON_FIELD_ITEM_ID, itemId)
         .put(JSON_FIELD_USER_ID, id);
@@ -130,7 +128,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
           .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(JSON_FIELD_ITEM));
             final Loan hold = getLoan(body, item);
-            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withJsonCreated(hold)));
+            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
             httpClient.closeClient();
           })
           .exceptionally(throwable -> {
@@ -139,17 +137,16 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
             return null;
           });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainInternalServerError(e.getMessage())));
+      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
       httpClient.closeClient();
     }
   }
 
   @Validate
   @Override
-  public void postPatronAccountByIdItemByItemIdHold(String itemId, String id,
+  public void postPatronAccountItemHoldByIdAndItemId(String id, String itemId,
       Hold entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final JsonObject holdJSON = new JsonObject()
         .put(JSON_FIELD_ITEM_ID, itemId)
         .put("requesterId", id)
@@ -171,7 +168,7 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
           .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(JSON_FIELD_ITEM));
             final Hold hold = getHold(body, item);
-            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withJsonCreated(hold)));
+            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
             httpClient.closeClient();
           })
           .exceptionally(throwable -> {
@@ -180,33 +177,31 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
             return null;
           });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withPlainInternalServerError(e.getMessage())));
+      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
       httpClient.closeClient();
     }
   }
 
   @Validate
   @Override
-  public void putPatronAccountByIdItemByItemIdHoldByHoldId(String holdId,
-      String itemId, String id, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
-    asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountByIdItemByItemIdHoldByHoldIdResponse.withNotImplemented()));
+  public void putPatronAccountItemHoldByIdAndItemIdAndHoldId(String id,
+      String itemId, String holdId, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
+    asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond501()));
   }
 
   @Validate
   @Override
-  public void deletePatronAccountByIdItemByItemIdHoldByHoldId(String holdId,
-      String itemId, String id, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+  public void deletePatronAccountItemHoldByIdAndItemIdAndHoldId(String id,
+      String itemId, String holdId, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     // TODO: validation that the hold is for the specified user and the
     // specified item.
     final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
     try {
       httpClient.request(HttpMethod.DELETE, "/circulation/requests/" + holdId, okapiHeaders)
           .thenApply(this::verifyAndExtractBody)
-          .thenAccept(body -> asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withNoContent())))
+          .thenAccept(body -> asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond204())))
           .exceptionally(throwable -> {
             asyncResultHandler.handle(handleHoldDELETEError(throwable));
             httpClient.closeClient();
@@ -220,34 +215,34 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
 
   @Validate
   @Override
-  public void postPatronAccountByIdInstanceByInstanceIdHold(String instanceId,
-      String id, Map<String, String> okapiHeaders,
+  public void postPatronAccountInstanceHoldByIdAndInstanceId(String id,
+      String instanceId, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     // TODO Implement once FOLIO can perform hold management on instances
-    asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountByIdInstanceByInstanceIdHoldResponse.withNotImplemented()));
+    asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond501()));
   }
 
   @Validate
   @Override
-  public void putPatronAccountByIdInstanceByInstanceIdHoldByHoldId(
-      String holdId, String instanceId, String id,
+  public void putPatronAccountInstanceHoldByIdAndInstanceIdAndHoldId(
+      String id, String instanceId, String holdId,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     // TODO Implement once FOLIO can perform hold management on instances
-    asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountByIdInstanceByInstanceIdHoldByHoldIdResponse.withNotImplemented()));
+    asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountInstanceHoldByIdAndInstanceIdAndHoldIdResponse.respond501()));
   }
 
   @Validate
   @Override
-  public void deletePatronAccountByIdInstanceByInstanceIdHoldByHoldId(
-      String holdId, String instanceId, String id,
+  public void deletePatronAccountInstanceHoldByIdAndInstanceIdAndHoldId(
+      String id, String instanceId, String holdId,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     // TODO Implement once FOLIO can perform hold management on instances
-    asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountByIdInstanceByInstanceIdHoldByHoldIdResponse.withNotImplemented()));
+    asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountInstanceHoldByIdAndInstanceIdAndHoldIdResponse.respond501()));
   }
 
   private HttpClientInterface getHttpClient(Map<String, String> okapiHeaders) {
@@ -492,25 +487,25 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         // do anything about. If the error is module generated, we can do
         // something about it or at least tell the user something.
         if (t instanceof ModuleGeneratedHttpException) {
-          result = Future.succeededFuture(GetPatronAccountByIdResponse.withPlainBadRequest(message));
+          result = Future.succeededFuture(GetPatronAccountByIdResponse.respond400WithTextPlain(message));
         } else {
-          result = Future.succeededFuture(GetPatronAccountByIdResponse.withPlainInternalServerError(message));
+          result = Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
         }
         break;
       case 401:
-        result = Future.succeededFuture(GetPatronAccountByIdResponse.withPlainUnauthorized(message));
+        result = Future.succeededFuture(GetPatronAccountByIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(GetPatronAccountByIdResponse.withPlainForbidden(message));
+        result = Future.succeededFuture(GetPatronAccountByIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(GetPatronAccountByIdResponse.withPlainNotFound(message));
+        result = Future.succeededFuture(GetPatronAccountByIdResponse.respond404WithTextPlain(message));
         break;
       default:
-        result = Future.succeededFuture(GetPatronAccountByIdResponse.withPlainInternalServerError(message));
+        result = Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(GetPatronAccountByIdResponse.withPlainInternalServerError(throwable.getMessage()));
+      result = Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
@@ -529,22 +524,22 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         // module. This API only takes a UUID, so a client side 400 is not
         // possible here, only server side, which the client won't be able to
         // do anything about.
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withPlainInternalServerError(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withPlainUnauthorized(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withPlainForbidden(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withPlainNotFound(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain(message));
         break;
       default:
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withPlainInternalServerError(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdHoldResponse.withPlainInternalServerError(throwable.getMessage()));
+      result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
@@ -563,27 +558,27 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         // module. This API takes UUIDs, so a client side 400 is not
         // possible here, only server side, which the client won't be able to
         // do anything about.
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainInternalServerError(message));
+        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainUnauthorized(message));
+        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainForbidden(message));
+        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainNotFound(message));
+        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond404WithTextPlain(message));
         break;
       case 422:
         final JsonObject response = new JsonObject(message);
         final Errors errors = Json.decodeValue(response.getString("errorMessage"), Errors.class);
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withJsonUnprocessableEntity(errors));
+        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
-        result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainInternalServerError(message));
+        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(PostPatronAccountByIdItemByItemIdRenewResponse.withPlainInternalServerError(throwable.getMessage()));
+      result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
@@ -602,22 +597,22 @@ public class PatronServicesResourceImpl implements PatronServicesResource {
         // module. This API only takes a UUID, so a client side 400 is not
         // possible here, only server side, which the client won't be able to
         // do anything about.
-        result = Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withPlainInternalServerError(message));
+        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withPlainUnauthorized(message));
+        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withPlainForbidden(message));
+        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withPlainNotFound(message));
+        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond404WithTextPlain(message));
         break;
       default:
-        result = Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withPlainInternalServerError(message));
+        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(DeletePatronAccountByIdItemByItemIdHoldByHoldIdResponse.withPlainInternalServerError(throwable.getMessage()));
+      result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;

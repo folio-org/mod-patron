@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Patron Services
 baseUri: https://github.com/folio-org/mod-patron
 protocols: [ HTTPS ]
@@ -10,20 +10,20 @@ documentation:
       This module allows 3rd party discovery services to perform patron
       actions in FOLIO
 
-schemas:
-  - account: !include account.json
-  - hold.json: !include hold.json
-  - loan.json: !include loan.json
-  - charge.json: !include charge.json
-  - money.json: !include money.json
-  - item.json: !include item.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
+types:
+  account: !include account.json
+  hold: !include hold.json
+  loan: !include loan.json
+  charge: !include charge.json
+  money: !include money.json
+  item: !include item.json
+  errors: !include raml-util/schemas/errors.schema
+  error: !include raml-util/schemas/error.schema
+  parameters: !include raml-util/schemas/parameters.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - validate: !include raml-util/traits/validation.raml
+  secured: !include raml-util/traits/auth.raml
+  validate: !include raml-util/traits/validation.raml
 
 /patron:
   displayName: Patron Services
@@ -113,7 +113,7 @@ traits:
                   description: Returns the renewed loan data
                   body:
                     application/json:
-                      schema: loan.json
+                      schema: loan
                       example: !include examples/loan.json
                 400:
                   description: Bad request
@@ -150,7 +150,7 @@ traits:
               is: [secured, validate]
               body:
                 application/json:
-                  schema: hold.json
+                  schema: hold
                   example: !include examples/hold.json
               responses:
                 201:
@@ -158,7 +158,7 @@ traits:
                     Returns data for a new hold request on the specified item
                   body:
                     application/json:
-                      schema: hold.json
+                      schema: hold
                       example: !include examples/hold.json
                 400:
                   description: Bad request
