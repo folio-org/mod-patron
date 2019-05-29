@@ -1,10 +1,12 @@
 package org.folio.rest.impl;
 
+import static io.restassured.RestAssured.given;
 import static org.folio.patron.utils.Utils.readMockFile;
 
 import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.tools.PomReader;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -16,6 +18,7 @@ import org.junit.runner.RunWith;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.http.Header;
+import io.restassured.http.Headers;
 import io.restassured.response.Response;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -59,7 +62,6 @@ public class PatronResourceImplTest {
   private final String goodItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
   private final String badItemId = "3dda4eb9-a156-474c-829f-bd5a386f382c";
   private final String goodInstanceId = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
-  private final String badInstanceId = "114a048c-916a-43fd-a8cb-8eacc296fe01";
   private final String goodHoldId = "dd238b5b-01fc-4205-83b8-ce27a650d827";
   private final String badHoldId = "1745628c-f424-4b50-a116-e18be37cd599";
 
@@ -166,6 +168,15 @@ public class PatronResourceImplTest {
           } else {
             req.response().setStatusCode(500).end("Unexpected call: " + req.path());
           }
+        }
+      } else if (req.path().equals("/circulation/requests/instances")) {
+        if (req.method() == HttpMethod.POST) {
+          req.response()
+            .setStatusCode(201)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/instance_holds_create.json"));
+        } else {
+          req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
       } else if (req.path().equals("/circulation/requests/" + goodHoldId)) {
         if (req.method() == HttpMethod.DELETE) {
@@ -349,8 +360,7 @@ public class PatronResourceImplTest {
   public final void testGetPatronAccountById(TestContext context) {
     logger.info("Testing for successful patron services account retrieval by id");
 
-    final Response r = RestAssured
-      .given()
+    final Response r = given()
         .log().all()
         .header(tenantHeader)
         .header(urlHeader)
@@ -365,8 +375,7 @@ public class PatronResourceImplTest {
           .log().all()
           .contentType(ContentType.JSON)
           .statusCode(200)
-          .extract()
-            .response();
+          .extract().response();
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
@@ -443,19 +452,18 @@ public class PatronResourceImplTest {
   public final void testGetPatronAccountByIdNoLists(TestContext context) {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
 
-    final Response r = RestAssured
-      .given()
+    final Response r = given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
         .pathParam("accountId", goodUserId)
-      .get(accountPath)
-        .then()
-          .log().all()
-          .contentType(ContentType.JSON)
-          .statusCode(200)
-          .extract()
-            .response();
+      .when()
+        .get(accountPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+        .extract().response();
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
@@ -480,17 +488,17 @@ public class PatronResourceImplTest {
   public final void testGetPatronAccountById400UserNotActive(TestContext context) {
     logger.info("Testing for 400 due to patron account not active");
 
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", inactiveUserId)
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", inactiveUserId)
+    .when()
       .get(accountPath)
-        .then()
-          .log().all()
-          .contentType(ContentType.TEXT)
-          .statusCode(400);
+    .then()
+      .log().all()
+      .contentType(ContentType.TEXT)
+      .statusCode(400);
 
     // Test done
     logger.info("Test done");
@@ -500,17 +508,17 @@ public class PatronResourceImplTest {
   public final void testGetPatronAccountById404(TestContext context) {
     logger.info("Testing for 404 due to unknown user id");
 
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", badUserId)
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", badUserId)
+    .when()
       .get(accountPath)
-        .then()
-          .log().all()
-          .contentType(ContentType.TEXT)
-          .statusCode(404);
+    .then()
+      .log().all()
+      .contentType(ContentType.TEXT)
+      .statusCode(404);
 
     // Test done
     logger.info("Test done");
@@ -520,20 +528,19 @@ public class PatronResourceImplTest {
   public final void testPostPatronAccountByIdItemByItemIdRenew(TestContext context) {
     logger.info("Testing renew for 201");
 
-    final Response r = RestAssured
-      .given()
+    final Response r = given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
         .pathParam("accountId", goodUserId)
         .pathParam("itemId", goodItemId)
-      .post(accountPath + itemPath + renewPath)
-        .then()
-          .log().all()
-          .contentType(ContentType.JSON)
-          .statusCode(201)
-          .extract()
-            .response();
+      .when()
+        .post(accountPath + itemPath + renewPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(201)
+        .extract().response();
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
@@ -549,21 +556,20 @@ public class PatronResourceImplTest {
   public final void testPostPatronAccountByIdItemByItemIdRenew422BadUserId(TestContext context) {
     logger.info("Testing renew for 422 due to a bad user id");
 
-    final Response r = RestAssured
-      .given()
+    final Response r = given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
         .header(new Header("x-okapi-bad-user-id", badUserId))
         .pathParam("accountId", badUserId)
         .pathParam("itemId", goodItemId)
-      .post(accountPath + itemPath + renewPath)
-        .then()
-          .log().all()
-          .contentType(ContentType.JSON)
-          .statusCode(422)
-          .extract()
-            .response();
+      .when()
+        .post(accountPath + itemPath + renewPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(422)
+        .extract().response();
 
     final String body = r.getBody().asString();
     final Errors errors = Json.decodeValue(body, Errors.class);
@@ -585,21 +591,20 @@ public class PatronResourceImplTest {
   public final void testPostPatronAccountByIdItemByItemIdRenew422BadItemId(TestContext context) {
     logger.info("Testing renew for 422 due to a bad item id");
 
-    final Response r = RestAssured
-      .given()
+    final Response r = given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
         .header(new Header("x-okapi-bad-item-id", badItemId))
         .pathParam("accountId", goodUserId)
         .pathParam("itemId", badItemId)
-      .post(accountPath + itemPath + renewPath)
-        .then()
-          .log().all()
-          .contentType(ContentType.JSON)
-          .statusCode(422)
-          .extract()
-            .response();
+      .when()
+        .post(accountPath + itemPath + renewPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(422)
+        .extract().response();
 
     final String body = r.getBody().asString();
     final Errors errors = Json.decodeValue(body, Errors.class);
@@ -621,8 +626,7 @@ public class PatronResourceImplTest {
   public final void testPostPatronAccountByIdItemByItemIdHold(TestContext context) {
     logger.info("Testing creating a hold on an item for the specified user");
 
-    final Response r = RestAssured
-      .given()
+    final Response r = given()
         .log().all()
         .header(tenantHeader)
         .header(urlHeader)
@@ -630,13 +634,13 @@ public class PatronResourceImplTest {
         .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
         .pathParam("accountId", goodUserId)
         .pathParam("itemId", goodItemId)
-      .post(accountPath + itemPath + holdPath)
-        .then()
-          .log().all()
-          .contentType(ContentType.JSON)
-          .statusCode(201)
-          .extract()
-            .response();
+      .when()
+        .post(accountPath + itemPath + holdPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(201)
+        .extract().response();
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
@@ -649,43 +653,21 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdHold500(TestContext context) {
-    logger.info("Testing creating a hold on an item for the specified user");
-
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .header(new Header("x-okapi-bad-data", "Data... bad!"))
-        .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
-        .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodItemId)
-      .post(accountPath + itemPath + holdPath)
-        .then()
-          .log().all()
-          .statusCode(500);
-
-    // Test done
-    logger.info("Test done");
-  }
-
-  @Test
   public final void testPutPatronAccountByIdItemByItemIdHoldByHoldId(TestContext context) {
     logger.info("Testing edit hold for 501");
 
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", badUserId)
-        .pathParam("itemId", "c9b8958e-dea6-4547-843f-02001d5265ff")
-        .pathParam("holdId", "1745628c-f424-4b50-a116-e18be37cd599")
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", badUserId)
+      .pathParam("itemId", "c9b8958e-dea6-4547-843f-02001d5265ff")
+      .pathParam("holdId", "1745628c-f424-4b50-a116-e18be37cd599")
+    .when()
       .put(accountPath + itemPath + holdPath + holdIdPath)
-        .then()
-          .log().all()
-          .statusCode(501);
+    .then()
+      .log().all()
+      .statusCode(501);
 
     // Test done
     logger.info("Test done");
@@ -695,18 +677,18 @@ public class PatronResourceImplTest {
   public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId(TestContext context) {
     logger.info("Testing delete hold by id");
 
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodItemId)
-        .pathParam("holdId", goodHoldId)
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .pathParam("holdId", goodHoldId)
+    .when()
       .delete(accountPath + itemPath + holdPath + holdIdPath)
-        .then()
-          .log().all()
-          .statusCode(204);
+    .then()
+      .log().all()
+      .statusCode(204);
 
     // Test done
     logger.info("Test done");
@@ -716,18 +698,18 @@ public class PatronResourceImplTest {
   public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId404(TestContext context) {
     logger.info("Testing delete hold by with an unknown id");
 
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodItemId)
-        .pathParam("holdId", badHoldId)
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .pathParam("holdId", badHoldId)
+    .when()
       .delete(accountPath + itemPath + holdPath + holdIdPath)
-        .then()
-          .log().all()
-          .statusCode(404);
+    .then()
+      .log().all()
+      .statusCode(404);
 
     // Test done
     logger.info("Test done");
@@ -735,61 +717,25 @@ public class PatronResourceImplTest {
 
   @Test
   public final void testPostPatronAccountByIdInstanceByInstanceIdHold(TestContext context) {
-    logger.info("Testing creating a hold on an instance for the specified user (501)");
+    logger.info("Testing creating a hold on an instance for the specified user");
 
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", goodUserId)
-        .pathParam("instanceId", goodInstanceId)
-      .post(accountPath + instancePath + holdPath)
-        .then()
-          .log().all()
-          .statusCode(501);
+    final Hold hold = given()
+        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader))
+        .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
+        .and().body(readMockFile(mockDataFolder
+            + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
+      .when()
+        .post(accountPath + instancePath + holdPath)
+      .then()
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(201)
+      .extract()
+        .as(Hold.class);
 
-    // Test done
-    logger.info("Test done");
-  }
+    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"), Hold.class);
 
-  @Test
-  public final void testPutPatronAccountByIdInstanceByInstanceIdHoldByHoldId(TestContext context) {
-    logger.info("Testing edit hold (instance) for 501");
-
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", badUserId)
-        .pathParam("instanceId", badInstanceId)
-        .pathParam("holdId", "1745628c-f424-4b50-a116-e18be37cd599")
-      .put(accountPath + instancePath + holdPath + holdIdPath)
-        .then()
-          .log().all()
-          .statusCode(501);
-
-    // Test done
-    logger.info("Test done");
-  }
-
-  @Test
-  public final void testDeletePatronAccountByIdInstanceByInstanceIdHoldByHoldId(TestContext context) {
-    logger.info("Testing delete hold (instance) by id");
-
-    RestAssured
-      .given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", goodUserId)
-        .pathParam("instanceId", goodInstanceId)
-        .pathParam("holdId", goodHoldId)
-      .delete(accountPath + instancePath + holdPath + holdIdPath)
-        .then()
-          .log().all()
-          .statusCode(501);
+    context.assertEquals(expectedHold, hold);
 
     // Test done
     logger.info("Test done");
@@ -816,7 +762,7 @@ public class PatronResourceImplTest {
 
   private boolean verifyHold(JsonObject expectedHold, JsonObject actualHold, TestContext context) {
     if (expectedHold.getString("requestId").equals(actualHold.getString("requestId"))) {
-      context.assertEquals(expectedHold.getString("fulfillmentPreference"), actualHold.getString("fulfillmentPreference"));
+      context.assertEquals(expectedHold.getString("pickupLocationId"), actualHold.getString("pickupLocationId"));
       context.assertEquals(expectedHold.getString("status"), actualHold.getString("status"));
       context.assertEquals(expectedHold.getString("expirationDate") == null ? null : new DateTime(expectedHold.getString("expirationDate"), DateTimeZone.UTC),
           actualHold.getString("expirationDate") == null ? null : new DateTime(actualHold.getString("expirationDate"), DateTimeZone.UTC));

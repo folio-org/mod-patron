@@ -25,11 +25,6 @@
       "format": "date-time",
       "description": "The date when the request expires"
     },
-    "fulfillmentPreference": {
-      "type": "string",
-      "description": "The method of fulfillment",
-      "enum": ["Hold Shelf", "Delivery"]
-    },
     "status": {
       "type": "string",
       "description": "The status of the hold request",
@@ -40,6 +35,11 @@
         "Closed - Filled",
         "Closed - Cancelled"
       ]
+    },
+    "pickupLocationId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "The UUID of the pick up location"
     },
     "queueLength": {
       "type": "integer",
@@ -52,6 +52,6 @@
   },
   "required": [
     "requestDate",
-    "fulfillmentPreference"
+    "pickupLocationId"
   ]
 }

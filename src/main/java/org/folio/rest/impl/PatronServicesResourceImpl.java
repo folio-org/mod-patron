@@ -15,7 +15,6 @@ import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Charge;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Hold;
-import org.folio.rest.jaxrs.model.Hold.FulfillmentPreference;
 import org.folio.rest.jaxrs.model.Hold.Status;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loan;
@@ -39,6 +38,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+  private static final String JSON_FIELD_PICKUP_SERVICE_POINT_ID = "pickupServicePointId";
+  private static final String JSON_FIELD_REQUEST_DATE = "requestDate";
   private static final String JSON_FIELD_NAME = "name";
   private static final String JSON_FIELD_ITEM = "item";
   private static final String JSON_FIELD_TOTAL_RECORDS = "totalRecords";
@@ -48,6 +49,7 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String JSON_FIELD_USER_ID = "userId";
   private static final String JSON_FIELD_ITEM_ID = "itemId";
   private static final String JSON_FIELD_REQUEST_EXPIRATION_DATE = "requestExpirationDate";
+  private static final String JSON_VALUE_HOLD_SHELF = "Hold Shelf";
 
   @Validate
   @Override
@@ -151,10 +153,9 @@ public class PatronServicesResourceImpl implements Patron {
         .put(JSON_FIELD_ITEM_ID, itemId)
         .put("requesterId", id)
         .put("requestType", "Hold")
-        // We don't appear to be using this field at all... look into this when
-        // implementing title level holds or other mod-patron features.
-        .put("requestDate", new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-        .put("fulfilmentPreference", entity.getFulfillmentPreference().toString());
+        .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+        .put("fulfilmentPreference", JSON_VALUE_HOLD_SHELF)
+        .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId());
 
     if (entity.getExpirationDate() != null) {
       holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
@@ -172,7 +173,7 @@ public class PatronServicesResourceImpl implements Patron {
             httpClient.closeClient();
           })
           .exceptionally(throwable -> {
-            asyncResultHandler.handle(handleHoldPOSTError(throwable));
+            asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
             httpClient.closeClient();
             return null;
           });
@@ -195,8 +196,7 @@ public class PatronServicesResourceImpl implements Patron {
   public void deletePatronAccountItemHoldByIdAndItemIdAndHoldId(String id,
       String itemId, String holdId, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    // TODO: validation that the hold is for the specified user and the
-    // specified item.
+    // Consider validation to verify the hold is for the specified user and the specified item.
     final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
     try {
       httpClient.request(HttpMethod.DELETE, "/circulation/requests/" + holdId, okapiHeaders)
@@ -216,33 +216,41 @@ public class PatronServicesResourceImpl implements Patron {
   @Validate
   @Override
   public void postPatronAccountInstanceHoldByIdAndInstanceId(String id,
-      String instanceId, Map<String, String> okapiHeaders,
+      String instanceId, Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
       Context vertxContext) {
-    // TODO Implement once FOLIO can perform hold management on instances
-    asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond501()));
-  }
+    final JsonObject holdJSON = new JsonObject()
+        .put(JSON_FIELD_INSTANCE_ID, instanceId)
+        .put("requesterId", id)
+        .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+        .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId());
 
-  @Validate
-  @Override
-  public void putPatronAccountInstanceHoldByIdAndInstanceIdAndHoldId(
-      String id, String instanceId, String holdId,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
-      Context vertxContext) {
-    // TODO Implement once FOLIO can perform hold management on instances
-    asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountInstanceHoldByIdAndInstanceIdAndHoldIdResponse.respond501()));
-  }
+    if (entity.getExpirationDate() != null) {
+      holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
+          new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
+    }
 
-  @Validate
-  @Override
-  public void deletePatronAccountInstanceHoldByIdAndInstanceIdAndHoldId(
-      String id, String instanceId, String holdId,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
-      Context vertxContext) {
-    // TODO Implement once FOLIO can perform hold management on instances
-    asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountInstanceHoldByIdAndInstanceIdAndHoldIdResponse.respond501()));
+    final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+    try {
+      httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()),
+          "/circulation/requests/instances", okapiHeaders)
+          .thenApply(this::verifyAndExtractBody)
+          .thenAccept(body -> {
+            final Item item = getItem(body.getString(JSON_FIELD_ITEM_ID),
+                body.getJsonObject(JSON_FIELD_ITEM));
+            final Hold hold = getHold(body, item);
+            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
+            httpClient.closeClient();
+          })
+          .exceptionally(throwable -> {
+            asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
+            httpClient.closeClient();
+            return null;
+          });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
+      httpClient.closeClient();
+    }
   }
 
   private HttpClientInterface getHttpClient(Map<String, String> okapiHeaders) {
@@ -354,7 +362,8 @@ public class PatronServicesResourceImpl implements Patron {
         .withItem(item)
         .withExpirationDate(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE) == null ? null : new DateTime(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
         .withRequestId(holdJson.getString("id"))
-        .withFulfillmentPreference(FulfillmentPreference.fromValue(holdJson.getString("fulfilmentPreference")))
+        .withPickupLocationId(holdJson.getString(JSON_FIELD_PICKUP_SERVICE_POINT_ID))
+        .withRequestDate(new DateTime(holdJson.getString(JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
         .withStatus(Status.fromValue(holdJson.getString("status")));
   }
 
@@ -511,7 +520,7 @@ public class PatronServicesResourceImpl implements Patron {
     return result;
   }
 
-  private Future<javax.ws.rs.core.Response> handleHoldPOSTError(Throwable throwable) {
+  private Future<javax.ws.rs.core.Response> handleItemHoldPOSTError(Throwable throwable) {
     final Future<javax.ws.rs.core.Response> result;
 
     final Throwable t = throwable.getCause();
@@ -540,6 +549,40 @@ public class PatronServicesResourceImpl implements Patron {
       }
     } else {
       result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(throwable.getMessage()));
+    }
+
+    return result;
+  }
+
+  private Future<javax.ws.rs.core.Response> handleInstanceHoldPOSTError(Throwable throwable) {
+    final Future<javax.ws.rs.core.Response> result;
+
+    final Throwable t = throwable.getCause();
+    if (t instanceof HttpException) {
+      final int code = ((HttpException) t).getCode();
+      final String message = ((HttpException) t).getMessage();
+      switch (code) {
+      case 400:
+        // This means that we screwed up something in the request to another
+        // module. This API only takes a UUID, so a client side 400 is not
+        // possible here, only server side, which the client won't be able to
+        // do anything about.
+        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));
+        break;
+      case 401:
+        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond401WithTextPlain(message));
+        break;
+      case 403:
+        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond403WithTextPlain(message));
+        break;
+      case 404:
+        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond404WithTextPlain(message));
+        break;
+      default:
+        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));
+      }
+    } else {
+      result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;

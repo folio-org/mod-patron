@@ -34,7 +34,7 @@
         "author": "John Lennon; Paul McCartney"
       },
       "requestDate": "2018-06-02T08:16:30Z",
-      "fulfillmentPreference": "Hold Shelf",
+      "pickupLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
       "status": "Open - Not yet filled"
     }
   ],
