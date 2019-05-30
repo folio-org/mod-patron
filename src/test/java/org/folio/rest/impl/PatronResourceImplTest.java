@@ -1,19 +1,32 @@
 package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.http.ContentType.JSON;
+import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.utils.Utils.readMockFile;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.tools.PomReader;
+import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -26,17 +39,13 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 
-@RunWith(VertxUnitRunner.class)
+@ExtendWith(VertxExtension.class)
 public class PatronResourceImplTest {
-  private final Logger logger = LoggerFactory.getLogger(PatronResourceImplTest.class);
+  private final Logger logger = LogManager.getLogger();
 
-  private Vertx vertx;
   private String moduleName;
   private String moduleVersion;
   private String moduleId;
@@ -89,10 +98,13 @@ public class PatronResourceImplTest {
   private final String feeFineDamageBookId = "881c628b-e1c4-4711-b9d7-090af40f6a8f";
   private final String feeFineDamageEquipmentId = "ca295e87-223f-403c-9eee-a152c47bf67f";
 
-  @Before
-  public void setUp(TestContext context) throws Exception {
-    vertx = Vertx.vertx();
+  static {
+    System.setProperty("vertx.logger-delegate-factory-class-name",
+        "io.vertx.core.logging.Log4j2LogDelegateFactory");
+  }
 
+  @BeforeEach
+  public void setUp(Vertx vertx, VertxTestContext context) throws Exception {
     moduleName = PomReader.INSTANCE.getModuleName().replaceAll("_", "-");
     moduleVersion = PomReader.INSTANCE.getVersion();
     moduleId = moduleName + "-" + moduleVersion;
@@ -102,14 +114,13 @@ public class PatronResourceImplTest {
     conf.put("http.port", okapiPort);
 
     final DeploymentOptions opt = new DeploymentOptions().setConfig(conf);
-    vertx.deployVerticle(RestVerticle.class.getName(), opt, context.asyncAssertSuccess());
+    vertx.deployVerticle(RestVerticle.class.getName(), opt, context.completing());
     RestAssured.port = okapiPort;
     RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     logger.info("Patron Services Test Setup Done using port " + okapiPort);
 
     final String host = "localhost";
 
-    final Async async = context.async();
     final HttpServer server = vertx.createHttpServer();
     server.requestHandler(req -> {
       if (req.path().equals(String.format("/users/%s", goodUserId))) {
@@ -143,11 +154,19 @@ public class PatronResourceImplTest {
         }
       } else if (req.path().equals("/circulation/requests")) {
         if (req.method() == HttpMethod.POST) {
-          if (req.getHeader("x-okapi-bad-data") != null) {
+          final String badDataValue = req.getHeader("x-okapi-bad-data");
+          if (badDataValue != null) {
+            if (badDataValue.equals("java.lang.NullPointerException")) {
               req.response()
                 .setStatusCode(201)
                 .putHeader("content-type", "application/json")
-                .sendFile(mockDataFolder + "/holds_create_bad_data.json");
+                .end("{}");
+            } else {
+              req.response()
+                .setStatusCode(Integer.parseInt(badDataValue))
+                .putHeader("content-type", "text/plain")
+                .end(badDataValue);
+            }
           } else {
             req.response()
               .setStatusCode(201)
@@ -171,18 +190,48 @@ public class PatronResourceImplTest {
         }
       } else if (req.path().equals("/circulation/requests/instances")) {
         if (req.method() == HttpMethod.POST) {
-          req.response()
-            .setStatusCode(201)
-            .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/instance_holds_create.json"));
+          final String badDataValue = req.getHeader("x-okapi-bad-data");
+          if (badDataValue != null) {
+            if (badDataValue.equals("java.lang.NullPointerException")) {
+              req.response()
+                .setStatusCode(201)
+                .putHeader("content-type", "application/json")
+                .end("{}");
+            } else {
+              req.response()
+                .setStatusCode(Integer.parseInt(badDataValue))
+                .putHeader("content-type", "text/plain")
+                .end(badDataValue);
+            }
+          } else {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/instance_holds_create.json"));
+          }
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
       } else if (req.path().equals("/circulation/requests/" + goodHoldId)) {
         if (req.method() == HttpMethod.DELETE) {
-          req.response()
-            .setStatusCode(204)
-            .end();
+          final String badDataValue = req.getHeader("x-okapi-bad-data");
+          if (badDataValue != null) {
+            if (badDataValue.equals("java.lang.NullPointerException")) {
+              req.response()
+                .setStatusCode(500)
+                .putHeader("content-type", "application/json")
+                .end("java.lang.NullPointerException");
+            } else {
+              req.response()
+                .setStatusCode(Integer.parseInt(badDataValue))
+                .putHeader("content-type", "text/plain")
+                .end(badDataValue);
+            }
+          } else {
+            req.response()
+              .setStatusCode(204)
+              .end();
+          }
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
@@ -330,9 +379,27 @@ public class PatronResourceImplTest {
             .sendFile(mockDataFolder + "/renew_bad_user_id.json");
         } else if (req.getHeader("x-okapi-bad-item-id") != null) {
           req.response()
-          .setStatusCode(422)
-          .putHeader("content-type", "application/json")
-          .sendFile(mockDataFolder + "/renew_bad_item_id.json");
+            .setStatusCode(422)
+            .putHeader("content-type", "application/json")
+            .sendFile(mockDataFolder + "/renew_bad_item_id.json");
+        } else if (req.getHeader("x-okapi-bad-data") != null) {
+          final String badDataValue = req.getHeader("x-okapi-bad-data");
+          if (badDataValue.equals("java.lang.NullPointerException")) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end("{}");
+          } else if (badDataValue.equals("422")) {
+            req.response()
+              .setStatusCode(422)
+              .putHeader("content-type", "application/json")
+              .end("{\"errors\":[{\"message\":\"error\"}]}");
+          } else {
+            req.response()
+              .setStatusCode(Integer.parseInt(badDataValue))
+              .putHeader("content-type", "text/plain")
+              .end(badDataValue);
+          }
         } else {
           req.response()
             .setStatusCode(201)
@@ -344,20 +411,17 @@ public class PatronResourceImplTest {
       }
     });
 
-    server.listen(serverPort, host, ar -> {
-      context.assertTrue(ar.succeeded());
-      async.complete();
-    });
+    server.listen(serverPort, host, context.completing());
   }
 
-  @After
-  public void tearDown(TestContext context) {
+  @AfterEach
+  public void tearDown(Vertx vertx, VertxTestContext context) {
     logger.info("Patron Services Testing Complete");
-    vertx.close(context.asyncAssertSuccess());
+    vertx.close(context.completing());
   }
 
   @Test
-  public final void testGetPatronAccountById(TestContext context) {
+  public final void testGetPatronAccountById() {
     logger.info("Testing for successful patron services account retrieval by id");
 
     final Response r = given()
@@ -381,17 +445,17 @@ public class PatronResourceImplTest {
     final JsonObject json = new JsonObject(body);
     final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testGetPatronAccountById.json"));
 
-    context.assertEquals(3, json.getInteger("totalLoans"));
-    context.assertEquals(3, json.getJsonArray("loans").size());
+    assertEquals(3, json.getInteger("totalLoans"));
+    assertEquals(3, json.getJsonArray("loans").size());
 
-    context.assertEquals(3, json.getInteger("totalHolds"));
-    context.assertEquals(3, json.getJsonArray("holds").size());
+    assertEquals(3, json.getInteger("totalHolds"));
+    assertEquals(3, json.getJsonArray("holds").size());
 
     JsonObject money = json.getJsonObject("totalCharges");
-    context.assertEquals(155.0, money.getDouble("amount"));
-    context.assertEquals("USD", money.getString("isoCurrencyCode"));
-    context.assertEquals(4, json.getInteger("totalChargesCount"));
-    context.assertEquals(4, json.getJsonArray("charges").size());
+    assertEquals(155.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(4, json.getInteger("totalChargesCount"));
+    assertEquals(4, json.getJsonArray("charges").size());
 
     for (int i = 0; i < 4; i++) {
       final JsonObject jo = json.getJsonArray("charges").getJsonObject(i);
@@ -399,14 +463,14 @@ public class PatronResourceImplTest {
       boolean found = false;
       for (int j = 0; j < 4; j++) {
         final JsonObject expectedJO = expectedJson.getJsonArray("charges").getJsonObject(j);
-        if (verifyCharge(expectedJO, jo, context)) {
+        if (verifyCharge(expectedJO, jo)) {
           found = true;
           break;
         }
       }
 
       if (found == false) {
-        context.fail("Unexpected charge: " + jo.toString());
+        fail("Unexpected charge: " + jo.toString());
       }
     }
 
@@ -416,14 +480,14 @@ public class PatronResourceImplTest {
       boolean found = false;
       for (int j = 0; j < 3; j++) {
         final JsonObject expectedJO = expectedJson.getJsonArray("holds").getJsonObject(j);
-        if (verifyHold(expectedJO, jo, context)) {
+        if (verifyHold(expectedJO, jo)) {
           found = true;
           break;
         }
       }
 
       if (found == false) {
-        context.fail("Unexpected id: " + jo.getString("requestId"));
+        fail("Unexpected id: " + jo.getString("requestId"));
       }
     }
 
@@ -433,14 +497,14 @@ public class PatronResourceImplTest {
       boolean found = false;
       for (int j = 0; j < 3; j++) {
         final JsonObject expectedJO = expectedJson.getJsonArray("loans").getJsonObject(j);
-        if (verifyLoan(expectedJO, jo, context)) {
+        if (verifyLoan(expectedJO, jo)) {
           found = true;
           break;
         }
       }
 
       if (found == false) {
-        context.fail("Unexpected loan: " + jo.toString());
+        fail("Unexpected loan: " + jo.toString());
       }
     }
 
@@ -449,7 +513,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testGetPatronAccountByIdNoLists(TestContext context) {
+  public final void testGetPatronAccountByIdNoLists() {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
 
     final Response r = given()
@@ -468,24 +532,24 @@ public class PatronResourceImplTest {
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
 
-    context.assertEquals(3, json.getInteger("totalLoans"));
-    context.assertEquals(0, json.getJsonArray("loans").size());
+    assertEquals(3, json.getInteger("totalLoans"));
+    assertEquals(0, json.getJsonArray("loans").size());
 
-    context.assertEquals(3, json.getInteger("totalHolds"));
-    context.assertEquals(0, json.getJsonArray("holds").size());
+    assertEquals(3, json.getInteger("totalHolds"));
+    assertEquals(0, json.getJsonArray("holds").size());
 
-    JsonObject money = json.getJsonObject("totalCharges");
-    context.assertEquals(155.0, money.getDouble("amount"));
-    context.assertEquals("USD", money.getString("isoCurrencyCode"));
-    context.assertEquals(4, json.getInteger("totalChargesCount"));
-    context.assertEquals(0, json.getJsonArray("charges").size());
+    final JsonObject money = json.getJsonObject("totalCharges");
+    assertEquals(155.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(4, json.getInteger("totalChargesCount"));
+    assertEquals(0, json.getJsonArray("charges").size());
 
     // Test done
     logger.info("Test done");
   }
 
   @Test
-  public final void testGetPatronAccountById400UserNotActive(TestContext context) {
+  public final void testGetPatronAccountById400UserNotActive() {
     logger.info("Testing for 400 due to patron account not active");
 
     given()
@@ -505,7 +569,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testGetPatronAccountById404(TestContext context) {
+  public final void testGetPatronAccountById404() {
     logger.info("Testing for 404 due to unknown user id");
 
     given()
@@ -525,7 +589,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdRenew(TestContext context) {
+  public final void testPostPatronAccountByIdItemByItemIdRenew() {
     logger.info("Testing renew for 201");
 
     final Response r = given()
@@ -546,14 +610,14 @@ public class PatronResourceImplTest {
     final JsonObject json = new JsonObject(body);
     final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdRenew.json"));
 
-    verifyLoan(expectedJson, json, context);
+    verifyLoan(expectedJson, json);
 
     // Test done
     logger.info("Test done");
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdRenew422BadUserId(TestContext context) {
+  public final void testPostPatronAccountByIdItemByItemIdRenew422BadUserId() {
     logger.info("Testing renew for 422 due to a bad user id");
 
     final Response r = given()
@@ -574,21 +638,21 @@ public class PatronResourceImplTest {
     final String body = r.getBody().asString();
     final Errors errors = Json.decodeValue(body, Errors.class);
 
-    context.assertNotNull(errors);
-    context.assertNotNull(errors.getErrors());
-    context.assertEquals(1, errors.getErrors().size());
-    context.assertEquals("Cannot renew item checked out to different user", errors.getErrors().get(0).getMessage());
-    context.assertNotNull(errors.getErrors().get(0).getParameters());
-    context.assertEquals(1, errors.getErrors().get(0).getParameters().size());
-    context.assertEquals("userId", errors.getErrors().get(0).getParameters().get(0).getKey());
-    context.assertEquals(badUserId, errors.getErrors().get(0).getParameters().get(0).getValue());
+    assertNotNull(errors);
+    assertNotNull(errors.getErrors());
+    assertEquals(1, errors.getErrors().size());
+    assertEquals("Cannot renew item checked out to different user", errors.getErrors().get(0).getMessage());
+    assertNotNull(errors.getErrors().get(0).getParameters());
+    assertEquals(1, errors.getErrors().get(0).getParameters().size());
+    assertEquals("userId", errors.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals(badUserId, errors.getErrors().get(0).getParameters().get(0).getValue());
 
     // Test done
     logger.info("Test done");
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdRenew422BadItemId(TestContext context) {
+  public final void testPostPatronAccountByIdItemByItemIdRenew422BadItemId() {
     logger.info("Testing renew for 422 due to a bad item id");
 
     final Response r = given()
@@ -609,21 +673,21 @@ public class PatronResourceImplTest {
     final String body = r.getBody().asString();
     final Errors errors = Json.decodeValue(body, Errors.class);
 
-    context.assertNotNull(errors);
-    context.assertNotNull(errors.getErrors());
-    context.assertEquals(1, errors.getErrors().size());
-    context.assertEquals("No item with ID " + badItemId + " exists", errors.getErrors().get(0).getMessage());
-    context.assertNotNull(errors.getErrors().get(0).getParameters());
-    context.assertEquals(1, errors.getErrors().get(0).getParameters().size());
-    context.assertEquals("itemId", errors.getErrors().get(0).getParameters().get(0).getKey());
-    context.assertEquals(badItemId, errors.getErrors().get(0).getParameters().get(0).getValue());
+    assertNotNull(errors);
+    assertNotNull(errors.getErrors());
+    assertEquals(1, errors.getErrors().size());
+    assertEquals("No item with ID " + badItemId + " exists", errors.getErrors().get(0).getMessage());
+    assertNotNull(errors.getErrors().get(0).getParameters());
+    assertEquals(1, errors.getErrors().get(0).getParameters().size());
+    assertEquals("itemId", errors.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals(badItemId, errors.getErrors().get(0).getParameters().get(0).getValue());
 
     // Test done
     logger.info("Test done");
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdHold(TestContext context) {
+  public final void testPostPatronAccountByIdItemByItemIdHold() {
     logger.info("Testing creating a hold on an item for the specified user");
 
     final Response r = given()
@@ -646,14 +710,14 @@ public class PatronResourceImplTest {
     final JsonObject json = new JsonObject(body);
     final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHold.json"));
 
-    verifyHold(expectedJson, json, context);
+    verifyHold(expectedJson, json);
 
     // Test done
     logger.info("Test done");
   }
 
   @Test
-  public final void testPutPatronAccountByIdItemByItemIdHoldByHoldId(TestContext context) {
+  public final void testPutPatronAccountByIdItemByItemIdHoldByHoldId() {
     logger.info("Testing edit hold for 501");
 
     given()
@@ -674,7 +738,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId(TestContext context) {
+  public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId() {
     logger.info("Testing delete hold by id");
 
     given()
@@ -695,7 +759,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId404(TestContext context) {
+  public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId404() {
     logger.info("Testing delete hold by with an unknown id");
 
     given()
@@ -716,7 +780,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testPostPatronAccountByIdInstanceByInstanceIdHold(TestContext context) {
+  public final void testPostPatronAccountByIdInstanceByInstanceIdHold() {
     logger.info("Testing creating a hold on an instance for the specified user");
 
     final Hold hold = given()
@@ -735,61 +799,210 @@ public class PatronResourceImplTest {
 
     final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"), Hold.class);
 
-    context.assertEquals(expectedHold, hold);
+    assertEquals(expectedHold, hold);
 
     // Test done
     logger.info("Test done");
   }
 
-  private boolean verifyCharge(JsonObject expectedCharge, JsonObject actualCharge, TestContext context) {
+  @ParameterizedTest
+  @MethodSource("instanceHoldsFailureCodes")
+  public final void testPostPatronAccountByIdInstanceByInstanceIdHoldWithErrors(
+      String codeString, int expectedCode) {
+    logger.info("Testing creating a hold on an instance for the specified user with a {} error",
+        codeString);
+
+    given()
+      .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
+          new Header("x-okapi-bad-data", codeString)))
+      .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
+      .and().body(readMockFile(mockDataFolder
+          + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
+    .when()
+      .post(accountPath + instancePath + holdPath)
+    .then()
+      .log().all()
+      .and().assertThat().statusCode(expectedCode)
+      .and().assertThat().contentType(ContentType.TEXT)
+      .and().assertThat().body(Matchers.equalTo(codeString));
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @ParameterizedTest
+  @MethodSource("itemHoldsFailureCodes")
+  public final void testPostPatronAccountByIdItemByItemIdHoldWithErrors(
+      String codeString, int expectedCode) {
+    logger.info("Testing creating a hold on an item for the specified user with a {} error",
+        codeString);
+
+    given()
+      .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
+          new Header("x-okapi-bad-data", codeString)))
+      .and().pathParams("accountId", goodUserId, "itemId", goodItemId)
+      .and().body(readMockFile(mockDataFolder
+          + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
+    .when()
+      .post(accountPath + itemPath + holdPath)
+    .then()
+      .log().all()
+      .and().assertThat().statusCode(expectedCode)
+      .and().assertThat().contentType(ContentType.TEXT)
+      .and().assertThat().body(Matchers.equalTo(codeString));
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @ParameterizedTest
+  @MethodSource("renewFailureCodes")
+  public final void testPostPatronAccountByIdItemByItemIdRenewWithErrors(
+      String codeString, int expectedCode, String expectedMessage,
+      ContentType expectedContentType) {
+    logger.info("Testing renew for with a {} error", codeString);
+
+    given()
+      .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
+          new Header("x-okapi-bad-data", codeString)))
+      .and().pathParams("accountId", goodUserId, "itemId", goodItemId)
+    .when()
+      .post(accountPath + itemPath + renewPath)
+    .then()
+      .log().all()
+      .and().assertThat().statusCode(expectedCode)
+      .and().assertThat().contentType(expectedContentType)
+      .and().assertThat().body(Matchers.equalTo(expectedMessage));
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @ParameterizedTest
+  @MethodSource("itemHoldsDeleteFailureCodes")
+  public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldIdWithErrors(
+      String codeString, int expectedCode) {
+    logger.info("Testing deleting a hold on an item for the specified user with a {} error",
+        codeString);
+
+    given()
+      .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
+          new Header("x-okapi-bad-data", codeString)))
+      .and().pathParams("accountId", goodUserId, "itemId", goodItemId, "holdId", goodHoldId)
+    .when()
+      .delete(accountPath + itemPath + holdPath + holdIdPath)
+    .then()
+      .log().all()
+      .and().assertThat().statusCode(expectedCode)
+      .and().assertThat().contentType(ContentType.TEXT)
+      .and().assertThat().body(Matchers.equalTo(codeString));
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  static Stream<Arguments> instanceHoldsFailureCodes() {
+    return Stream.of(
+        // Even though we receive a 400, we need to return a 500 since there is nothing the client
+        // can do to correct the 400. We'd have to correct it in the code.
+        Arguments.of("400", 500),
+        Arguments.of("401", 401),
+        Arguments.of("403", 403),
+        Arguments.of("404", 404),
+        Arguments.of("500", 500),
+        Arguments.of("java.lang.NullPointerException", 500)
+      );
+  }
+
+  static Stream<Arguments> itemHoldsFailureCodes() {
+    return Stream.of(
+        // Even though we receive a 400, we need to return a 500 since there is nothing the client
+        // can do to correct the 400. We'd have to correct it in the code.
+        Arguments.of("400", 500),
+        Arguments.of("401", 401),
+        Arguments.of("403", 403),
+        Arguments.of("404", 404),
+        Arguments.of("500", 500),
+        Arguments.of("java.lang.NullPointerException", 500)
+      );
+  }
+
+  static Stream<Arguments> renewFailureCodes() {
+    return Stream.of(
+        // Even though we receive a 400, we need to return a 500 since there is nothing the client
+        // can do to correct the 400. We'd have to correct it in the code.
+        Arguments.of("400", 500, "400", TEXT),
+        Arguments.of("401", 401, "401", TEXT),
+        Arguments.of("403", 403, "403", TEXT),
+        Arguments.of("404", 404, "404", TEXT),
+        Arguments.of("422", 422, new JsonObject(
+            "{\"errors\":[{\"message\":\"error\", \"parameters\":[]}]}") .encodePrettily(), JSON),
+        Arguments.of("500", 500, "500", TEXT),
+        Arguments.of("java.lang.NullPointerException", 500, "java.lang.NullPointerException", TEXT)
+      );
+  }
+
+  static Stream<Arguments> itemHoldsDeleteFailureCodes() {
+    return Stream.of(
+        // Even though we receive a 400, we need to return a 500 since there is nothing the client
+        // can do to correct the 400. We'd have to correct it in the code.
+        Arguments.of("400", 500),
+        Arguments.of("401", 401),
+        Arguments.of("403", 403),
+        Arguments.of("404", 404),
+        Arguments.of("500", 500)
+      );
+  }
+
+  private boolean verifyCharge(JsonObject expectedCharge, JsonObject actualCharge) {
     // Bad check, but each date is unique in the mock data.
     if (expectedCharge.getString("accrualDate").equals(actualCharge.getString("accrualDate"))) {
-      context.assertEquals(expectedCharge.getString("state"), actualCharge.getString("state"));
-      context.assertEquals(expectedCharge.getString("reason"), actualCharge.getString("reason"));
+      assertEquals(expectedCharge.getString("state"), actualCharge.getString("state"));
+      assertEquals(expectedCharge.getString("reason"), actualCharge.getString("reason"));
 
-      verifyAmount(expectedCharge.getJsonObject("chargeAmount"), actualCharge.getJsonObject("chargeAmount"), context);
+      verifyAmount(expectedCharge.getJsonObject("chargeAmount"), actualCharge.getJsonObject("chargeAmount"));
 
-      return verifyItem(expectedCharge.getJsonObject("item"), actualCharge.getJsonObject("item"), context);
+      return verifyItem(expectedCharge.getJsonObject("item"), actualCharge.getJsonObject("item"));
     }
 
     return false;
   }
 
-  private void verifyAmount(JsonObject expectedAmount, JsonObject actualAmount, TestContext context) {
-    context.assertEquals(expectedAmount.getDouble("amount"), actualAmount.getDouble("amount"));
-    context.assertEquals(expectedAmount.getString("isoCurrencyCode"), actualAmount.getString("isoCurrencyCode"));
+  private void verifyAmount(JsonObject expectedAmount, JsonObject actualAmount) {
+    assertEquals(expectedAmount.getDouble("amount"), actualAmount.getDouble("amount"));
+    assertEquals(expectedAmount.getString("isoCurrencyCode"), actualAmount.getString("isoCurrencyCode"));
   }
 
-  private boolean verifyHold(JsonObject expectedHold, JsonObject actualHold, TestContext context) {
+  private boolean verifyHold(JsonObject expectedHold, JsonObject actualHold) {
     if (expectedHold.getString("requestId").equals(actualHold.getString("requestId"))) {
-      context.assertEquals(expectedHold.getString("pickupLocationId"), actualHold.getString("pickupLocationId"));
-      context.assertEquals(expectedHold.getString("status"), actualHold.getString("status"));
-      context.assertEquals(expectedHold.getString("expirationDate") == null ? null : new DateTime(expectedHold.getString("expirationDate"), DateTimeZone.UTC),
+      assertEquals(expectedHold.getString("pickupLocationId"), actualHold.getString("pickupLocationId"));
+      assertEquals(expectedHold.getString("status"), actualHold.getString("status"));
+      assertEquals(expectedHold.getString("expirationDate") == null ? null : new DateTime(expectedHold.getString("expirationDate"), DateTimeZone.UTC),
           actualHold.getString("expirationDate") == null ? null : new DateTime(actualHold.getString("expirationDate"), DateTimeZone.UTC));
 
-      return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"), context);
+      return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"));
     }
 
     return false;
   }
 
-  private boolean verifyLoan(JsonObject expectedLoan, JsonObject actualLoan, TestContext context) {
+  private boolean verifyLoan(JsonObject expectedLoan, JsonObject actualLoan) {
     if (expectedLoan.getString("id").equals(actualLoan.getString("id"))) {
-      context.assertEquals(expectedLoan.getString("loanDate"), actualLoan.getString("loanDate"));
-      context.assertEquals(expectedLoan.getString("dueDate"), actualLoan.getString("dueDate"));
-      context.assertEquals(expectedLoan.getBoolean("overdue"), actualLoan.getBoolean("overdue"));
+      assertEquals(expectedLoan.getString("loanDate"), actualLoan.getString("loanDate"));
+      assertEquals(expectedLoan.getString("dueDate"), actualLoan.getString("dueDate"));
+      assertEquals(expectedLoan.getBoolean("overdue"), actualLoan.getBoolean("overdue"));
 
-      return verifyItem(expectedLoan.getJsonObject("item"), actualLoan.getJsonObject("item"), context);
+      return verifyItem(expectedLoan.getJsonObject("item"), actualLoan.getJsonObject("item"));
     }
 
     return false;
   }
 
-  private boolean verifyItem(JsonObject expectedItem, JsonObject actualItem, TestContext context) {
+  private boolean verifyItem(JsonObject expectedItem, JsonObject actualItem) {
     if (expectedItem.getString("itemId").equals(actualItem.getString("itemId"))) {
-      context.assertEquals(expectedItem.getString("instanceId"), actualItem.getString("instanceId"));
-      context.assertEquals(expectedItem.getString("title"), actualItem.getString("title"));
-      context.assertEquals(expectedItem.getString("author"), actualItem.getString("author"));
+      assertEquals(expectedItem.getString("instanceId"), actualItem.getString("instanceId"));
+      assertEquals(expectedItem.getString("title"), actualItem.getString("title"));
+      assertEquals(expectedItem.getString("author"), actualItem.getString("author"));
 
       return true;
     }

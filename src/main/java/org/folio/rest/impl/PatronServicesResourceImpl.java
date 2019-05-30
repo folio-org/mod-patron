@@ -447,7 +447,8 @@ public class PatronServicesResourceImpl implements Patron {
 
   private JsonObject verifyAndExtractBody(Response response) {
     if (!Response.isSuccess(response.getCode())) {
-      throw new CompletionException(new HttpException(response.getCode(), response.getError().toString()));
+      throw new CompletionException(new HttpException(response.getCode(),
+          response.getError().getString("errorMessage")));
     }
 
     return response.getBody();
@@ -613,8 +614,7 @@ public class PatronServicesResourceImpl implements Patron {
         result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond404WithTextPlain(message));
         break;
       case 422:
-        final JsonObject response = new JsonObject(message);
-        final Errors errors = Json.decodeValue(response.getString("errorMessage"), Errors.class);
+        final Errors errors = Json.decodeValue(message, Errors.class);
         result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond422WithApplicationJson(errors));
         break;
       default:

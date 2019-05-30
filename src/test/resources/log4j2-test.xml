@@ -6,7 +6,7 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Root level="${sys:loglevel:-info}">
+    <Root level="${sys:loglevel:-debug}">
       <AppenderRef ref="STDOUT"/>
     </Root>
   </Loggers>
