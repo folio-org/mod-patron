@@ -39,6 +39,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
@@ -113,8 +114,12 @@ public class PatronResourceImplTest {
     final JsonObject conf = new JsonObject();
     conf.put("http.port", okapiPort);
 
+    final Checkpoint verticleStarted = context.checkpoint(1);
+    final Checkpoint mockOkapiStarted = context.checkpoint(1);
+
     final DeploymentOptions opt = new DeploymentOptions().setConfig(conf);
-    vertx.deployVerticle(RestVerticle.class.getName(), opt, context.completing());
+    vertx.deployVerticle(RestVerticle.class.getName(), opt,
+        context.succeeding(id -> verticleStarted.flag()));
     RestAssured.port = okapiPort;
     RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     logger.info("Patron Services Test Setup Done using port " + okapiPort);
@@ -411,7 +416,7 @@ public class PatronResourceImplTest {
       }
     });
 
-    server.listen(serverPort, host, context.completing());
+    server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
   }
 
   @AfterEach
