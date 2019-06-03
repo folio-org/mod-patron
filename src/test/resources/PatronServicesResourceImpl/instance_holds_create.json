@@ -7,6 +7,7 @@
   "requestExpirationDate": "3000-01-30T08:16:30Z",
   "fulfilmentPreference": "Hold Shelf",
   "status": "Open - Not yet filled",
+  "position": 1,
   "item" :{
     "title": "Something's Got a Hold on Me",
     "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",

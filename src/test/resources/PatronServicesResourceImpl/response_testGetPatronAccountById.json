@@ -78,6 +78,7 @@
                 "title": "I Want to Hold Your Hand",
                 "author": "John Lennon; Paul McCartney"
             },
+            "queuePosition": 1,
             "fulfillmentPreference": "Hold Shelf",
             "status": "Open - Not yet filled"
         },
@@ -89,6 +90,7 @@
                 "title": "Hold On",
                 "author": "Jon Anderson; Trevor Rabin; Chris Squire"
             },
+            "queuePosition": 3,
             "fulfillmentPreference": "Hold Shelf",
             "status": "Open - Awaiting pickup"
         },
@@ -100,6 +102,7 @@
                 "title": "Hold On, I'm Comin'",
                 "author": "Isaac Hayes; David Porter"
             },
+            "queuePosition": 5,
             "expirationDate": "2020-01-31T15:22:12Z",
             "fulfillmentPreference": "Hold Shelf",
             "status": "Open - Not yet filled"

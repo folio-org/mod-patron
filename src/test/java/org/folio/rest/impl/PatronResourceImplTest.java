@@ -179,12 +179,12 @@ public class PatronResourceImplTest {
               .end(readMockFile(mockDataFolder + "/holds_create.json"));
           }
         } else {
-          if (req.query().equals(String.format("limit=%d&query=%%28requesterId%%3D%%3D%s%%20and%%20requestType%%3D%%3DHold%%20and%%20status%%3D%%3DOpen%%2A%%29", Integer.MAX_VALUE, goodUserId))) {
+          if (req.query().equals(String.format("limit=%d&query=%%28requesterId%%3D%%3D%s%%20and%%20status%%3D%%3DOpen%%2A%%29", Integer.MAX_VALUE, goodUserId))) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/holds_all.json"));
-          } else if (req.query().equals(String.format("limit=%d&query=%%28requesterId%%3D%%3D%s%%20and%%20requestType%%3D%%3DHold%%20and%%20status%%3D%%3DOpen%%2A%%29", 1, goodUserId))) {
+          } else if (req.query().equals(String.format("limit=%d&query=%%28requesterId%%3D%%3D%s%%20and%%20status%%3D%%3DOpen%%2A%%29", 1, goodUserId))) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
@@ -984,7 +984,8 @@ public class PatronResourceImplTest {
       assertEquals(expectedHold.getString("status"), actualHold.getString("status"));
       assertEquals(expectedHold.getString("expirationDate") == null ? null : new DateTime(expectedHold.getString("expirationDate"), DateTimeZone.UTC),
           actualHold.getString("expirationDate") == null ? null : new DateTime(actualHold.getString("expirationDate"), DateTimeZone.UTC));
-
+      assertEquals(expectedHold.getInteger("requestPosition"),
+          actualHold.getInteger("requestPosition"));
       return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"));
     }
 

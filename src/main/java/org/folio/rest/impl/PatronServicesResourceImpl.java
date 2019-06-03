@@ -49,6 +49,7 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String JSON_FIELD_USER_ID = "userId";
   private static final String JSON_FIELD_ITEM_ID = "itemId";
   private static final String JSON_FIELD_REQUEST_EXPIRATION_DATE = "requestExpirationDate";
+  private static final String JSON_FIELD_POSITION = "position";
   private static final String JSON_VALUE_HOLD_SHELF = "Hold Shelf";
 
   @Validate
@@ -74,7 +75,7 @@ public class PatronServicesResourceImpl implements Patron {
                 .thenApply(this::verifyAndExtractBody)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = httpClient.request("/circulation/requests?limit=" + getLimit(includeHolds) + "&query=%28requesterId%3D%3D" + id + "%20and%20requestType%3D%3DHold%20and%20status%3D%3DOpen%2A%29", okapiHeaders)
+            final CompletableFuture<Account> cf2 = httpClient.request("/circulation/requests?limit=" + getLimit(includeHolds) + "&query=%28requesterId%3D%3D" + id + "%20and%20status%3D%3DOpen%2A%29", okapiHeaders)
                 .thenApply(this::verifyAndExtractBody)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
@@ -364,6 +365,7 @@ public class PatronServicesResourceImpl implements Patron {
         .withRequestId(holdJson.getString("id"))
         .withPickupLocationId(holdJson.getString(JSON_FIELD_PICKUP_SERVICE_POINT_ID))
         .withRequestDate(new DateTime(holdJson.getString(JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
+        .withQueuePosition(holdJson.getInteger(JSON_FIELD_POSITION))
         .withStatus(Status.fromValue(holdJson.getString("status")));
   }
 
