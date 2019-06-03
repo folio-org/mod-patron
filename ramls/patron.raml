@@ -2,7 +2,7 @@
 title: Patron Services
 baseUri: https://github.com/folio-org/mod-patron
 protocols: [ HTTPS ]
-version: v2.0
+version: v3.0
 
 documentation:
   - title: Patron Services
@@ -240,26 +240,44 @@ traits:
             displayName: Hold Management
             description: Services that provide hold management
             post:
+              description: |
+                Creates a hold request on an existing item by instance ID for the user
               is: [validate]
-              description: Not implemented
+              body:
+                application/json:
+                  schema: hold
+                  example: !include examples/hold.json
               responses:
-                501:
-                  description: Not implemented
-            /{holdId}:
-              displayName: Hold Management By Id
-              description: Services that provide hold management by Id
-              uriParameters:
-                holdId:
-                  description: The UUID of a FOLIO hold request
-                  type: string
-                  pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
-              put:
-                description: Not implemented
-                responses:
-                  501:
-                    description: Not implemented
-              delete:
-                description: Not implemented
-                responses:
-                  501:
-                    description: Not implemented
+                201:
+                  description: |
+                    Returns data for a new hold request on the selected item
+                  body:
+                    application/json:
+                      schema: hold
+                      example: !include examples/hold.json
+                400:
+                  description: Bad request
+                  body:
+                    text/plain:
+                      example: unable to process request -- constraint violation
+                401:
+                  description: Not authorized to perform requested action
+                  body:
+                    text/plain:
+                      example: unable to create hold -- unauthorized
+                404:
+                  description: Instance with a given ID not found
+                  body:
+                    text/plain:
+                      example: item not found
+                403:
+                  description: Access Denied
+                  body:
+                    text/plain:
+                      example: Access Denied
+                500:
+                  description: |
+                    Internal server error, e.g. due to misconfiguration
+                  body:
+                    text/plain:
+                      example: internal server error, contact administrator

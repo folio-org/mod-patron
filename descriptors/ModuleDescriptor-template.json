@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -39,6 +39,14 @@
           ]
         },
         {
+          "methods": ["POST"],
+          "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/hold",
+          "permissionsRequired": ["patron.hold.instance.item.post"],
+          "modulePermissions": [
+            "circulation.requests.instances.item.post"
+          ]
+        },
+        {
           "methods": ["PUT"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
           "permissionsRequired": ["patron.hold.item.put"],
@@ -64,7 +72,7 @@
     },
     {
       "id": "circulation",
-      "version": "7.0"
+      "version": "7.6"
     },
     {
       "id": "feesfines",
@@ -96,6 +104,11 @@
       "description": "Creates a hold on the specified item for this patron"
     },
     {
+      "permissionName": "patron.hold.instance.item.post",
+      "displayName": "patron - create an instance level hold",
+      "description": "Creates a hold on an item from the specified instance for this patron"
+    },
+    {
       "permissionName": "patron.hold.item.put",
       "displayName": "patron - update a hold",
       "description": "Updates the specified hold"
@@ -113,6 +126,7 @@
         "patron.account.item.get",
         "patron.renew.item.post",
         "patron.hold.item.post",
+        "patron.hold.instance.item.post",
         "patron.hold.item.put",
         "patron.hold.item.delete"
       ]

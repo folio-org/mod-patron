@@ -4,8 +4,8 @@
   "itemId": "32e5757d-6566-466e-b69d-994eb33d2b62",
   "requestType": "Hold",
   "requestDate": "2018-05-30T08:01:30Z",
-  "requestExpirationDate": "3000-01-30T08:01:30Z",
-  "fulfilmentPreference": "Trash Can",
+  "requestExpirationDate": "3000-01-30T08:16:30Z",
+  "fulfilmentPreference": "Hold Shelf",
   "status": "Open - Not yet filled",
   "item" :{
     "title": "Something's Got a Hold on Me",
@@ -15,5 +15,6 @@
       {"name": "Leroy Kirkland"},
       {"name": "Pearl Woods"}
     ]
-  }
+  },
+  "pickupServicePointId": "963396d7-c96f-4bb1-a24c-42e868a8823d"
 }

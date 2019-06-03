@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-patron</artifactId>
-  <version>2.0.1-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <name>Patron Services</name>
   <description>Discovery service initiated patron services for FOLIO</description>
   <inceptionYear>2018</inceptionYear>
@@ -77,19 +77,36 @@
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
+      <artifactId>domain-models-api-aspects</artifactId>
+      <version>${raml-module-builder.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
       <version>${raml-module-builder.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <version>4.4.6</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.26</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
     </dependency>
     <!-- test dependencies -->
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-unit</artifactId>
-      <version>3.5.4</version>
+      <artifactId>vertx-junit5</artifactId>
+      <version>3.7.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -99,9 +116,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -181,6 +197,14 @@
                   <key>raml_files</key>
                   <value>${ramlfiles_path}</value>
                 </systemProperty>
+                <systemProperty>
+                  <key>jsonschema2pojo.config.includeToString</key>
+                  <value>true</value>
+                </systemProperty>
+                <systemProperty>
+                  <key>jsonschema2pojo.config.includeHashcodeAndEquals</key>
+                  <value>true</value>
+                </systemProperty>
               </systemProperties>
             </configuration>
           </execution>
@@ -211,11 +235,6 @@
           <verbose>true</verbose>
           <showWeaveInfo>false</showWeaveInfo>
           <complianceLevel>1.8</complianceLevel>
-          <includes>
-            <include>**/impl/*.java</include>
-            <include>**/*.aj</include>
-          </includes>
-          <aspectDirectory>src/main/java/org/folio/rest/annotations</aspectDirectory>
           <XaddSerialVersionUID>true</XaddSerialVersionUID>
           <showWeaveInfo>true</showWeaveInfo>
           <aspectLibraries>
@@ -368,8 +387,8 @@
             <configuration>
               <properties>
                 <property>
-                  <name>log4j.configuration</name>
-                  <value>${project.baseUri}src/main/resources/log4j.properties</value>
+                  <name>log4j.configurationFile</name>
+                  <value>${project.baseUri}src/test/resources/log4j2-test.xml</value>
                 </property>
               </properties>
             </configuration>
@@ -396,7 +415,15 @@
                   </manifestEntries>
                 </transformer>
               </transformers>
-              <artifactSet />
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>**/log4j2.properties</exclude>
+                    <exclude>**/log4j.properties</exclude>
+                  </excludes>
+                </filter>
+              </filters>
               <outputFile>${project.build.directory}/${project.artifactId}-fat.jar</outputFile>
             </configuration>
           </execution>
@@ -422,4 +449,30 @@
       </plugin>
     </plugins>
   </build>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>2.9.8</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-bom</artifactId>
+        <version>2.11.2</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>5.4.2</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>
