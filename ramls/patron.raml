@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Patron Services
 baseUri: https://github.com/folio-org/mod-patron
 protocols: [ HTTPS ]
@@ -10,20 +10,19 @@ documentation:
       This module allows 3rd party discovery services to perform patron
       actions in FOLIO
 
-schemas:
-  - account: !include account.json
-  - hold.json: !include hold.json
-  - loan.json: !include loan.json
-  - charge.json: !include charge.json
-  - money.json: !include money.json
-  - item.json: !include item.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
+types:
+  account: !include account.json
+  hold: !include hold.json
+  loan: !include loan.json
+  charge: !include charge.json
+  money: !include money.json
+  item: !include item.json
+  errors: !include raml-util/schemas/errors.schema
+  error: !include raml-util/schemas/error.schema
+  parameters: !include raml-util/schemas/parameters.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - validate: !include raml-util/traits/validation.raml
+  validate: !include raml-util/traits/validation.raml
 
 /patron:
   displayName: Patron Services
@@ -40,7 +39,6 @@ traits:
           pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
       get:
         description: Return account details for the specified FOLIO user id
-        is: [secured]
         queryParameters:
           includeLoans:
             description: |
@@ -107,13 +105,13 @@ traits:
             description: Service endpoint for loan renewal
             post:
               description: Renews a loan on the item for the user
-              is: [secured, validate]
+              is: [validate]
               responses:
                 201:
                   description: Returns the renewed loan data
                   body:
                     application/json:
-                      schema: loan.json
+                      schema: loan
                       example: !include examples/loan.json
                 400:
                   description: Bad request
@@ -147,10 +145,10 @@ traits:
             post:
               description: |
                 Creates a hold request on an existing item for the user
-              is: [secured, validate]
+              is: [validate]
               body:
                 application/json:
-                  schema: hold.json
+                  schema: hold
                   example: !include examples/hold.json
               responses:
                 201:
@@ -158,7 +156,7 @@ traits:
                     Returns data for a new hold request on the specified item
                   body:
                     application/json:
-                      schema: hold.json
+                      schema: hold
                       example: !include examples/hold.json
                 400:
                   description: Bad request
@@ -195,13 +193,11 @@ traits:
                   type: string
                   pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
               put:
-                is: [secured]
                 description: Not implemented
                 responses:
                   501:
                     description: Not implemented
               delete:
-                is: [secured]
                 description: Removes the specified hold request
                 responses:
                   204:
@@ -244,7 +240,7 @@ traits:
             displayName: Hold Management
             description: Services that provide hold management
             post:
-              is: [secured, validate]
+              is: [validate]
               description: Not implemented
               responses:
                 501:
@@ -258,13 +254,11 @@ traits:
                   type: string
                   pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
               put:
-                is: [secured]
                 description: Not implemented
                 responses:
                   501:
                     description: Not implemented
               delete:
-                is: [secured]
                 description: Not implemented
                 responses:
                   501:
