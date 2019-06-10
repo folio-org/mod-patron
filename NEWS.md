@@ -1,3 +1,9 @@
+## 3.0.0 2019-06-10
+ * [MODPATRON-8](https://issues.folio.org/browse/MODPATRON-8): Title level requests
+ * [MODPATRON-2](https://issues.folio.org/browse/MODPATRON-2): Support for returning the request queue position in requests
+ * [MODPATRON-5](https://issues.folio.org/browse/MODPATRON-5): Support for pickup location when placing or returning a request
+ * [MODPATRON-13](https://issues.folio.org/browse/MODPATRON-13): Update to RAML 1.0 and the latest RMB
+
 ## 2.0.0 2019-03-22
  * [MODPATRON-18](https://issues.folio.org/browse/MODPATRON-18): Support for
    `circulation` 7.0. This interface update includes potentially breaking
