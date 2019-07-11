@@ -1,3 +1,6 @@
+## 3.0.1 2019-07-11
+ * [MODPATRON-25](https://issues.folio.org/browse/MODPATRON-25): Validation changes for hold.json
+
 ## 3.0.0 2019-06-10
  * [MODPATRON-8](https://issues.folio.org/browse/MODPATRON-8): Title level requests
  * [MODPATRON-2](https://issues.folio.org/browse/MODPATRON-2): Support for returning the request queue position in requests
