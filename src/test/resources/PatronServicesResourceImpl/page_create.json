@@ -1,0 +1,21 @@
+{
+  "id": "dd238b5b-01fc-4205-83b8-ce27a650d827",
+  "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+  "itemId": "32e5757d-6566-466e-b69d-994eb33d2b62",
+  "requestType": "Page",
+  "requestDate": "2018-05-30T08:01:30Z",
+  "requestExpirationDate": "3000-01-30T08:16:30Z",
+  "fulfilmentPreference": "Hold Shelf",
+  "status": "Open - Not yet filled",
+  "position": 1,
+  "item" :{
+    "title": "Something's Got a Hold on Me",
+    "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
+    "contributors": [
+      {"name": "Etta James"},
+      {"name": "Leroy Kirkland"},
+      {"name": "Pearl Woods"}
+    ]
+  },
+  "pickupServicePointId": "963396d7-c96f-4bb1-a24c-42e868a8823d"
+}
