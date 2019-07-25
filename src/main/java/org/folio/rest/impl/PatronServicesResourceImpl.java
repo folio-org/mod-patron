@@ -1,29 +1,18 @@
 package org.folio.rest.impl;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.Charge;
-import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Hold;
+import org.folio.rest.jaxrs.model.*;
+import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Hold.Status;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
-import org.folio.rest.tools.client.HttpClientFactory;
 import org.folio.rest.tools.client.Response;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
-import org.folio.rest.tools.utils.TenantTool;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -38,19 +27,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
-  private static final String JSON_FIELD_PICKUP_SERVICE_POINT_ID = "pickupServicePointId";
-  private static final String JSON_FIELD_REQUEST_DATE = "requestDate";
-  private static final String JSON_FIELD_NAME = "name";
-  private static final String JSON_FIELD_ITEM = "item";
-  private static final String JSON_FIELD_TOTAL_RECORDS = "totalRecords";
-  private static final String JSON_FIELD_CONTRIBUTORS = "contributors";
-  private static final String JSON_FIELD_TITLE = "title";
-  private static final String JSON_FIELD_INSTANCE_ID = "instanceId";
-  private static final String JSON_FIELD_USER_ID = "userId";
-  private static final String JSON_FIELD_ITEM_ID = "itemId";
-  private static final String JSON_FIELD_REQUEST_EXPIRATION_DATE = "requestExpirationDate";
-  private static final String JSON_FIELD_POSITION = "position";
-  private static final String JSON_VALUE_HOLD_SHELF = "Hold Shelf";
 
   @Validate
   @Override
@@ -58,11 +34,10 @@ public class PatronServicesResourceImpl implements Patron {
       boolean includeCharges, boolean includeHolds,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
       // Look up the user to ensure that the user exists and is enabled
-      httpClient.request("/users/" + id, okapiHeaders)
-        .thenApply(this::verifyAndExtractBody)
+        LookupsUtils.getUser(id, okapiHeaders, httpClient)
         .thenAccept(this::verifyUserEnabled)
         .thenCompose(v -> {
           try {
@@ -72,15 +47,15 @@ public class PatronServicesResourceImpl implements Patron {
             account.setTotalChargesCount(0);
 
             final CompletableFuture<Account> cf1 = httpClient.request("/circulation/loans?limit=" + getLimit(includeLoans) + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
-                .thenApply(this::verifyAndExtractBody)
+                .thenApply(LookupsUtils::verifyAndExtractBody)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
             final CompletableFuture<Account> cf2 = httpClient.request("/circulation/requests?limit=" + getLimit(includeHolds) + "&query=%28requesterId%3D%3D" + id + "%20and%20status%3D%3DOpen%2A%29", okapiHeaders)
-                .thenApply(this::verifyAndExtractBody)
+                .thenApply(LookupsUtils::verifyAndExtractBody)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
             final CompletableFuture<Account> cf3 = httpClient.request("/accounts?limit=" + getLimit(true) + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
-                .thenApply(this::verifyAndExtractBody)
+                .thenApply(LookupsUtils::verifyAndExtractBody)
                 .thenApply(body -> addCharges(account, body, includeCharges))
                 .thenCompose(charges -> {
                   if (includeCharges) {
@@ -121,15 +96,15 @@ public class PatronServicesResourceImpl implements Patron {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final JsonObject renewalJSON = new JsonObject()
-        .put(JSON_FIELD_ITEM_ID, itemId)
-        .put(JSON_FIELD_USER_ID, id);
+        .put(Constants.JSON_FIELD_ITEM_ID, itemId)
+        .put(Constants.JSON_FIELD_USER_ID, id);
 
-    final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
       httpClient.request(HttpMethod.POST, Buffer.buffer(renewalJSON.toString()), "/circulation/renew-by-id", okapiHeaders)
-          .thenApply(this::verifyAndExtractBody)
+          .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> {
-            final Item item = getItem(itemId, body.getJsonObject(JSON_FIELD_ITEM));
+            final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
             final Loan hold = getLoan(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
             httpClient.closeClient();
@@ -150,38 +125,47 @@ public class PatronServicesResourceImpl implements Patron {
   public void postPatronAccountItemHoldByIdAndItemId(String id, String itemId,
       Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    final JsonObject holdJSON = new JsonObject()
-        .put(JSON_FIELD_ITEM_ID, itemId)
-        .put("requesterId", id)
-        .put("requestType", "Hold")
-        .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-        .put("fulfilmentPreference", JSON_VALUE_HOLD_SHELF)
-        .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId());
 
-    if (entity.getExpirationDate() != null) {
-      holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
-          new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
-    }
+    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
+    RequestObjectFactory requestFactory = new RequestObjectFactory(okapiHeaders);
 
-    final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
-    try {
-      httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()), "/circulation/requests", okapiHeaders)
-          .thenApply(this::verifyAndExtractBody)
-          .thenAccept(body -> {
-            final Item item = getItem(itemId, body.getJsonObject(JSON_FIELD_ITEM));
-            final Hold hold = getHold(body, item);
-            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
-            httpClient.closeClient();
-          })
-          .exceptionally(throwable -> {
-            asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
+    requestFactory.createRequestByItem(id, itemId, entity, httpClient)
+      .thenCompose(holdJSON -> {
+        try {
+          if (holdJSON == null) {
+            final Errors errors = new Errors()
+                          .withErrors(Collections.singletonList(
+                              new Error().withMessage("Cannot find a valid request type for this item")
+                                         .withParameters(Collections.singletonList(
+                                            new Parameter().withKey("itemId")
+                                                           .withValue(itemId)
+                                         ))
+                          ));
+
+            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors)));
             httpClient.closeClient();
             return null;
-          });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
-      httpClient.closeClient();
-    }
+          }
+
+          return httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()), "/circulation/requests", okapiHeaders)
+            .thenApply(LookupsUtils::verifyAndExtractBody)
+            .thenAccept(body -> {
+              final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
+              final Hold hold = getHold(body, item);
+              asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
+              httpClient.closeClient();
+            })
+            .exceptionally(throwable -> {
+              asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
+              httpClient.closeClient();
+              return null;
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
+          httpClient.closeClient();
+          return null;
+        }
+      });
   }
 
   @Validate
@@ -198,10 +182,10 @@ public class PatronServicesResourceImpl implements Patron {
       String itemId, String holdId, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     // Consider validation to verify the hold is for the specified user and the specified item.
-    final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
       httpClient.request(HttpMethod.DELETE, "/circulation/requests/" + holdId, okapiHeaders)
-          .thenApply(this::verifyAndExtractBody)
+          .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond204())))
           .exceptionally(throwable -> {
             asyncResultHandler.handle(handleHoldDELETEError(throwable));
@@ -221,24 +205,24 @@ public class PatronServicesResourceImpl implements Patron {
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
       Context vertxContext) {
     final JsonObject holdJSON = new JsonObject()
-        .put(JSON_FIELD_INSTANCE_ID, instanceId)
+        .put(Constants.JSON_FIELD_INSTANCE_ID, instanceId)
         .put("requesterId", id)
-        .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-        .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId());
+        .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+        .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId());
 
     if (entity.getExpirationDate() != null) {
-      holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
+      holdJSON.put(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE,
           new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
     }
 
-    final HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
       httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()),
           "/circulation/requests/instances", okapiHeaders)
-          .thenApply(this::verifyAndExtractBody)
+          .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> {
-            final Item item = getItem(body.getString(JSON_FIELD_ITEM_ID),
-                body.getJsonObject(JSON_FIELD_ITEM));
+            final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID),
+                body.getJsonObject(Constants.JSON_FIELD_ITEM));
             final Hold hold = getHold(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
             httpClient.closeClient();
@@ -254,13 +238,6 @@ public class PatronServicesResourceImpl implements Patron {
     }
   }
 
-  private HttpClientInterface getHttpClient(Map<String, String> okapiHeaders) {
-    final String okapiURL = okapiHeaders.getOrDefault("X-Okapi-Url", "");
-    final String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-
-    return HttpClientFactory.getHttpClient(okapiURL, tenantId);
-  }
-
   private void verifyUserEnabled(JsonObject body) {
     final boolean active = body.getBoolean("active");
 
@@ -270,7 +247,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Account addLoans(Account account, JsonObject body, boolean includeLoans) {
-    final int totalLoans = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalLoans = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Loan> loans = new ArrayList<>();
 
     account.setTotalLoans(totalLoans);
@@ -281,7 +258,8 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : loansArray) {
         if (o instanceof JsonObject) {
           JsonObject loanObject = (JsonObject) o;
-          final Item item = getItem(loanObject.getString(JSON_FIELD_ITEM_ID), loanObject.getJsonObject(JSON_FIELD_ITEM));
+          final Item item = getItem(loanObject.getString(Constants.JSON_FIELD_ITEM_ID),
+                                    loanObject.getJsonObject(Constants.JSON_FIELD_ITEM));
           final Loan loan = getLoan(loanObject, item);
           loans.add(loan);
         }
@@ -292,7 +270,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Item getItem(String itemId, JsonObject itemJson) {
-    final JsonArray contributors = itemJson.getJsonArray(JSON_FIELD_CONTRIBUTORS, new JsonArray());
+    final JsonArray contributors = itemJson.getJsonArray(Constants.JSON_FIELD_CONTRIBUTORS, new JsonArray());
     final StringBuilder sb = new StringBuilder();
 
     for (Object o : contributors) {
@@ -300,15 +278,15 @@ public class PatronServicesResourceImpl implements Patron {
         if (sb.length() != 0) {
           sb.append("; ");
         }
-        sb.append(((JsonObject) o).getString(JSON_FIELD_NAME));
+        sb.append(((JsonObject) o).getString(Constants.JSON_FIELD_NAME));
       }
     }
 
     return new Item()
         .withAuthor(sb.length() == 0 ? null : sb.toString())
-        .withInstanceId(itemJson.getString(JSON_FIELD_INSTANCE_ID))
+        .withInstanceId(itemJson.getString(Constants.JSON_FIELD_INSTANCE_ID))
         .withItemId(itemId)
-        .withTitle(itemJson.getString(JSON_FIELD_TITLE));
+        .withTitle(itemJson.getString(Constants.JSON_FIELD_TITLE));
   }
 
   private Loan getLoan(JsonObject loan, Item item) {
@@ -337,7 +315,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Account addHolds(Account account, JsonObject body, boolean includeHolds) {
-    final int totalHolds = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalHolds = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Hold> holds = new ArrayList<>();
 
     account.setTotalHolds(totalHolds);
@@ -348,7 +326,7 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : holdsJson) {
         if (o instanceof JsonObject) {
           JsonObject holdJson = (JsonObject) o;
-          final Item item = getItem(holdJson.getString(JSON_FIELD_ITEM_ID), holdJson.getJsonObject(JSON_FIELD_ITEM));
+          final Item item = getItem(holdJson.getString(Constants.JSON_FIELD_ITEM_ID), holdJson.getJsonObject(Constants.JSON_FIELD_ITEM));
           final Hold hold = getHold(holdJson, item);
           holds.add(hold);
         }
@@ -361,16 +339,18 @@ public class PatronServicesResourceImpl implements Patron {
   private Hold getHold(JsonObject holdJson, Item item) {
     return new Hold()
         .withItem(item)
-        .withExpirationDate(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE) == null ? null : new DateTime(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
+        .withExpirationDate(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE) == null
+            ? null
+          : new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
         .withRequestId(holdJson.getString("id"))
-        .withPickupLocationId(holdJson.getString(JSON_FIELD_PICKUP_SERVICE_POINT_ID))
-        .withRequestDate(new DateTime(holdJson.getString(JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
-        .withQueuePosition(holdJson.getInteger(JSON_FIELD_POSITION))
+        .withPickupLocationId(holdJson.getString(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID))
+        .withRequestDate(new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
+        .withQueuePosition(holdJson.getInteger(Constants.JSON_FIELD_POSITION))
         .withStatus(Status.fromValue(holdJson.getString("status")));
   }
 
   private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
-    final int totalCharges = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalCharges = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
 
     account.setTotalChargesCount(totalCharges);
@@ -383,7 +363,7 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : accountsJson) {
         if (o instanceof JsonObject) {
           final JsonObject accountJson = (JsonObject) o;
-          final Item item = new Item().withItemId(accountJson.getString(JSON_FIELD_ITEM_ID));
+          final Item item = new Item().withItemId(accountJson.getString(Constants.JSON_FIELD_ITEM_ID));
           final Charge charge = getCharge(accountJson, item);
           amount += charge.getChargeAmount().getAmount().doubleValue();
           if (includeCharges) {
@@ -405,28 +385,25 @@ public class PatronServicesResourceImpl implements Patron {
         .withItem(item)
         .withAccrualDate(new DateTime(chargeJson.getString("dateCreated"), DateTimeZone.UTC).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
-        .withState(chargeJson.getJsonObject("paymentStatus", new JsonObject().put(JSON_FIELD_NAME,  "Unknown")).getString(JSON_FIELD_NAME))
+        .withState(chargeJson.getJsonObject("paymentStatus",
+            new JsonObject().put(Constants.JSON_FIELD_NAME,  "Unknown"))
+                  .getString(Constants.JSON_FIELD_NAME))
         .withReason(chargeJson.getString("feeFineType"));
   }
 
   private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
-    return getItem(charge, httpClient, okapiHeaders)
-        .thenApply(this::verifyAndExtractBody)
+    return getItem(charge, okapiHeaders, httpClient)
         .thenCompose(item ->getHoldingsRecord(item, httpClient, okapiHeaders))
-        .thenApply(this::verifyAndExtractBody)
+        .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
-        .thenApply(this::verifyAndExtractBody)
+        .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenApply(instance -> getItem(charge, instance))
         .thenApply(item -> updateItem(charge, item, account));
   }
 
-  private CompletableFuture<Response> getItem(Charge charge,
-      HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
-    try {
-      return httpClient.request("/inventory/items/" + charge.getItem().getItemId(), okapiHeaders);
-    } catch (Exception e) {
-      throw new CompletionException(e);
-    }
+  private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders, HttpClientInterface httpClient) {
+
+    return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders, httpClient);
   }
 
   private CompletableFuture<Response> getHoldingsRecord(JsonObject item,
@@ -441,27 +418,19 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<Response> getInstance(JsonObject holdingsRecord,
       HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
     try {
-      return httpClient.request("/inventory/instances/" + holdingsRecord.getString(JSON_FIELD_INSTANCE_ID), okapiHeaders);
+      return httpClient.request("/inventory/instances/" + holdingsRecord.getString(Constants.JSON_FIELD_INSTANCE_ID), okapiHeaders);
     } catch (Exception e) {
       throw new CompletionException(e);
     }
   }
 
-  private JsonObject verifyAndExtractBody(Response response) {
-    if (!Response.isSuccess(response.getCode())) {
-      throw new CompletionException(new HttpException(response.getCode(),
-          response.getError().getString("errorMessage")));
-    }
-
-    return response.getBody();
-  }
 
   private Item getItem(Charge charge, JsonObject instance) {
     final String itemId = charge.getItem().getItemId();
     final JsonObject composite = new JsonObject()
-        .put(JSON_FIELD_CONTRIBUTORS, instance.getJsonArray(JSON_FIELD_CONTRIBUTORS))
-        .put(JSON_FIELD_INSTANCE_ID, instance.getString("id"))
-        .put(JSON_FIELD_TITLE, instance.getString(JSON_FIELD_TITLE));
+        .put(Constants.JSON_FIELD_CONTRIBUTORS, instance.getJsonArray(Constants.JSON_FIELD_CONTRIBUTORS))
+        .put(Constants.JSON_FIELD_INSTANCE_ID, instance.getString("id"))
+        .put(Constants.JSON_FIELD_TITLE, instance.getString(Constants.JSON_FIELD_TITLE));
 
     return getItem(itemId, composite);
   }
