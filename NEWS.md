@@ -1,3 +1,7 @@
+## 3.0.2 2019-07-25
+ * [MODPATRON-26](https://issues.folio.org/browse/MODPATRON-26): Determine request type to use when
+   making an item level request
+
 ## 3.0.1 2019-07-11
  * [MODPATRON-25](https://issues.folio.org/browse/MODPATRON-25): Validation changes for hold.json
 
