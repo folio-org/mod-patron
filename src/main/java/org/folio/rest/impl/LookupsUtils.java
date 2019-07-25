@@ -14,6 +14,8 @@ import java.util.concurrent.CompletionException;
 
 class LookupsUtils {
 
+  private LookupsUtils(){}
+
   static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders) {
     HttpClientInterface httpClient = getHttpClient(okapiHeaders);
     return get("/inventory/items/" + itemId, httpClient, okapiHeaders)

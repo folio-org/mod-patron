@@ -391,7 +391,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
-    return getItem(charge, httpClient, okapiHeaders)
+    return getItem(charge, okapiHeaders)
         .thenCompose(item ->getHoldingsRecord(item, httpClient, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
@@ -400,8 +400,7 @@ public class PatronServicesResourceImpl implements Patron {
         .thenApply(item -> updateItem(charge, item, account));
   }
 
-  private CompletableFuture<JsonObject> getItem(Charge charge,
-      HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
+  private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders) {
 
     return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders);
   }

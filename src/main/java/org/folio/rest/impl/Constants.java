@@ -1,6 +1,9 @@
 package org.folio.rest.impl;
 
 class Constants {
+
+  private Constants(){}
+
   static final String JSON_FIELD_PICKUP_SERVICE_POINT_ID = "pickupServicePointId";
   static final String JSON_FIELD_REQUEST_DATE = "requestDate";
   static final String JSON_FIELD_NAME = "name";
