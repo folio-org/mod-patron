@@ -133,18 +133,14 @@ public class PatronServicesResourceImpl implements Patron {
       .thenCompose(holdJSON -> {
         try {
           if (holdJSON == null) {
-
-            final Errors errors = new Errors();
-
-            Error anError = new Error();
-            anError.setMessage("Cannot find a valid request type for this item");
-
-            Parameter parameter = new Parameter();
-            parameter.setKey("itemId");
-            parameter.setValue(itemId);
-
-            anError.setParameters(new ArrayList<>(Arrays.asList(parameter)));
-            errors.setErrors(new ArrayList<>( Arrays.asList(anError)));
+            final Errors errors = new Errors()
+                          .withErrors(Collections.singletonList(
+                              new Error().withMessage("Cannot find a valid request type for this item")
+                                         .withParameters(Collections.singletonList(
+                                            new Parameter().withKey("itemId")
+                                                           .withValue(itemId)
+                                         ))
+                          ));
 
             Throwable throwable = new Throwable((new HttpException(422, JsonObject.mapFrom(errors).toString())));
             asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
