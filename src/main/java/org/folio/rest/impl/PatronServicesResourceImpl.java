@@ -142,8 +142,7 @@ public class PatronServicesResourceImpl implements Patron {
                                          ))
                           ));
 
-            Throwable throwable = new Throwable((new HttpException(422, JsonObject.mapFrom(errors).toString())));
-            asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
+            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors)));
             httpClient.closeClient();
             return null;
           }
@@ -516,10 +515,6 @@ public class PatronServicesResourceImpl implements Patron {
         break;
       case 404:
         result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain(message));
-        break;
-      case 422:
-        final Errors errors = Json.decodeValue(message, Errors.class);
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
         result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));
