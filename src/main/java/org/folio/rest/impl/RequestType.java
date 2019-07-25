@@ -28,6 +28,6 @@ public enum RequestType {
   }
 
   public boolean nameMatches(String value) {
-    return equalsIgnoreCase(getValue(), value);
+    return this.value.equalsIgnoreCase(value);
   }
 }

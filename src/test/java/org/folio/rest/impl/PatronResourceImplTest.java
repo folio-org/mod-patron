@@ -819,12 +819,23 @@ public class PatronResourceImplTest {
       .post(accountPath + itemPath + holdPath)
       .then()
       .log().all()
-      .contentType(TEXT)
-      .statusCode(500)
+      .contentType(ContentType.JSON)
+      .statusCode(422)
       .extract().response();
 
     final String body = r.getBody().asString();
-    assertEquals("Cannot find a valid request type for this item", body);
+    final Errors errors = Json.decodeValue(body, Errors.class);
+
+    final String expectedMessage = "Cannot find a valid request type for this item";
+    assertNotNull(errors);
+    assertNotNull(errors.getErrors());
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(expectedMessage, errors.getErrors().get(0).getMessage());
+    /////
+    assertNotNull(errors.getErrors().get(0).getParameters());
+    assertEquals(1, errors.getErrors().get(0).getParameters().size());
+    assertEquals("itemId", errors.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals(intransitItemId, errors.getErrors().get(0).getParameters().get(0).getValue());
 
     // Test done
     logger.info("Test done");

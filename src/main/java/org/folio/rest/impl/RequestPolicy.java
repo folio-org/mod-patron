@@ -34,7 +34,7 @@ class RequestPolicy {
 
     String arrayPropertyName = "requestTypes";
 
-    if(within == null || !within.containsKey(arrayPropertyName)) {
+    if (within == null || !within.containsKey(arrayPropertyName)) {
       return Stream.empty();
     }
 
@@ -51,10 +51,9 @@ class RequestPolicy {
 
   private static Function<Object, String> castToString() {
     return entry -> {
-      if(entry instanceof String) {
-        return (String)entry;
-      }
-      else {
+      if (entry instanceof String) {
+        return (String) entry;
+      } else {
         return null;
       }
     };

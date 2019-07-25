@@ -16,26 +16,26 @@ class LookupsUtils {
 
   private LookupsUtils(){}
 
-  static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders) {
-    HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+  static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders,
+                                               HttpClientInterface httpClient) {
     return get("/inventory/items/" + itemId, httpClient, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders) {
-    HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+  static CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders,
+                                               HttpClientInterface httpClient) {
     return get("/users/" + userId, httpClient, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static CompletableFuture<JsonObject> getRequestPolicyId(String queryString, Map<String, String> okapiHeaders) {
-    HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+  static CompletableFuture<JsonObject> getRequestPolicyId(String queryString, Map<String, String> okapiHeaders,
+                                                          HttpClientInterface httpClient) {
     return get("/circulation/rules/request-policy?" + queryString, httpClient, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
-    HttpClientInterface httpClient = getHttpClient(okapiHeaders);
+  static CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders,
+                                                        HttpClientInterface httpClient) {
     return get("/request-policy-storage/request-policies/" + requestPolicyId, httpClient, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }

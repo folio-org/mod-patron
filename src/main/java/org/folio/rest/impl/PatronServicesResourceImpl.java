@@ -1,23 +1,15 @@
 package org.folio.rest.impl;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.Charge;
-import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Hold;
+import org.folio.rest.jaxrs.model.*;
+import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Hold.Status;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
 import org.folio.rest.tools.client.Response;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
@@ -45,7 +37,7 @@ public class PatronServicesResourceImpl implements Patron {
     final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
       // Look up the user to ensure that the user exists and is enabled
-        LookupsUtils.getUser(id, okapiHeaders)
+        LookupsUtils.getUser(id, okapiHeaders, httpClient)
         .thenAccept(this::verifyUserEnabled)
         .thenCompose(v -> {
           try {
@@ -137,11 +129,25 @@ public class PatronServicesResourceImpl implements Patron {
     final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     RequestObjectFactory requestFactory = new RequestObjectFactory(okapiHeaders);
 
-    requestFactory.createRequestByItem(id, itemId, entity)
+    requestFactory.createRequestByItem(id, itemId, entity, httpClient)
       .thenCompose(holdJSON -> {
         try {
           if (holdJSON == null) {
-            asyncResultHandler.handle(handleItemHoldPOSTError(new Exception("Cannot find a valid request type for this item")));
+
+            final Errors errors = new Errors();
+
+            Error anError = new Error();
+            anError.setMessage("Cannot find a valid request type for this item");
+
+            Parameter parameter = new Parameter();
+            parameter.setKey("itemId");
+            parameter.setValue(itemId);
+
+            anError.setParameters(new ArrayList<>(Arrays.asList(parameter)));
+            errors.setErrors(new ArrayList<>( Arrays.asList(anError)));
+
+            Throwable throwable = new Throwable((new HttpException(422, JsonObject.mapFrom(errors).toString())));
+            asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
             httpClient.closeClient();
             return null;
           }
@@ -391,7 +397,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
-    return getItem(charge, okapiHeaders)
+    return getItem(charge, okapiHeaders, httpClient)
         .thenCompose(item ->getHoldingsRecord(item, httpClient, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
@@ -400,9 +406,9 @@ public class PatronServicesResourceImpl implements Patron {
         .thenApply(item -> updateItem(charge, item, account));
   }
 
-  private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders) {
+  private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders, HttpClientInterface httpClient) {
 
-    return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders);
+    return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders, httpClient);
   }
 
   private CompletableFuture<Response> getHoldingsRecord(JsonObject item,
@@ -514,6 +520,10 @@ public class PatronServicesResourceImpl implements Patron {
         break;
       case 404:
         result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain(message));
+        break;
+      case 422:
+        final Errors errors = Json.decodeValue(message, Errors.class);
+        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
         result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));

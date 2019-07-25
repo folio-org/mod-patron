@@ -1,9 +1,6 @@
 package org.folio.rest.impl;
 
-
 import java.util.Arrays;
-
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 public enum ItemStatus {
   NONE(""),
@@ -34,6 +31,6 @@ public enum ItemStatus {
   }
 
   private boolean valueMatches(String value) {
-    return equalsIgnoreCase(getValue(), value);
+    return this.value.equalsIgnoreCase(value);
   }
 }
