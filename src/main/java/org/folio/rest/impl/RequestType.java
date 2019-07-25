@@ -2,8 +2,6 @@ package org.folio.rest.impl;
 
 import java.util.Arrays;
 
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-
 public enum RequestType {
   NONE(""),
   HOLD("Hold"),

@@ -831,7 +831,7 @@ public class PatronResourceImplTest {
     assertNotNull(errors.getErrors());
     assertEquals(1, errors.getErrors().size());
     assertEquals(expectedMessage, errors.getErrors().get(0).getMessage());
-    /////
+
     assertNotNull(errors.getErrors().get(0).getParameters());
     assertEquals(1, errors.getErrors().get(0).getParameters().size());
     assertEquals("itemId", errors.getErrors().get(0).getParameters().get(0).getKey());
@@ -1081,8 +1081,6 @@ public class PatronResourceImplTest {
 
   static Stream<Arguments> itemRequestsParams() {
     return Stream.of(
-      // Even though we receive a 400, we need to return a 500 since there is nothing the client
-      // can do to correct the 400. We'd have to correct it in the code.
       Arguments.of(availableItemId, "/response_testPostPatronAccountByIdItemByItemIdPage.json" ),
       Arguments.of(checkedoutItemId, "/response_testPostPatronAccountByIdItemByItemIdHold.json")
     );
