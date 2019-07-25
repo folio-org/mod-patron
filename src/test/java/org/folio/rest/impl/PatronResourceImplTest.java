@@ -107,9 +107,9 @@ public class PatronResourceImplTest {
   private final String loanTypeId1 = "2b94c631-fca9-4892-a730-03ee529ffe27";
   private final String patronGroupId1 = "3684a786-6671-4268-8ed0-9db82ebca60b";
   private final String effectiveLocation1 = "fcd64ce1-6995-48f0-840e-89ffa2288371";
-  private final String availableItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
-  private final String checkedoutItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
   private final String intransitItemId = "32e5757d-6566-466e-b69d-994eb33d2c98";
+  private static final String availableItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
+  private static final String checkedoutItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
@@ -185,19 +185,29 @@ public class PatronResourceImplTest {
                 .end(badDataValue);
             }
           } else {
-            req.response()
-              .setStatusCode(201)
-              .putHeader("content-type", "application/json")
-              .end(readMockFile(mockDataFolder + "/page_create.json"));
+            req.bodyHandler( body -> {
+              String content = new String(body.getBytes());
+              JsonObject jsonContent = new JsonObject(content);
+
+              if (jsonContent != null) {
+                String itemId = jsonContent.getString("itemId");
+                RequestType requestType = RequestType.from(jsonContent.getString("requestType"));
+
+                if (itemId.equals(checkedoutItemId) && requestType == RequestType.HOLD) {
+                  req.response()
+                    .setStatusCode(201)
+                    .putHeader("content-type", "application/json")
+                    .end(readMockFile(mockDataFolder + "/holds_create.json"));
+                } else if (itemId.equals(availableItemId) && requestType == RequestType.PAGE) {
+                  req.response()
+                    .setStatusCode(201)
+                    .putHeader("content-type", "application/json")
+                    .end(readMockFile(mockDataFolder + "/page_create.json"));
+                }
+              }
+            });
           }
-        } else if (req.path().equals("/circulation/requests/")) {
-            if (req.method() == HttpMethod.POST) {
-                req.response()
-                  .setStatusCode(201)
-                  .putHeader("content-type", "application/json")
-                  .end(readMockFile(mockDataFolder + "/holds_create.json"));
-            }
-          } else {
+        } else {
             if (req.query().equals(String.format("limit=%d&query=%%28requesterId%%3D%%3D%s%%20and%%20status%%3D%%3DOpen%%2A%%29", Integer.MAX_VALUE, goodUserId))) {
               req.response()
                 .setStatusCode(200)
@@ -759,8 +769,9 @@ public class PatronResourceImplTest {
     logger.info("Test done");
   }
 
-  @Test
-  public final void testPostPatronAccountByIdItemByItemIdHold() {
+  @ParameterizedTest
+  @MethodSource("itemRequestsParams")
+  public final void testPostPatronAccountByIdItemByItemIdRequests(String itemId, String responseFile) {
     logger.info("Testing creating a hold on an item for the specified user");
 
     final Response r = given()
@@ -770,7 +781,7 @@ public class PatronResourceImplTest {
         .header(contentTypeHeader)
         .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
         .pathParam("accountId", goodUserId)
-        .pathParam("itemId", checkedoutItemId)
+        .pathParam("itemId", itemId)
       .when()
         .post(accountPath + itemPath + holdPath)
       .then()
@@ -781,39 +792,9 @@ public class PatronResourceImplTest {
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
-    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHold.json"));
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + responseFile));
 
-    verifyHold(expectedJson, json);
-
-    // Test done
-    logger.info("Test done");
-  }
-
-  @Test
-  public final void testPostPatronAccountByIdItemByItemIdPage() {
-    logger.info("Testing creating a page request on an item for the specified user");
-
-    final Response r = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", availableItemId)
-      .when()
-      .post(accountPath + itemPath + holdPath)
-      .then()
-      .log().all()
-      .contentType(ContentType.JSON)
-      .statusCode(201)
-      .extract().response();
-
-    final String body = r.getBody().asString();
-    final JsonObject json = new JsonObject(body);
-    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHold.json"));
-
-    verifyHold(expectedJson, json);
+    verifyRequests(expectedJson, json);
 
     // Test done
     logger.info("Test done");
@@ -1087,6 +1068,15 @@ public class PatronResourceImplTest {
       );
   }
 
+  static Stream<Arguments> itemRequestsParams() {
+    return Stream.of(
+      // Even though we receive a 400, we need to return a 500 since there is nothing the client
+      // can do to correct the 400. We'd have to correct it in the code.
+      Arguments.of(availableItemId, "/response_testPostPatronAccountByIdItemByItemIdPage.json" ),
+      Arguments.of(checkedoutItemId, "/response_testPostPatronAccountByIdItemByItemIdHold.json")
+    );
+  }
+
   private boolean verifyCharge(JsonObject expectedCharge, JsonObject actualCharge) {
     // Bad check, but each date is unique in the mock data.
     if (expectedCharge.getString("accrualDate").equals(actualCharge.getString("accrualDate"))) {
@@ -1106,6 +1096,12 @@ public class PatronResourceImplTest {
     assertEquals(expectedAmount.getString("isoCurrencyCode"), actualAmount.getString("isoCurrencyCode"));
   }
 
+  private void verifyRequests(JsonObject expectedHold, JsonObject actualHold) {
+    if (!verifyHold(expectedHold, actualHold)) {
+      fail("verification of request objects failed");
+    }
+  }
+
   private boolean verifyHold(JsonObject expectedHold, JsonObject actualHold) {
     if (expectedHold.getString("requestId").equals(actualHold.getString("requestId"))) {
       assertEquals(expectedHold.getString("pickupLocationId"), actualHold.getString("pickupLocationId"));
@@ -1116,7 +1112,6 @@ public class PatronResourceImplTest {
           actualHold.getInteger("requestPosition"));
       return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"));
     }
-
     return false;
   }
 
