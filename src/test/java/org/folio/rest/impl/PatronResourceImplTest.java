@@ -456,19 +456,19 @@ public class PatronResourceImplTest {
             .end(readMockFile(mockDataFolder + "/renew_create.json"));
         }
       } else if (req.path().equals("/circulation/rules/request-policy")) {
-          if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&shelving_location_id=%s",
+          if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
                                                 materialTypeId1, loanTypeId1, patronGroupId1, effectiveLocation1))) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/requestPolicyId_all.json"));
-          } else if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&shelving_location_id=%s",
+          } else if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
             materialTypeId2, loanTypeId1, patronGroupId1, effectiveLocation1))) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/requestPolicyId_hold.json"));
-          } else if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&shelving_location_id=%s",
+          } else if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
             materialTypeId3, loanTypeId1, patronGroupId1, effectiveLocation1))) {
             req.response()
               .setStatusCode(200)
