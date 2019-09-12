@@ -70,7 +70,7 @@ class RequestObjectFactory {
 
   private CompletableFuture<JsonObject> lookupRequestPolicyId(RequestTypeParameters criteria, HttpClientInterface httpClient) {
     String queryString = String.format(
-      "item_type_id=%s&loan_type_id=%s&patron_type_id=%s&shelving_location_id=%s",
+      "item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
       criteria.getItemMaterialTypeId(), criteria.getItemLoanTypeId(),
       criteria.getPatronGroupId(), criteria.getItemLocationId()
     );
