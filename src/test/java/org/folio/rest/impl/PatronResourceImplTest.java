@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.stream.Stream;
 
+import io.restassured.response.ExtractableResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.patron.utils.Utils;
@@ -247,7 +248,7 @@ public class PatronResourceImplTest {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
       } else if (req.path().equals("/circulation/requests/" + goodHoldId)) {
-        if (req.method() == HttpMethod.DELETE) {
+        if (req.method() == HttpMethod.PATCH) {
           final String badDataValue = req.getHeader("x-okapi-bad-data");
           if (badDataValue != null) {
             if (badDataValue.equals("java.lang.NullPointerException")) {
@@ -263,8 +264,8 @@ public class PatronResourceImplTest {
             }
           } else {
             req.response()
-              .setStatusCode(204)
-              .end();
+              .setStatusCode(201)
+              .end(readMockFile("mockDataFolder" + "/hold_cancel.json"));
           }
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
@@ -899,6 +900,40 @@ public class PatronResourceImplTest {
     .then()
       .log().all()
       .statusCode(404);
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testPatchPatronAccountByIdItemByItemIdHoldByHoldId() {
+    logger.info("Testing cancellation hold by id");
+
+    String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
+
+    final ExtractableResponse<Response> holdPatchResponse = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(aBody)
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .pathParam("holdId", goodHoldId)
+      .when()
+       .contentType(ContentType.JSON)
+      .patch(accountPath + itemPath + holdPath + holdIdPath)
+      .then()
+      .log().all()
+    //  .and().assertThat().contentType(ContentType.JSON)
+//      .and().assertThat().statusCode(201)
+      .extract();
+       // .as(Hold.class);
+
+ //   final String body = r.getBody().asString();
+ //   final JsonObject json = new JsonObject(body);
+ //   final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + responseFile));
+ //   final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPatchPatronAccountByIdInstanceByInstanceIdHold.json"), Hold.class);
+ //   assertEquals(expectedHold, holdPatchResponse);
 
     // Test done
     logger.info("Test done");

@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "3.0",
+      "version": "3.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -44,6 +44,14 @@
           "permissionsRequired": ["patron.hold.instance.item.post"],
           "modulePermissions": [
             "circulation.requests.instances.item.post"
+          ]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
+          "permissionsRequired": ["patron.hold.item.post"],
+          "modulePermissions": [
+            "circulation.requests.item.post"
           ]
         },
         {

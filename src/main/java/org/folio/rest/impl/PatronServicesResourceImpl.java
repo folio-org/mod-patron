@@ -176,6 +176,37 @@ public class PatronServicesResourceImpl implements Patron {
     asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond501()));
   }
 
+  @Override
+  public void patchPatronAccountItemHoldByIdAndItemIdAndHoldId(String id, String itemId, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
+      final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
+      try {
+         httpClient.request(HttpMethod.PUT, Buffer.buffer(entity.toString()), "/circulation/requests/" + holdId, okapiHeaders)
+          .thenApply(LookupsUtils::verifyAndExtractBody)
+          .thenCompose( x -> {
+            try {
+             return httpClient.request(HttpMethod.GET, "/circulation/requests/" + holdId, okapiHeaders)
+                .thenApply(LookupsUtils::verifyAndExtractBody)
+                .thenAccept( body -> {
+                    final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
+                    final Hold hold = getHold(body, item);
+                    asyncResultHandler.handle(Future.succeededFuture(PatchPatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(hold)));
+                    httpClient.closeClient();
+                });
+            } catch (Exception e) {
+              e.printStackTrace();
+              httpClient.closeClient();
+              return null;
+            }})
+          .exceptionally(throwable -> {
+            asyncResultHandler.handle(handleHoldDELETEError(throwable));
+            httpClient.closeClient();
+            return null;
+        });
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+  }
+
   @Validate
   @Override
   public void deletePatronAccountItemHoldByIdAndItemIdAndHoldId(String id,
@@ -301,7 +332,7 @@ public class PatronServicesResourceImpl implements Patron {
       // This should be more sophisticated, or actually reported by
       // the circulation module. What is "overdue" can vary as some
       // libraries have a grace period, don't count holidays, etc.
-      final DateTime dueDateTime = new DateTime(dueDateString, DateTimeZone.UTC); 
+      final DateTime dueDateTime = new DateTime(dueDateString, DateTimeZone.UTC);
       dueDate = dueDateTime.toDate();
       overdue = dueDateTime.isBeforeNow();
     }

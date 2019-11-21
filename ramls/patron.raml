@@ -2,7 +2,7 @@
 title: Patron Services
 baseUri: https://github.com/folio-org/mod-patron
 protocols: [ HTTPS ]
-version: v3.0
+version: v3.1
 
 documentation:
   - title: Patron Services
@@ -197,6 +197,47 @@ traits:
                 responses:
                   501:
                     description: Not implemented
+              patch:
+                description: Modifies the request, including cancels the request
+                body:
+                  application/json:
+                    schema: hold
+                    example: !include examples/hold.json
+                responses:
+                  201:
+                    description: |
+                      Returns data for a new hold request on the specified item
+                    body:
+                      application/json:
+                        schema: hold
+                        example: !include examples/hold.json
+                  400:
+                    description: Bad request
+                    body:
+                      text/plain:
+                        example: |
+                          unable to process request -- constraint violation
+                  401:
+                    description: Not authorized to perform requested action
+                    body:
+                      text/plain:
+                        example: unable to delete hold -- unauthorized
+                  404:
+                    description: Item with a given ID not found
+                    body:
+                      text/plain:
+                        example: hold not found
+                  403:
+                    description: Access Denied
+                    body:
+                      text/plain:
+                        example: Access Denied
+                  500:
+                    description: |
+                      Internal server error, e.g. due to misconfiguration
+                    body:
+                      text/plain:
+                        example: internal server error, contact administrator
               delete:
                 description: Removes the specified hold request
                 responses:
