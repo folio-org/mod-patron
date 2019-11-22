@@ -176,6 +176,7 @@ public class PatronServicesResourceImpl implements Patron {
     asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond501()));
   }
 
+  @Validate
   @Override
   public void patchPatronAccountItemHoldByIdAndItemIdAndHoldId(String id, String itemId, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
       final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);

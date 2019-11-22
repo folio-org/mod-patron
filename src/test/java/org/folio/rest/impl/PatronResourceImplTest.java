@@ -919,6 +919,7 @@ public class PatronResourceImplTest {
       .pathParam("accountId", goodUserId)
       .pathParam("itemId", goodItemId)
       .pathParam("holdId", goodHoldId)
+      .log().all()
       .when()
        .contentType(ContentType.JSON)
       .patch(accountPath + itemPath + holdPath + holdIdPath)
