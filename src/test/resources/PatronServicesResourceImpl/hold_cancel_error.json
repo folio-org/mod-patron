@@ -1,0 +1,13 @@
+{
+  "errors": [
+    {
+      "message": "Cannot edit a closed request",
+      "parameters": [
+        {
+          "key": "id",
+          "value": "69f059dd-e8ad-43a9-b2d7-d35a0ad3ab1b"
+        }
+      ]
+    }
+  ]
+}

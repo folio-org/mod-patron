@@ -48,26 +48,10 @@
         },
         {
           "methods": ["POST"],
-          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
+          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}/cancel",
           "permissionsRequired": ["patron.hold.item.post"],
           "modulePermissions": [
             "circulation.requests.item.post"
-          ]
-        },
-        {
-          "methods": ["PUT"],
-          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
-          "permissionsRequired": ["patron.hold.item.put"],
-          "modulePermissions": [
-            "circulation.requests.item.put"
-          ]
-        },
-        {
-          "methods": ["DELETE"],
-          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
-          "permissionsRequired": ["patron.hold.item.delete"],
-          "modulePermissions": [
-            "circulation.requests.item.delete"
           ]
         }
       ]

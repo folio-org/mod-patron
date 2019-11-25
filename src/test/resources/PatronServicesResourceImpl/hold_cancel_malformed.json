@@ -10,7 +10,7 @@
   "cancellationReasonId": "b548b182-55c2-4741-b169-616d9cd995a8",
   "cancelledByUserId": "ab5a5c57-491c-4b08-8f39-907810e14913",
   "cancellationAdditionalInformation": "I don't want it anymore",
-  "cancelledDate": "2019-11-06T16:23:30.262+0000",
+  "cancelledDate": "2019-11-06T16:23:30.262+0000"
   "item" :{
     "title": "Something's Got a Hold on Me",
     "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
@@ -20,5 +20,4 @@
       {"name": "Pearl Woods"}
     ]
   },
-  "pickupServicePointId": "963396d7-c96f-4bb1-a24c-42e868a8823d"
-}
+  "pickupServicePointId": "963396d7-c96f-4bb1-a24c-42e868a11223"

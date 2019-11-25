@@ -170,15 +170,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   @Validate
   @Override
-  public void putPatronAccountItemHoldByIdAndItemIdAndHoldId(String id,
-      String itemId, String holdId, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    asyncResultHandler.handle(Future.succeededFuture(PutPatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond501()));
-  }
-
-  @Validate
-  @Override
-  public void patchPatronAccountItemHoldByIdAndItemIdAndHoldId(String id, String itemId, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
+  public void postPatronAccountItemHoldCancelByIdAndItemIdAndHoldId(String id, String itemId, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
       final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
       try {
          httpClient.request(HttpMethod.PUT, Buffer.buffer(entity.toString()), "/circulation/requests/" + holdId, okapiHeaders)
@@ -190,44 +182,31 @@ public class PatronServicesResourceImpl implements Patron {
                 .thenAccept( body -> {
                     final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
                     final Hold hold = getHold(body, item);
-                    asyncResultHandler.handle(Future.succeededFuture(PatchPatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(hold)));
+                    asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(hold)));
                     httpClient.closeClient();
-                });
+                }).exceptionally(
+                 throwable -> {
+                   asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(entity)));
+                   httpClient.closeClient();
+                   return null;
+                 }
+               );
             } catch (Exception e) {
               e.printStackTrace();
+              asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(entity)));
               httpClient.closeClient();
               return null;
             }})
           .exceptionally(throwable -> {
-            asyncResultHandler.handle(handleHoldDELETEError(throwable));
+            asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
             httpClient.closeClient();
             return null;
         });
       } catch (Exception e) {
+        asyncResultHandler.handle(handleHoldCancelPOSTError(e));
+        httpClient.closeClient();
         e.printStackTrace();
       }
-  }
-
-  @Validate
-  @Override
-  public void deletePatronAccountItemHoldByIdAndItemIdAndHoldId(String id,
-      String itemId, String holdId, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    // Consider validation to verify the hold is for the specified user and the specified item.
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
-    try {
-      httpClient.request(HttpMethod.DELETE, "/circulation/requests/" + holdId, okapiHeaders)
-          .thenApply(LookupsUtils::verifyAndExtractBody)
-          .thenAccept(body -> asyncResultHandler.handle(Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond204())))
-          .exceptionally(throwable -> {
-            asyncResultHandler.handle(handleHoldDELETEError(throwable));
-            httpClient.closeClient();
-            return null;
-          });
-    } catch (Exception e) {
-      asyncResultHandler.handle(handleHoldDELETEError(e));
-      httpClient.closeClient();
-    }
   }
 
   @Validate
@@ -369,16 +348,25 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Hold getHold(JsonObject holdJson, Item item) {
-    return new Hold()
-        .withItem(item)
-        .withExpirationDate(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE) == null
-            ? null
-          : new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
-        .withRequestId(holdJson.getString("id"))
-        .withPickupLocationId(holdJson.getString(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID))
-        .withRequestDate(new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
-        .withQueuePosition(holdJson.getInteger(Constants.JSON_FIELD_POSITION))
-        .withStatus(Status.fromValue(holdJson.getString("status")));
+    Hold hold = new Hold()
+      .withItem(item)
+      .withExpirationDate(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE) == null
+        ? null
+        : new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
+      .withRequestId(holdJson.getString("id"))
+      .withPickupLocationId(holdJson.getString(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID))
+      .withRequestDate(new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
+      .withQueuePosition(holdJson.getInteger(Constants.JSON_FIELD_POSITION))
+      .withStatus(Status.fromValue(holdJson.getString("status")))
+      .withCancellationAdditionalInformation(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_ADDITIONAL_INFO))
+      .withCancellationReasonId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_REASON_ID))
+      .withCancelledByUserId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_USER_ID));
+
+    String cancellationDate = holdJson.getString(Constants.JSON_FIELD_CANCELLATION_DATE);
+    if (cancellationDate != null && !cancellationDate.isEmpty()) {
+      hold.withCancelledDate(new DateTime(cancellationDate, DateTimeZone.UTC).toDate());
+    }
+    return hold;
   }
 
   private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
@@ -630,7 +618,7 @@ public class PatronServicesResourceImpl implements Patron {
     return result;
   }
 
-  private Future<javax.ws.rs.core.Response> handleHoldDELETEError(Throwable throwable) {
+  private Future<javax.ws.rs.core.Response> handleHoldCancelPOSTError(Throwable throwable) {
     final Future<javax.ws.rs.core.Response> result;
 
     final Throwable t = throwable.getCause();
@@ -639,26 +627,26 @@ public class PatronServicesResourceImpl implements Patron {
       final String message = ((HttpException) t).getMessage();
       switch (code) {
       case 400:
-        // This means that we screwed up something in the request to another
-        // module. This API only takes a UUID, so a client side 400 is not
-        // possible here, only server side, which the client won't be able to
-        // do anything about.
-        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond400WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond401WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond403WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond404WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond404WithTextPlain(message));
+        break;
+      case 422:
+        final Errors errors = Json.decodeValue(message, Errors.class);
+        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
-        result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(DeletePatronAccountItemHoldByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(throwable.getMessage()));
+      result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
