@@ -75,10 +75,8 @@ public class PatronResourceImplTest {
   private final String goodCancelItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
   private final String badItemId = "3dda4eb9-a156-474c-829f-bd5a386f382c";
   private final String goodInstanceId = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
-  private final String goodHoldId = "dd238b5b-01fc-4205-83b8-ce27a650d827";
-  private final String badHoldId = "1745628c-f424-4b50-a116-e18be37cd599";
-  private final String goodCancelHoldId = "dd238b5b-01fc-4205-83b8-ce27abcd888";
-  private final String badCancelHoldId = "dd238b5b-01fc-4205-83b8-ce27abcd999";
+  private final String goodCancelHoldId = "dd238b5b-01fc-4205-83b8-888888888888";
+  private final String badCancelHoldId = "dd238b5b-01fc-4205-83b8-999999999999";
 
   private final String chargeItemBook1Id = "e785f572-c5d4-4bbc-91ba-c0d62ebebc20";
   private final String chargeItemBook2Id = "cb958743-ddcd-4bf6-907a-e6962b66bfe9";
