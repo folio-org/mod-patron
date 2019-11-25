@@ -192,7 +192,6 @@ public class PatronServicesResourceImpl implements Patron {
                  }
                );
             } catch (Exception e) {
-              e.printStackTrace();
               asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(entity)));
               httpClient.closeClient();
               return null;
@@ -205,7 +204,6 @@ public class PatronServicesResourceImpl implements Patron {
       } catch (Exception e) {
         asyncResultHandler.handle(handleHoldCancelPOSTError(e));
         httpClient.closeClient();
-        e.printStackTrace();
       }
   }
 
