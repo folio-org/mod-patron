@@ -880,27 +880,26 @@ public class PatronResourceImplTest {
     String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
 
     final Hold holdCancelResponse = given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(aBody)
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", goodCancelItemId)
-      .pathParam("holdId", goodCancelHoldId)
-      .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", goodCancelItemId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
       .when()
-       .contentType(ContentType.JSON)
-      .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .contentType(ContentType.JSON)
+        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
       .then()
-      .log().all()
-      .and().assertThat().contentType(ContentType.JSON)
-      .and().assertThat().statusCode(201)
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(201)
       .extract()
-      .as(Hold.class);
+        .as(Hold.class);
 
     final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
     assertEquals(expectedHold, holdCancelResponse);
-
     // Test done
     logger.info("Test done");
   }
@@ -912,30 +911,28 @@ public class PatronResourceImplTest {
     String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
 
     final Hold holdCancelResponse = given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .header(new Header(okapiBadDataHeader, "good-hold-cancel-wo-cancel-date"))
-      .body(aBody)
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", goodCancelItemId)
-      .pathParam("holdId", goodCancelHoldId)
-      .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .header(new Header(okapiBadDataHeader, "good-hold-cancel-wo-cancel-date"))
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", goodCancelItemId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
       .when()
-      .contentType(ContentType.JSON)
-      .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .contentType(ContentType.JSON)
+        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
       .then()
-      .log().all()
-      .and().assertThat().contentType(ContentType.JSON)
-      .and().assertThat().statusCode(201)
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(201)
       .extract()
-      .as(Hold.class);
+        .as(Hold.class);
 
     final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
     expectedHold.setCancelledDate(null);
-
     assertEquals(expectedHold, holdCancelResponse);
-
     // Test done
     logger.info("Test done");
   }
@@ -948,24 +945,24 @@ public class PatronResourceImplTest {
     String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
 
     final Hold holdCancelResponse = given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .header(okapiBadDataHeader, "hold_cancel_malformed.json")
-      .body(aBody)
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", goodCancelItemId)
-      .pathParam("holdId", goodCancelHoldId)
-      .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .header(okapiBadDataHeader, "hold_cancel_malformed.json")
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", goodCancelItemId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
       .when()
-      .contentType(ContentType.JSON)
-      .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .contentType(ContentType.JSON)
+        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
       .then()
-      .log().all()
-      .and().assertThat().contentType(ContentType.JSON)
-      .and().assertThat().statusCode(201)
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(201)
       .extract()
-      .as(Hold.class);
+        .as(Hold.class);
 
     final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/hold_cancel_request.json"), Hold.class);
     assertEquals(expectedHold, holdCancelResponse);
@@ -981,24 +978,24 @@ public class PatronResourceImplTest {
     String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
 
     final Errors holdErrorResponse = given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(new Header(okapiBadDataHeader, "422"))
-      .header(contentTypeHeader)
-      .body(aBody)
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", goodCancelItemId)
-      .pathParam("holdId", goodCancelHoldId)
-      .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(new Header(okapiBadDataHeader, "422"))
+        .header(contentTypeHeader)
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", goodCancelItemId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
       .when()
-      .contentType(ContentType.JSON)
-      .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
-      .then()
-      .log().all()
-      .and().assertThat().contentType(ContentType.JSON)
-      .and().assertThat().statusCode(422)
+        .contentType(ContentType.JSON)
+        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .then()
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(422)
       .extract()
-      .as(Errors.class);
+        .as(Errors.class);
 
     final Errors expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/hold_cancel_error.json"), Errors.class);
     assertEquals(expectedErrors, holdErrorResponse);
@@ -1114,20 +1111,20 @@ public class PatronResourceImplTest {
         codeString);
 
     String response = given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .header(new Header(okapiBadDataHeader, codeString))
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", goodItemId)
-      .pathParam("holdId", badCancelHoldId)
-      .body(readMockFile(mockDataFolder + "/generic_hold_cancel_request.json"))
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .header(new Header(okapiBadDataHeader, codeString))
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", goodItemId)
+        .pathParam("holdId", badCancelHoldId)
+        .body(readMockFile(mockDataFolder + "/generic_hold_cancel_request.json"))
       .when()
-      .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
       .then()
-      .log().all()
-      .statusCode(expectedCode)
-      .extract().body().asString();
+        .log().all()
+        .statusCode(expectedCode)
+        .extract().body().asString();
 
     assertEquals(errorText, response);
     // Test done
