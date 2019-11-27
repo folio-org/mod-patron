@@ -170,41 +170,48 @@ public class PatronServicesResourceImpl implements Patron {
 
   @Validate
   @Override
-  public void postPatronAccountItemHoldCancelByIdAndItemIdAndHoldId(String id, String itemId, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-      final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
-      try {
-         httpClient.request(HttpMethod.PUT, Buffer.buffer(entity.toString()), "/circulation/requests/" + holdId, okapiHeaders)
-          .thenApply(LookupsUtils::verifyAndExtractBody)
-          .thenCompose( x -> {
-            try {
-             return httpClient.request(HttpMethod.GET, "/circulation/requests/" + holdId, okapiHeaders)
-                .thenApply(LookupsUtils::verifyAndExtractBody)
-                .thenAccept( body -> {
-                    final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
-                    final Hold hold = getHold(body, item);
-                    asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(hold)));
-                    httpClient.closeClient();
-                }).exceptionally(
-                 throwable -> {
-                   asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(entity)));
-                   httpClient.closeClient();
-                   return null;
-                 }
-               );
-            } catch (Exception e) {
-              asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond201WithApplicationJson(entity)));
+  public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
+    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
+    final Hold[] holds = new Hold[1];
+
+    try {
+      httpClient.request(HttpMethod.GET, "/circulation/requests/" + holdId, okapiHeaders)
+        .thenApply(LookupsUtils::verifyAndExtractBody)
+        .thenApply( body -> {
+          JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
+          final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID), itemJson);
+          final Hold hold = getHold(body, item);
+          hold.withCancellationAdditionalInformation(entity.getCancellationAdditionalInformation());
+          hold.withCancellationReasonId(entity.getCancellationReasonId());
+          hold.withCancelledByUserId(entity.getCancelledByUserId());
+          hold.withCancelledDate(entity.getCancelledDate());
+          holds[0] = hold;
+          return hold;
+        })
+        .thenCompose( aHold -> {
+          try {
+            return httpClient.request(HttpMethod.PUT, Buffer.buffer(aHold.toString()), "/circulation/requests/" + holdId, okapiHeaders);
+          } catch (Exception e) {
+              asyncResultHandler.handle(handleHoldCancelPOSTError(e));
               httpClient.closeClient();
               return null;
-            }})
-          .exceptionally(throwable -> {
+            }
+        })
+        .thenApply(LookupsUtils::verifyAndExtractBody)
+        .thenAccept(
+            body -> {
+              asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0])));
+              httpClient.closeClient();
+            })
+        .exceptionally(throwable -> {
             asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
             httpClient.closeClient();
             return null;
         });
-      } catch (Exception e) {
-        asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-        httpClient.closeClient();
-      }
+    } catch (Exception e) {
+      asyncResultHandler.handle(handleHoldCancelPOSTError(e));
+      httpClient.closeClient();
+    }
   }
 
   @Validate
@@ -625,26 +632,26 @@ public class PatronServicesResourceImpl implements Patron {
       final String message = ((HttpException) t).getMessage();
       switch (code) {
       case 400:
-        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond400WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond400WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond401WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond403WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond404WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond404WithTextPlain(message));
         break;
       case 422:
         final Errors errors = Json.decodeValue(message, Errors.class);
-        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond422WithApplicationJson(errors));
+        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
-        result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(message));
+        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(PostPatronAccountItemHoldCancelByIdAndItemIdAndHoldIdResponse.respond500WithTextPlain(throwable.getMessage()));
+      result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;

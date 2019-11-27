@@ -265,19 +265,19 @@ public class PatronResourceImplTest {
         } else if (req.method() == HttpMethod.GET) {
           if (badDataValue != null && badDataValue.equals("hold_cancel_malformed.json")) {
             req.response()
-              .setStatusCode(201)
+              .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/hold_cancel_error_malformed.json"));
           } if (badDataValue != null && badDataValue.equals("good-hold-cancel-wo-cancel-date")) {
             String responseBody = readMockFile(mockDataFolder + "/hold_cancel_without_cancel_date.json");
             req.response()
-              .setStatusCode(201)
+              .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(responseBody);
           } else {
               String responseBody = readMockFile(mockDataFolder + "/hold_cancel.json");
             req.response()
-              .setStatusCode(201)
+              .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(responseBody);
           }
@@ -885,16 +885,15 @@ public class PatronResourceImplTest {
         .header(contentTypeHeader)
         .body(aBody)
         .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodCancelItemId)
         .pathParam("holdId", goodCancelHoldId)
         .log().all()
       .when()
         .contentType(ContentType.JSON)
-        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
       .then()
         .log().all()
         .and().assertThat().contentType(ContentType.JSON)
-        .and().assertThat().statusCode(201)
+        .and().assertThat().statusCode(200)
       .extract()
         .as(Hold.class);
 
@@ -909,6 +908,9 @@ public class PatronResourceImplTest {
     logger.info("Testing cancellation hold by id");
 
     String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
+    JsonObject jsonBody = new JsonObject(aBody);
+    jsonBody.remove("cancelledDate");
+    aBody = jsonBody.encodePrettily();
 
     final Hold holdCancelResponse = given()
         .header(tenantHeader)
@@ -917,56 +919,21 @@ public class PatronResourceImplTest {
         .header(new Header(okapiBadDataHeader, "good-hold-cancel-wo-cancel-date"))
         .body(aBody)
         .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodCancelItemId)
         .pathParam("holdId", goodCancelHoldId)
         .log().all()
       .when()
         .contentType(ContentType.JSON)
-        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
       .then()
         .log().all()
         .and().assertThat().contentType(ContentType.JSON)
-        .and().assertThat().statusCode(201)
+        .and().assertThat().statusCode(200)
       .extract()
         .as(Hold.class);
 
     final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
     expectedHold.setCancelledDate(null);
     assertEquals(expectedHold, holdCancelResponse);
-    // Test done
-    logger.info("Test done");
-  }
-
-
-  @Test
-  public final void testCancelPatronRequestByHoldIdWithExceptionOnFollowUpRequest() {
-    logger.info("Testing cancellation hold by id");
-
-    String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
-
-    final Hold holdCancelResponse = given()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .header(okapiBadDataHeader, "hold_cancel_malformed.json")
-        .body(aBody)
-        .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodCancelItemId)
-        .pathParam("holdId", goodCancelHoldId)
-        .log().all()
-      .when()
-        .contentType(ContentType.JSON)
-        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
-      .then()
-        .log().all()
-        .and().assertThat().contentType(ContentType.JSON)
-        .and().assertThat().statusCode(201)
-      .extract()
-        .as(Hold.class);
-
-    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/hold_cancel_request.json"), Hold.class);
-    assertEquals(expectedHold, holdCancelResponse);
-
     // Test done
     logger.info("Test done");
   }
@@ -984,12 +951,11 @@ public class PatronResourceImplTest {
         .header(contentTypeHeader)
         .body(aBody)
         .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodCancelItemId)
         .pathParam("holdId", goodCancelHoldId)
         .log().all()
       .when()
         .contentType(ContentType.JSON)
-        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
         .then()
         .log().all()
         .and().assertThat().contentType(ContentType.JSON)
@@ -1116,11 +1082,10 @@ public class PatronResourceImplTest {
         .header(contentTypeHeader)
         .header(new Header(okapiBadDataHeader, codeString))
         .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodItemId)
         .pathParam("holdId", badCancelHoldId)
         .body(readMockFile(mockDataFolder + "/generic_hold_cancel_request.json"))
       .when()
-        .post(accountPath + itemPath + holdPath + holdIdPath + cancelPath)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
       .then()
         .log().all()
         .statusCode(expectedCode)
