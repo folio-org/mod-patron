@@ -48,7 +48,7 @@
         },
         {
           "methods": ["POST"],
-          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}/cancel",
+          "pathPattern": "/patron/account/{accountId}/hold/{holdId}/cancel",
           "permissionsRequired": ["patron.hold.cancel.item.post"],
           "modulePermissions": [
             "circulation.requests.item.put",

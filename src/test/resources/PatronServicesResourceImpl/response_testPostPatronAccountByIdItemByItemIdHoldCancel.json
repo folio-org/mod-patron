@@ -10,8 +10,8 @@
     "expirationDate": "3000-01-30T08:16:30Z",
     "status": "Closed - Cancelled",
     "cancellationReasonId": "b548b182-55c2-4741-b169-616d9cd995a8",
-    "cancelledByUserId": "ab5a5c57-491c-4b08-8f39-907810e14913",
+    "canceledByUserId": "ab5a5c57-491c-4b08-8f39-907810e14913",
     "cancellationAdditionalInformation": "I don't want it anymore",
-    "cancelledDate": "2019-11-06T16:23:30.262+0000",
+    "canceledDate": "2019-11-06T16:23:30.262+0000",
     "pickupLocationId": "963396d7-c96f-4bb1-a24c-42e868a8823d"
 }

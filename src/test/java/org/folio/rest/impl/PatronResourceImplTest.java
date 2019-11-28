@@ -932,7 +932,6 @@ public class PatronResourceImplTest {
         .as(Hold.class);
 
     final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
-    expectedHold.setCancelledDate(null);
     assertEquals(expectedHold, holdCancelResponse);
     // Test done
     logger.info("Test done");

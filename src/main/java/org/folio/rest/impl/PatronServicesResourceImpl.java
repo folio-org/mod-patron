@@ -183,8 +183,8 @@ public class PatronServicesResourceImpl implements Patron {
           final Hold hold = getHold(body, item);
           hold.withCancellationAdditionalInformation(entity.getCancellationAdditionalInformation());
           hold.withCancellationReasonId(entity.getCancellationReasonId());
-          hold.withCancelledByUserId(entity.getCancelledByUserId());
-          hold.withCancelledDate(entity.getCancelledDate());
+          hold.withCanceledByUserId(entity.getCanceledByUserId());
+          hold.withCanceledDate(entity.getCanceledDate());
           holds[0] = hold;
           return hold;
         })
@@ -365,11 +365,11 @@ public class PatronServicesResourceImpl implements Patron {
       .withStatus(Status.fromValue(holdJson.getString("status")))
       .withCancellationAdditionalInformation(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_ADDITIONAL_INFO))
       .withCancellationReasonId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_REASON_ID))
-      .withCancelledByUserId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_USER_ID));
+      .withCanceledByUserId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_USER_ID));
 
-    String cancellationDate = holdJson.getString(Constants.JSON_FIELD_CANCELLATION_DATE);
-    if (cancellationDate != null && !cancellationDate.isEmpty()) {
-      hold.withCancelledDate(new DateTime(cancellationDate, DateTimeZone.UTC).toDate());
+    String canceledationDate = holdJson.getString(Constants.JSON_FIELD_CANCELLATION_DATE);
+    if (canceledationDate != null && !canceledationDate.isEmpty()) {
+      hold.withCanceledDate(new DateTime(canceledationDate, DateTimeZone.UTC).toDate());
     }
     return hold;
   }

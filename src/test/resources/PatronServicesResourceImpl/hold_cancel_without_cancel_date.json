@@ -8,7 +8,7 @@
   "fulfilmentPreference": "Hold Shelf",
   "status": "Closed - Cancelled",
   "cancellationReasonId": "b548b182-55c2-4741-b169-616d9cd995a8",
-  "cancelledByUserId": "ab5a5c57-491c-4b08-8f39-907810e14913",
+  "canceledByUserId": "ab5a5c57-491c-4b08-8f39-907810e14913",
   "cancellationAdditionalInformation": "I don't want it anymore",
   "item" :{
     "title": "Something's Got a Hold on Me",
