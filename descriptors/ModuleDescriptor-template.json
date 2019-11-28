@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "3.0",
+      "version": "4.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -47,19 +47,12 @@
           ]
         },
         {
-          "methods": ["PUT"],
-          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
-          "permissionsRequired": ["patron.hold.item.put"],
+          "methods": ["POST"],
+          "pathPattern": "/patron/account/{accountId}/hold/{holdId}/cancel",
+          "permissionsRequired": ["patron.hold.cancel.item.post"],
           "modulePermissions": [
-            "circulation.requests.item.put"
-          ]
-        },
-        {
-          "methods": ["DELETE"],
-          "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold/{holdId}",
-          "permissionsRequired": ["patron.hold.item.delete"],
-          "modulePermissions": [
-            "circulation.requests.item.delete"
+            "circulation.requests.item.put",
+            "circulation.requests.item.get"
           ]
         }
       ]
@@ -109,12 +102,7 @@
       "description": "Creates a hold on an item from the specified instance for this patron"
     },
     {
-      "permissionName": "patron.hold.item.put",
-      "displayName": "patron - update a hold",
-      "description": "Updates the specified hold"
-    },
-    {
-      "permissionName": "patron.hold.item.delete",
+      "permissionName": "patron.hold.cancel.item.post",
       "displayName": "patron - remove a hold",
       "description": "Removes the specified hold"
     },
@@ -127,8 +115,7 @@
         "patron.renew.item.post",
         "patron.hold.item.post",
         "patron.hold.instance.item.post",
-        "patron.hold.item.put",
-        "patron.hold.item.delete"
+        "patron.hold.cancel.item.post"
       ]
     }
   ],

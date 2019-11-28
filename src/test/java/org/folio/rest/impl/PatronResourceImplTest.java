@@ -65,15 +65,18 @@ public class PatronResourceImplTest {
   private final String holdPath = "/hold";
   private final String holdIdPath = "/{holdId}";
   private final String renewPath = "/renew";
+  private final String cancelPath = "/cancel";
+  private final String okapiBadDataHeader = "x-okapi-bad-data";
 
   private final String goodUserId = "1ec54964-70f0-44cc-bd19-2a892ea0d336";
   private final String inactiveUserId = "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4";
   private final String badUserId = "3ed07e77-a5c9-47c8-bb0b-381099e10a42";
   private final String goodItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
+  private final String goodCancelItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
   private final String badItemId = "3dda4eb9-a156-474c-829f-bd5a386f382c";
   private final String goodInstanceId = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
-  private final String goodHoldId = "dd238b5b-01fc-4205-83b8-ce27a650d827";
-  private final String badHoldId = "1745628c-f424-4b50-a116-e18be37cd599";
+  private final String goodCancelHoldId = "dd238b5b-01fc-4205-83b8-888888888888";
+  private final String badCancelHoldId = "dd238b5b-01fc-4205-83b8-999999999999";
 
   private final String chargeItemBook1Id = "e785f572-c5d4-4bbc-91ba-c0d62ebebc20";
   private final String chargeItemBook2Id = "cb958743-ddcd-4bf6-907a-e6962b66bfe9";
@@ -246,36 +249,65 @@ public class PatronResourceImplTest {
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
-      } else if (req.path().equals("/circulation/requests/" + goodHoldId)) {
-        if (req.method() == HttpMethod.DELETE) {
-          final String badDataValue = req.getHeader("x-okapi-bad-data");
-          if (badDataValue != null) {
-            if (badDataValue.equals("java.lang.NullPointerException")) {
-              req.response()
-                .setStatusCode(500)
-                .putHeader("content-type", "application/json")
-                .end("java.lang.NullPointerException");
-            } else {
-              req.response()
-                .setStatusCode(Integer.parseInt(badDataValue))
-                .putHeader("content-type", "text/plain")
-                .end(badDataValue);
-            }
+      } else if (req.path().equals("/circulation/requests/" + goodCancelHoldId)) {
+        final String badDataValue = req.getHeader(okapiBadDataHeader);
+        if (req.method() == HttpMethod.PUT) {
+          if (badDataValue != null && badDataValue.equals("422")) {
+            req.response()
+              .setStatusCode(422)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/hold_cancel_error.json"));
           } else {
             req.response()
               .setStatusCode(204)
               .end();
           }
-        } else {
-          req.response().setStatusCode(500).end("Unexpected call: " + req.path());
+        } else if (req.method() == HttpMethod.GET) {
+          if (badDataValue != null && badDataValue.equals("hold_cancel_malformed.json")) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/hold_cancel_error_malformed.json"));
+          } if (badDataValue != null && badDataValue.equals("good-hold-cancel-wo-cancel-date")) {
+            String responseBody = readMockFile(mockDataFolder + "/hold_cancel_without_cancel_date.json");
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(responseBody);
+          } else {
+              String responseBody = readMockFile(mockDataFolder + "/hold_cancel.json");
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(responseBody);
+          }
         }
-      } else if (req.path().equals("/circulation/requests/" + badHoldId)) {
-        if (req.method() == HttpMethod.DELETE) {
+      } else if (req.path().equals("/circulation/requests/"  + badCancelHoldId)) {
+        final String badDataValue = req.getHeader("x-okapi-bad-data");
+        if (badDataValue.equals("404")) {
           req.response()
             .setStatusCode(404)
-            .end();
+            .putHeader("content-type", "text/plain")
+            .end("hold not found");
+        } else if (badDataValue.equals("403")) {
+          req.response()
+            .setStatusCode(403)
+            .putHeader("content-type", "text/plain")
+            .end("access denied");
+        } else if (badDataValue.equals("401")) {
+          req.response()
+            .setStatusCode(401)
+            .putHeader("content-type", "text/plain")
+            .end("unable to cancel hold -- unauthorized");
+        } else if (badDataValue.equals("400")) {
+          req.response()
+            .setStatusCode(400)
+            .putHeader("content-type", "text/plain")
+            .end("unable to process request -- constraint violation");
         } else {
-          req.response().setStatusCode(500).end("Unexpected call: " + req.path());
+          req.response()
+            .setStatusCode(500)
+            .end("internal server error, contact administrator");
         }
       } else if (req.path().equals("/accounts")) {
         if (req.query().equals(String.format("limit=%d&query=%%28userId%%3D%%3D%s%%20and%%20status.name%%3D%%3DOpen%%29", Integer.MAX_VALUE, goodUserId))) {
@@ -842,63 +874,96 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testPutPatronAccountByIdItemByItemIdHoldByHoldId() {
-    logger.info("Testing edit hold for 501");
+  public final void testSuccessfulCancelPatronRequestByHoldId() {
+    logger.info("Testing cancellation hold by id");
 
-    given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .pathParam("accountId", badUserId)
-      .pathParam("itemId", "c9b8958e-dea6-4547-843f-02001d5265ff")
-      .pathParam("holdId", "1745628c-f424-4b50-a116-e18be37cd599")
-    .when()
-      .put(accountPath + itemPath + holdPath + holdIdPath)
-    .then()
-      .log().all()
-      .statusCode(501);
+    String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
 
+    final Hold holdCancelResponse = given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
+      .when()
+        .contentType(ContentType.JSON)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
+      .then()
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(200)
+      .extract()
+        .as(Hold.class);
+
+    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
+    assertEquals(expectedHold, holdCancelResponse);
     // Test done
     logger.info("Test done");
   }
 
   @Test
-  public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId() {
-    logger.info("Testing delete hold by id");
+  public final void testSuccessfulCancelPatronRequestByHoldIdWithoutCancelDate() {
+    logger.info("Testing cancellation hold by id");
 
-    given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", goodItemId)
-      .pathParam("holdId", goodHoldId)
-    .when()
-      .delete(accountPath + itemPath + holdPath + holdIdPath)
-    .then()
-      .log().all()
-      .statusCode(204);
+    String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
+    JsonObject jsonBody = new JsonObject(aBody);
+    jsonBody.remove("cancelledDate");
+    aBody = jsonBody.encodePrettily();
 
+    final Hold holdCancelResponse = given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .header(new Header(okapiBadDataHeader, "good-hold-cancel-wo-cancel-date"))
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
+      .when()
+        .contentType(ContentType.JSON)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
+      .then()
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(200)
+      .extract()
+        .as(Hold.class);
+
+    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
+    assertEquals(expectedHold, holdCancelResponse);
     // Test done
     logger.info("Test done");
   }
 
   @Test
-  public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldId404() {
-    logger.info("Testing delete hold by with an unknown id");
+  public final void testCancelPatronRequestByHoldIdFailure422() {
+    logger.info("Testing cancellation hold by id");
 
-    given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", goodItemId)
-      .pathParam("holdId", badHoldId)
-    .when()
-      .delete(accountPath + itemPath + holdPath + holdIdPath)
-    .then()
-      .log().all()
-      .statusCode(404);
+    String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
+
+    final Errors holdErrorResponse = given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(new Header(okapiBadDataHeader, "422"))
+        .header(contentTypeHeader)
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
+      .when()
+        .contentType(ContentType.JSON)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
+        .then()
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(422)
+      .extract()
+        .as(Errors.class);
+
+    final Errors expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/hold_cancel_error.json"), Errors.class);
+    assertEquals(expectedErrors, holdErrorResponse);
 
     // Test done
     logger.info("Test done");
@@ -1004,24 +1069,28 @@ public class PatronResourceImplTest {
   }
 
   @ParameterizedTest
-  @MethodSource("itemHoldsDeleteFailureCodes")
+  @MethodSource("itemHoldsCancelFailureCodes")
   public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldIdWithErrors(
-      String codeString, int expectedCode) {
-    logger.info("Testing deleting a hold on an item for the specified user with a {} error",
+      String codeString, int expectedCode, String errorText) {
+    logger.info("Testing cancelling a hold on an item for the specified user with a {} error",
         codeString);
 
-    given()
-      .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
-          new Header("x-okapi-bad-data", codeString)))
-      .and().pathParams("accountId", goodUserId, "itemId", goodItemId, "holdId", goodHoldId)
-    .when()
-      .delete(accountPath + itemPath + holdPath + holdIdPath)
-    .then()
-      .log().all()
-      .and().assertThat().statusCode(expectedCode)
-      .and().assertThat().contentType(ContentType.TEXT)
-      .and().assertThat().body(Matchers.equalTo(codeString));
+    String response = given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .header(new Header(okapiBadDataHeader, codeString))
+        .pathParam("accountId", goodUserId)
+        .pathParam("holdId", badCancelHoldId)
+        .body(readMockFile(mockDataFolder + "/generic_hold_cancel_request.json"))
+      .when()
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
+      .then()
+        .log().all()
+        .statusCode(expectedCode)
+        .extract().body().asString();
 
+    assertEquals(errorText, response);
     // Test done
     logger.info("Test done");
   }
@@ -1067,15 +1136,15 @@ public class PatronResourceImplTest {
       );
   }
 
-  static Stream<Arguments> itemHoldsDeleteFailureCodes() {
+  static Stream<Arguments> itemHoldsCancelFailureCodes() {
     return Stream.of(
         // Even though we receive a 400, we need to return a 500 since there is nothing the client
         // can do to correct the 400. We'd have to correct it in the code.
-        Arguments.of("400", 500),
-        Arguments.of("401", 401),
-        Arguments.of("403", 403),
-        Arguments.of("404", 404),
-        Arguments.of("500", 500)
+        Arguments.of("400", 400, "unable to process request -- constraint violation"),
+        Arguments.of("401", 401, "unable to cancel hold -- unauthorized"),
+        Arguments.of("403", 403, "access denied"),
+        Arguments.of("404", 404, "hold not found"),
+        Arguments.of("500", 500, "internal server error, contact administrator")
       );
   }
 

@@ -19,4 +19,8 @@ class Constants {
   static final String JSON_VALUE_HOLD_SHELF = "Hold Shelf";
   static final String JSON_FIELD_ID = "id";
   static final String JSON_FIELD_PATRON_GROUP = "patronGroup";
+  static final String JSON_FIELD_CANCELLATION_REASON_ID = "cancellationReasonId";
+  static final String JSON_FIELD_CANCELLATION_DATE = "cancelledDate";
+  static final String JSON_FIELD_CANCELLATION_USER_ID = "cancelledByUserId";
+  static final String JSON_FIELD_CANCELLATION_ADDITIONAL_INFO = "cancellationAdditionalInformation";
 }
