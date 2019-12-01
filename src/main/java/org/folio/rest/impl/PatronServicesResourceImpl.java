@@ -181,16 +181,12 @@ public class PatronServicesResourceImpl implements Patron {
           JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
           final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID), itemJson);
           final Hold hold = getHold(body, item);
-          hold.withCancellationAdditionalInformation(entity.getCancellationAdditionalInformation());
-          hold.withCancellationReasonId(entity.getCancellationReasonId());
-          hold.withCanceledByUserId(entity.getCanceledByUserId());
-          hold.withCanceledDate(entity.getCanceledDate());
-          holds[0] = hold;
-          return hold;
+          holds[0] = constructHoldEntity(hold, entity);
+          return modifyRequestObject(body, entity);
         })
-        .thenCompose( aHold -> {
+        .thenCompose( anUpdatedRequest -> {
           try {
-            return httpClient.request(HttpMethod.PUT, Buffer.buffer(aHold.toString()), "/circulation/requests/" + holdId, okapiHeaders);
+            return httpClient.request(HttpMethod.PUT, Buffer.buffer(anUpdatedRequest.toString()), "/circulation/requests/" + holdId, okapiHeaders);
           } catch (Exception e) {
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
               httpClient.closeClient();
@@ -458,6 +454,24 @@ public class PatronServicesResourceImpl implements Patron {
         .put(Constants.JSON_FIELD_TITLE, instance.getString(Constants.JSON_FIELD_TITLE));
 
     return getItem(itemId, composite);
+  }
+
+  private JsonObject modifyRequestObject(JsonObject request, Hold entity) {
+    request.put("cancellationAdditionalInformation", entity.getCancellationAdditionalInformation());
+    request.put("cancellationReasonId", entity.getCancellationReasonId());
+    request.put("cancelledByUserId", entity.getCanceledByUserId());
+    request.put("cancelledDate", entity.getCanceledDate().toString());
+    request.put("status", Status.CLOSED_CANCELLED);
+    return request;
+  }
+
+  private Hold constructHoldEntity(Hold newHold, Hold tempHoldEntity ) {
+    newHold.withCancellationAdditionalInformation(tempHoldEntity.getCancellationAdditionalInformation());
+    newHold.withCancellationReasonId(tempHoldEntity.getCancellationReasonId());
+    newHold.withCanceledByUserId(tempHoldEntity.getCanceledByUserId());
+    newHold.withCanceledDate(tempHoldEntity.getCanceledDate());
+    newHold.withStatus(Status.CLOSED_CANCELLED);
+    return newHold;
   }
 
   private Account updateItem(Charge charge, Item item, Account account) {
