@@ -38,7 +38,7 @@
     <http.port>8081</http.port>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <ramlfiles_util_path>${ramlfiles_path}/raml-util</ramlfiles_util_path>
-    <raml-module-builder.version>24.0.0</raml-module-builder.version>
+    <raml-module-builder.version>29.1.0</raml-module-builder.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
@@ -106,7 +106,7 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
-      <version>3.7.0</version>
+      <version>3.8.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
