@@ -1,15 +1,25 @@
 package org.folio.rest.impl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.*;
+import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.Charge;
 import org.folio.rest.jaxrs.model.Error;
-import org.folio.rest.jaxrs.model.Hold.Status;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Hold;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.Parameter;
+import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
 import org.folio.rest.tools.client.Response;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
@@ -25,6 +35,8 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import static org.folio.rest.impl.HoldHelpers.*;
 
 public class PatronServicesResourceImpl implements Patron {
 
@@ -181,8 +193,8 @@ public class PatronServicesResourceImpl implements Patron {
           JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
           final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID), itemJson);
           final Hold hold = getHold(body, item);
-          holds[0] = constructHoldEntity(hold, entity);
-          return modifyRequestObject(body, entity);
+          holds[0] = constructNewHoldWithCancellationFields(hold, entity);
+          return addCancellationFieldsToRequest(body, entity);
         })
         .thenCompose( anUpdatedRequest -> {
           try {
@@ -348,28 +360,6 @@ public class PatronServicesResourceImpl implements Patron {
     return account;
   }
 
-  private Hold getHold(JsonObject holdJson, Item item) {
-    Hold hold = new Hold()
-      .withItem(item)
-      .withExpirationDate(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE) == null
-        ? null
-        : new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
-      .withRequestId(holdJson.getString("id"))
-      .withPickupLocationId(holdJson.getString(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID))
-      .withRequestDate(new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
-      .withQueuePosition(holdJson.getInteger(Constants.JSON_FIELD_POSITION))
-      .withStatus(Status.fromValue(holdJson.getString("status")))
-      .withCancellationAdditionalInformation(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_ADDITIONAL_INFO))
-      .withCancellationReasonId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_REASON_ID))
-      .withCanceledByUserId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_USER_ID));
-
-    String canceledationDate = holdJson.getString(Constants.JSON_FIELD_CANCELLATION_DATE);
-    if (canceledationDate != null && !canceledationDate.isEmpty()) {
-      hold.withCanceledDate(new DateTime(canceledationDate, DateTimeZone.UTC).toDate());
-    }
-    return hold;
-  }
-
   private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
     final int totalCharges = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
@@ -454,24 +444,6 @@ public class PatronServicesResourceImpl implements Patron {
         .put(Constants.JSON_FIELD_TITLE, instance.getString(Constants.JSON_FIELD_TITLE));
 
     return getItem(itemId, composite);
-  }
-
-  private JsonObject modifyRequestObject(JsonObject request, Hold entity) {
-    request.put("cancellationAdditionalInformation", entity.getCancellationAdditionalInformation());
-    request.put("cancellationReasonId", entity.getCancellationReasonId());
-    request.put("cancelledByUserId", entity.getCanceledByUserId());
-    request.put("cancelledDate", entity.getCanceledDate().toString());
-    request.put("status", Status.CLOSED_CANCELLED);
-    return request;
-  }
-
-  private Hold constructHoldEntity(Hold newHold, Hold tempHoldEntity ) {
-    newHold.withCancellationAdditionalInformation(tempHoldEntity.getCancellationAdditionalInformation());
-    newHold.withCancellationReasonId(tempHoldEntity.getCancellationReasonId());
-    newHold.withCanceledByUserId(tempHoldEntity.getCanceledByUserId());
-    newHold.withCanceledDate(tempHoldEntity.getCanceledDate());
-    newHold.withStatus(Status.CLOSED_CANCELLED);
-    return newHold;
   }
 
   private Account updateItem(Charge charge, Item item, Account account) {

@@ -275,7 +275,7 @@ public class PatronResourceImplTest {
               .putHeader("content-type", "application/json")
               .end(responseBody);
           } else {
-              String responseBody = readMockFile(mockDataFolder + "/hold_cancel.json");
+            String responseBody = readMockFile(mockDataFolder + "/hold_cancel.json");
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
