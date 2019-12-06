@@ -7,7 +7,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 class HoldHelpers {
   private HoldHelpers() {}
