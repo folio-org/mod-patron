@@ -6,14 +6,20 @@ import org.folio.rest.jaxrs.model.Item;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 class HoldHelpers {
   private HoldHelpers() {}
 
   static JsonObject addCancellationFieldsToRequest(JsonObject request, Hold entity) {
+
+    final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
     request.put("cancellationAdditionalInformation", entity.getCancellationAdditionalInformation());
     request.put("cancellationReasonId", entity.getCancellationReasonId());
     request.put("cancelledByUserId", entity.getCanceledByUserId());
-    request.put("cancelledDate", entity.getCanceledDate().toString());
+    request.put("cancelledDate", formatter.format(entity.getCanceledDate()));
     request.put("status", Hold.Status.CLOSED_CANCELLED.value());
     return request;
   }

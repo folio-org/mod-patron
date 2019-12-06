@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.jaxrs.model.Hold;
+import org.joda.time.DateTime;
 import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 
 import static org.folio.patron.utils.Utils.readMockFile;
@@ -26,8 +28,10 @@ class HoldHelpersTest {
     final String cancellationReasonId = "dd238b5b-01fc-4205-83b8-888888888888";
     final String requestId = "dd238b5b-01fc-4205-83b8-888888888888";
     final String holdCancellationReason = "I really don't want it anymore";
-    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-    Date canceledDate = format.parse ( "2019-11-27" );
+    final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSZ");
+
+    Date canceledDate = DateTime.now().toDate();
+    String canceledDateString = formatter.format(canceledDate);
 
     Hold holdEntity = new Hold();
     holdEntity.withStatus(Hold.Status.CLOSED_CANCELLED);
@@ -44,6 +48,6 @@ class HoldHelpersTest {
     assertEquals(userIdCanceledHold, newJsonRequest.getString("cancelledByUserId"));
     assertEquals(cancellationReasonId, newJsonRequest.getString("cancellationReasonId"));
     assertEquals(holdCancellationReason, newJsonRequest.getString("cancellationAdditionalInformation"));
-    assertEquals(canceledDate.toString(), newJsonRequest.getString("cancelledDate"));
+    assertEquals(canceledDateString, newJsonRequest.getString("cancelledDate"));
   }
 }
