@@ -65,7 +65,7 @@
     },
     {
       "id": "circulation",
-      "version": "8.0"
+      "version": "8.0 9.0"
     },
     {
       "id": "feesfines",
@@ -73,7 +73,7 @@
     },
     {
       "id": "inventory",
-      "version": "5.2 6.0 7.0 8.0 9.0"
+      "version": "5.2 6.0 7.0 8.0 9.0 10.0"
     },
     {
       "id": "holdings-storage",
