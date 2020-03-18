@@ -1,3 +1,6 @@
+## 4.1.0 2020-03-18
+ * [MODPATRON-36](https://issues.folio.org/browse/MODPATRON-36): MODPATRON-36: Migrate to item-storage 8.0 and inventory 10.0
+
 ## 4.0.0 2019-12-06
  * [MODPATRON-29](https://issues.folio.org/browse/MODPATRON-29): Fixing the impact of the API change regarding CIRC-405
  * [FOLIO-2235](https://issues.folio.org/browse/FOLIO-2235): Add LaunchDescriptor settings to each backend non-core module repository
