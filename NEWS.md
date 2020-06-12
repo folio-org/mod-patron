@@ -1,3 +1,6 @@
+## 4.2.0 2020-06-12
+ * [MODPATRON-37](https://issues.folio.org/browse/MODPATRON-37): MODPATRON-37: Migrate to RMB 30.0.2
+
 ## 4.1.0 2020-03-18
  * [MODPATRON-36](https://issues.folio.org/browse/MODPATRON-36): MODPATRON-36: Migrate to item-storage 8.0 and inventory 10.0
 
