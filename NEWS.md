@@ -1,3 +1,6 @@
+## 4.3.0 2020-10-20
+ * [MODPATRON-45](https://issues.folio.org/browse/MODPATRON-45): MODPATRON-45: Upgrade to RMB v31.1.2 and JDK 11
+
 ## 4.2.0 2020-06-12
  * [MODPATRON-37](https://issues.folio.org/browse/MODPATRON-37): MODPATRON-37: Migrate to RMB 30.0.2
 
