@@ -561,6 +561,10 @@ public class PatronServicesResourceImpl implements Patron {
       case 404:
         result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond404WithTextPlain(message));
         break;
+        case 422:
+          result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.
+            respond422WithApplicationJson(new Errors().withErrors(List.of(new Error().withMessage(message)))));
+          break;
       default:
         result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));
       }
