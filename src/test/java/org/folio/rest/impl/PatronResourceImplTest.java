@@ -1032,7 +1032,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testPostPatronAccountByIdInstanceByInstanceIdHold422Error() {
+  public final void postToCreateInstanceHoldRequestShouldForwardOn422Error() {
     logger.info("Testing creating a hold on an instance for the specified user with bad instance id error");
 
     final var holdErrorResponse = given()
@@ -1054,13 +1054,10 @@ public class PatronResourceImplTest {
 
     final var expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/instance_hold_bad_instance_id.json"), Errors.class);
     assertEquals(expectedErrors, holdErrorResponse);
-
-    // Test done
-    logger.info("Test done");
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdHold422Error() {
+  public final void postToCreateItemHoldRequestShouldForwardOn422Error() {
     logger.info("Testing creating a hold on an item for the specified user with bad item id error");
 
     final var holdErrorResponse = given()
@@ -1081,9 +1078,6 @@ public class PatronResourceImplTest {
 
     final var expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/item_hold_bad_item_id.json"), Errors.class);
     assertEquals(expectedErrors, holdErrorResponse);
-
-    // Test done
-    logger.info("Test done");
   }
 
   @ParameterizedTest
