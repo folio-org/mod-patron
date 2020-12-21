@@ -527,6 +527,10 @@ public class PatronServicesResourceImpl implements Patron {
       case 404:
         result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain(message));
         break;
+      case 422:
+        final Errors errors = Json.decodeValue(message, Errors.class);
+        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors));
+        break;
       default:
         result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));
       }
@@ -560,6 +564,10 @@ public class PatronServicesResourceImpl implements Patron {
         break;
       case 404:
         result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond404WithTextPlain(message));
+        break;
+      case 422:
+        final Errors errors = Json.decodeValue(message, Errors.class);
+        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
         result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));

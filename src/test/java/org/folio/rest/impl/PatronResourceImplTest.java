@@ -75,6 +75,7 @@ public class PatronResourceImplTest {
   private final String goodCancelItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
   private final String badItemId = "3dda4eb9-a156-474c-829f-bd5a386f382c";
   private final String goodInstanceId = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
+  private final String badInstanceId = "68cb9692-aa5f-459d-8791-f79486c11225";
   private final String goodCancelHoldId = "dd238b5b-01fc-4205-83b8-888888888888";
   private final String badCancelHoldId = "dd238b5b-01fc-4205-83b8-999999999999";
 
@@ -175,7 +176,12 @@ public class PatronResourceImplTest {
       } else if (req.path().equals("/circulation/requests")) {
         if (req.method() == HttpMethod.POST) {
           final String badDataValue = req.getHeader("x-okapi-bad-data");
-          if (badDataValue != null) {
+          if (req.getHeader("x-okapi-bad-item-id") != null) {
+            req.response()
+                .setStatusCode(422)
+                .putHeader("content-type", "application/json")
+                .end(readMockFile(mockDataFolder + "/item_hold_bad_item_id.json"));
+          } else if (badDataValue != null) {
             if (badDataValue.equals("java.lang.NullPointerException")) {
               req.response()
                 .setStatusCode(201)
@@ -228,7 +234,12 @@ public class PatronResourceImplTest {
       } else if (req.path().equals("/circulation/requests/instances")) {
         if (req.method() == HttpMethod.POST) {
           final String badDataValue = req.getHeader("x-okapi-bad-data");
-          if (badDataValue != null) {
+          if (req.getHeader("x-okapi-bad-instance-id") != null) {
+            req.response()
+                .setStatusCode(422)
+                .putHeader("content-type", "application/json")
+                .end(readMockFile(mockDataFolder + "/instance_hold_bad_instance_id.json"));
+          } else if (badDataValue != null) {
             if (badDataValue.equals("java.lang.NullPointerException")) {
               req.response()
                 .setStatusCode(201)
@@ -1018,6 +1029,55 @@ public class PatronResourceImplTest {
 
     // Test done
     logger.info("Test done");
+  }
+
+  @Test
+  public final void postToCreateInstanceHoldRequestShouldForwardOn422Error() {
+    logger.info("Testing creating a hold on an instance for the specified user with bad instance id error");
+
+    final var holdErrorResponse = given()
+        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
+            new Header("x-okapi-bad-instance-id", badInstanceId),
+            new Header(okapiBadDataHeader, "422")))
+        .and().pathParams("accountId", goodUserId, "instanceId", badInstanceId)
+        .and().body(readMockFile(mockDataFolder
+        + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
+      .when()
+        .contentType(ContentType.JSON)
+        .post(accountPath + instancePath + holdPath)
+        .then()
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(422)
+      .extract()
+        .as(Errors.class);
+
+    final var expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/instance_hold_bad_instance_id.json"), Errors.class);
+    assertEquals(expectedErrors, holdErrorResponse);
+  }
+
+  @Test
+  public final void postToCreateItemHoldRequestShouldForwardOn422Error() {
+    logger.info("Testing creating a hold on an item for the specified user with bad item id error");
+
+    final var holdErrorResponse = given()
+        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
+            new Header("x-okapi-bad-item-id", badItemId),
+            new Header(okapiBadDataHeader, "422")))
+        .and().pathParams("accountId", goodUserId, "itemId", goodItemId)
+        .and().body(readMockFile(mockDataFolder
+        + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
+        .when()
+        .post(accountPath + itemPath + holdPath)
+        .then()
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(422)
+        .extract()
+        .as(Errors.class);
+
+    final var expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/item_hold_bad_item_id.json"), Errors.class);
+    assertEquals(expectedErrors, holdErrorResponse);
   }
 
   @ParameterizedTest
