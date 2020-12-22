@@ -62,6 +62,10 @@
       "description": "Date the request was cancelled",
       "type": "string",
       "format": "date-time"
+    },
+    "patronComments": {
+      "description": "Comments made by the patron",
+      "type": "string"
     }
   },
   "required": [
