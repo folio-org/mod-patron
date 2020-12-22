@@ -1210,7 +1210,7 @@ public class PatronResourceImplTest {
       );
   }
 
-    static Stream<Arguments> itemRequestsParams() {
+  static Stream<Arguments> itemRequestsParams() {
     return Stream.of(
       Arguments.of(availableItemId, "/response_testPostPatronAccountByIdItemByItemIdPage.json" ),
       Arguments.of(checkedoutItemId, "/response_testPostPatronAccountByIdItemByItemIdHold.json")
