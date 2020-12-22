@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.stream.Stream;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.patron.utils.Utils;
@@ -197,29 +198,23 @@ public class PatronResourceImplTest {
             req.bodyHandler( body -> {
               String content = new String(body.getBytes());
               JsonObject jsonContent = new JsonObject(content);
+
               if (jsonContent != null) {
-                final var patronComments =  req.getHeader("x-okapi-patron-comment");
-                if (patronComments != null) {
-                  String readPayload = new JsonObject(readMockFile(mockDataFolder + "/holds_create.json")).put("patronComments", patronComments).encodePrettily();
-                  req.response()
-                      .setStatusCode(201)
-                      .putHeader("content-type", "application/json")
-                      .end(readPayload);
-                } else {
-                  String itemId = jsonContent.getString("itemId");
-                  RequestType requestType = RequestType.from(jsonContent.getString("requestType"));
-                  if (itemId.equals(checkedoutItemId) && requestType == RequestType.HOLD) {
-                    req.response()
-                        .setStatusCode(201)
-                        .putHeader("content-type", "application/json")
-                        .end(readMockFile(mockDataFolder + "/holds_create.json"));
-                  } else if (itemId.equals(availableItemId) && requestType == RequestType.PAGE) {
-                    req.response()
-                        .setStatusCode(201)
-                        .putHeader("content-type", "application/json")
-                        .end(readMockFile(mockDataFolder + "/page_create.json"));
-                  }
+                String itemId = jsonContent.getString("itemId");
+                RequestType requestType = RequestType.from(jsonContent.getString("requestType"));
+
+                var responsePayload = StringUtils.EMPTY;
+
+                if (itemId.equals(checkedoutItemId) && requestType == RequestType.HOLD) {
+                  responsePayload = readMockFile(mockDataFolder + "/holds_create.json");
+                } else if (itemId.equals(availableItemId) && requestType == RequestType.PAGE) {
+                  responsePayload = readMockFile(mockDataFolder + "/page_create.json");
                 }
+
+                req.response()
+                    .setStatusCode(201)
+                    .putHeader("content-type", "application/json")
+                    .end(responsePayload);
               }
             });
           }
@@ -259,15 +254,10 @@ public class PatronResourceImplTest {
                 .end(badDataValue);
             }
           } else {
-            String readPayload = readMockFile(mockDataFolder + "/instance_holds_create.json");
-            final var patronComments =  req.getHeader("x-okapi-patron-comment");
-            if (patronComments != null) {
-              readPayload = new JsonObject(readPayload).put("patronComments", patronComments).encodePrettily();
-            }
             req.response()
               .setStatusCode(201)
               .putHeader("content-type", "application/json")
-              .end(readPayload);
+              .end(readMockFile(mockDataFolder + "/instance_holds_create.json"));
           }
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
@@ -855,33 +845,6 @@ public class PatronResourceImplTest {
     logger.info("Test done");
   }
 
-  @Test
-  public final void testPostPatronAccountByIdItemByItemIdRequestsPatronComments() {
-    logger.info("Testing creating a hold with patron comments on an item for the specified user");
-
-    final var expectedPatronComment = "I need this book. Item level comment.";
-
-    final var holdResponse = given()
-        .log().all()
-        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
-                 new Header("x-okapi-patron-comment", expectedPatronComment)))
-        .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
-        .pathParam("accountId", goodUserId)
-        .pathParam("itemId", goodItemId)
-      .when()
-        .post(accountPath + itemPath + holdPath)
-      .then()
-        .log().all()
-        .contentType(ContentType.JSON)
-        .statusCode(201)
-      .extract()
-        .as(Hold.class);
-
-    final var expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldWihPatronComments.json"), Hold.class);
-
-    assertEquals(expectedHold.getPatronComments(), holdResponse.getPatronComments());
-  }
-
   /*
   This test checks the negative case of not being able to place a request due to request policy and whitelist restrictions
    */
@@ -1043,32 +1006,6 @@ public class PatronResourceImplTest {
 
     // Test done
     logger.info("Test done");
-  }
-
-  @Test
-  public final void testPostPatronAccountByIdInstanceByInstanceIdHoldPatronComments() {
-    logger.info("Testing creating a hold with parton comments on an instance for the specified user");
-
-    final var expectedPatronComment = "I need this book. Instance level comment.";
-
-    final var hold = given()
-        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
-                new Header("x-okapi-patron-comment", expectedPatronComment)))
-        .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
-        .and().body(readMockFile(mockDataFolder
-            + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
-        .when()
-        .post(accountPath + instancePath + holdPath)
-        .then()
-        .log().all()
-        .and().assertThat().contentType(ContentType.JSON)
-        .and().assertThat().statusCode(201)
-        .extract()
-        .as(Hold.class);
-
-    final var expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHoldWithPatronComments.json"), Hold.class);
-
-    assertEquals(expectedHold.getPatronComments(), hold.getPatronComments());
   }
 
   @ParameterizedTest
@@ -1273,7 +1210,7 @@ public class PatronResourceImplTest {
       );
   }
 
-  static Stream<Arguments> itemRequestsParams() {
+    static Stream<Arguments> itemRequestsParams() {
     return Stream.of(
       Arguments.of(availableItemId, "/response_testPostPatronAccountByIdItemByItemIdPage.json" ),
       Arguments.of(checkedoutItemId, "/response_testPostPatronAccountByIdItemByItemIdHold.json")
@@ -1313,6 +1250,8 @@ public class PatronResourceImplTest {
           actualHold.getString("expirationDate") == null ? null : new DateTime(actualHold.getString("expirationDate"), DateTimeZone.UTC));
       assertEquals(expectedHold.getInteger("requestPosition"),
           actualHold.getInteger("requestPosition"));
+      assertEquals(expectedHold.getString("patronComments"),
+          actualHold.getString("patronComments"));
       return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"));
     }
     return false;
