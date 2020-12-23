@@ -45,7 +45,8 @@ class HoldHelpers {
       .withStatus(Hold.Status.fromValue(holdJson.getString("status")))
       .withCancellationAdditionalInformation(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_ADDITIONAL_INFO))
       .withCancellationReasonId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_REASON_ID))
-      .withCanceledByUserId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_USER_ID));
+      .withCanceledByUserId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_USER_ID))
+      .withPatronComments(holdJson.getString(Constants.JSON_FIELD_PATRON_COMMENTS));
 
     String canceledationDate = holdJson.getString(Constants.JSON_FIELD_CANCELLATION_DATE);
     if (canceledationDate != null && !canceledationDate.isEmpty()) {

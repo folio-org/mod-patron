@@ -10,5 +10,6 @@
   "requestDate": "2018-06-02T08:16:30Z",
   "expirationDate": "3000-01-30T08:16:30Z",
   "pickupLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
-  "status": "Open - Not yet filled"
+  "status": "Open - Not yet filled",
+  "patronComments": "Can you deliver this to the History building for Professor Grant?"
 }

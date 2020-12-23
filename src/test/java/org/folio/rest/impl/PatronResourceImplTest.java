@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.stream.Stream;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.patron.utils.Utils;
@@ -202,17 +203,18 @@ public class PatronResourceImplTest {
                 String itemId = jsonContent.getString("itemId");
                 RequestType requestType = RequestType.from(jsonContent.getString("requestType"));
 
+                var responsePayload = StringUtils.EMPTY;
+
                 if (itemId.equals(checkedoutItemId) && requestType == RequestType.HOLD) {
-                  req.response()
-                    .setStatusCode(201)
-                    .putHeader("content-type", "application/json")
-                    .end(readMockFile(mockDataFolder + "/holds_create.json"));
+                  responsePayload = readMockFile(mockDataFolder + "/holds_create.json");
                 } else if (itemId.equals(availableItemId) && requestType == RequestType.PAGE) {
-                  req.response()
+                  responsePayload = readMockFile(mockDataFolder + "/page_create.json");
+                }
+
+                req.response()
                     .setStatusCode(201)
                     .putHeader("content-type", "application/json")
-                    .end(readMockFile(mockDataFolder + "/page_create.json"));
-                }
+                    .end(responsePayload);
               }
             });
           }
@@ -1248,6 +1250,8 @@ public class PatronResourceImplTest {
           actualHold.getString("expirationDate") == null ? null : new DateTime(actualHold.getString("expirationDate"), DateTimeZone.UTC));
       assertEquals(expectedHold.getInteger("requestPosition"),
           actualHold.getInteger("requestPosition"));
+      assertEquals(expectedHold.getString("patronComments"),
+          actualHold.getString("patronComments"));
       return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"));
     }
     return false;
