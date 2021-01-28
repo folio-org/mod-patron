@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-patron</artifactId>
-  <version>4.4.0-SNAPSHOT</version>
+  <version>4.4.1-SNAPSHOT</version>
   <name>Patron Services</name>
   <description>Discovery service initiated patron services for FOLIO</description>
   <inceptionYear>2018</inceptionYear>
@@ -33,12 +33,12 @@
   </ciManagement>
 
   <properties>
-    <aspectj.version>1.9.5</aspectj.version>
+    <aspectj.version>1.9.6</aspectj.version>
     <module_name>mod-patron</module_name>
     <http.port>8081</http.port>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <ramlfiles_util_path>${ramlfiles_path}/raml-util</ramlfiles_util_path>
-    <raml-module-builder.version>31.1.2</raml-module-builder.version>
+    <raml-module-builder.version>32.1.0</raml-module-builder.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -110,7 +110,7 @@
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
-      <version>4.3.0</version>
+      <version>4.3.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
