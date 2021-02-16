@@ -10,15 +10,15 @@ import java.util.Random;
 
 import org.apache.commons.io.IOUtils;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * @author mreno
  *
  */
 public final class Utils {
-  private static final Logger logger = LoggerFactory.getLogger("okapi");
+  private static final Logger logger = LogManager.getLogger("okapi");
 
   private Utils() {
     super();
