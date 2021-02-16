@@ -39,7 +39,6 @@
     <ramlfiles_util_path>${ramlfiles_path}/raml-util</ramlfiles_util_path>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <aspectj.version>1.9.6</aspectj.version>
-    <junit.version>5.7.0</junit.version>
     <raml-module-builder.version>32.1.0</raml-module-builder.version>
   </properties>
 
@@ -51,33 +50,22 @@
     </repository>
   </repositories>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <!-- There is some data-time parsing issues could occurs because of global configuration to accept
-             with colon (can be changed via annotation or objects mapper config). Affected in higher versions starting from the 2.11.0 -->
-        <version>2.10.2</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-bom</artifactId>
-        <version>2.13.3</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit</groupId>
-        <artifactId>junit-bom</artifactId>
-        <version>${junit.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
+  <distributionManagement>
+    <repository>
+      <id>folio-nexus</id>
+      <name>FOLIO Release Repository</name>
+      <url>https://repository.folio.org/repository/maven-releases/</url>
+      <uniqueVersion>false</uniqueVersion>
+      <layout>default</layout>
+    </repository>
+    <snapshotRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Snapshot Repository</name>
+      <uniqueVersion>true</uniqueVersion>
+      <url>https://repository.folio.org/repository/maven-snapshots/</url>
+      <layout>default</layout>
+    </snapshotRepository>
+  </distributionManagement>
 
   <dependencies>
     <dependency>
@@ -133,7 +121,6 @@
   </dependencies>
 
   <build>
-
     <resources>
       <resource>
         <directory>src/main/resources</directory>
@@ -482,24 +469,33 @@
         </configuration>
       </plugin>
     </plugins>
-
   </build>
 
-  <distributionManagement>
-    <repository>
-      <id>folio-nexus</id>
-      <name>FOLIO Release Repository</name>
-      <url>https://repository.folio.org/repository/maven-releases/</url>
-      <uniqueVersion>false</uniqueVersion>
-      <layout>default</layout>
-    </repository>
-    <snapshotRepository>
-      <id>folio-nexus</id>
-      <name>FOLIO Snapshot Repository</name>
-      <uniqueVersion>true</uniqueVersion>
-      <url>https://repository.folio.org/repository/maven-snapshots/</url>
-      <layout>default</layout>
-    </snapshotRepository>
-  </distributionManagement>
-
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <!-- There is some data-time parsing issues could occurs because of global configuration to accept
+             with colon (can be changed via annotation or objects mapper config). Affected in higher versions starting from the 2.11.0 -->
+        <version>2.10.2</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-bom</artifactId>
+        <version>2.13.3</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>5.7.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>
