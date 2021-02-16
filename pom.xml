@@ -455,6 +455,16 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.0.0-M5</version>
         <configuration>
+          <!--
+            Options to enable performance optimizations for Netty running on java 11th.
+            This manually opens access level for Netty.
+            Passing of "illegal-access" parameter allows to know when deep reflections is used in further.
+          -->
+          <argLine>
+            --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
+            -Dio.netty.tryReflectionSetAccessible=true
+            --illegal-access=warn
+          </argLine>
           <useSystemClassLoader>false</useSystemClassLoader>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>
