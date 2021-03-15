@@ -1,3 +1,13 @@
+## 4.4.0 2021-03-15
+
+* Introduces `patron comments` for requests ([MODPATRON-4](https://issues.folio.org/browse/MODPATRON-4))
+* Upgrades to RAML Module Builder 32.1.0
+* Upgrades to vert.x 4.0.0
+* Provides `patron 4.2`
+* Requires `circulation 9.5`
+* Requires `feesfines 14.0, 15.0 or 16.0`
+
+
 ## 4.3.0 2020-10-20
  * [MODPATRON-45](https://issues.folio.org/browse/MODPATRON-45): MODPATRON-45: Upgrade to RMB v31.1.2 and JDK 11
 
