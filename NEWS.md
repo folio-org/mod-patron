@@ -1,3 +1,7 @@
+## 4.5.0 (IN PROGRESS)
+
+ * [MODPATRON-52](https://issues.folio.org/browse/MODPATRON-52): Requires `circulation 9.5 10`
+
 ## 4.4.0 2021-03-15
 
 * Introduces `patron comments` for requests ([MODPATRON-4](https://issues.folio.org/browse/MODPATRON-4))
@@ -23,7 +27,7 @@
  * [MODPATRON-32](https://issues.folio.org/browse/MODPATRON-32): Update holdings-storage API version to 4.0
  * [FOLIO-2358](https://issues.folio.org/browse/FOLIO-2358): Use JVM features (UseContainerSupport, MaxRAMPercentage) to manage container memory
  * [MODPATRON-34](https://issues.folio.org/browse/MODPATRON-34): Implement Cancel Requests, updated RMB version to 29.1.0 and vertx-junit version to 3.8.4
- 
+
 ## 3.0.2 2019-07-25
  * [MODPATRON-26](https://issues.folio.org/browse/MODPATRON-26): Determine request type to use when
    making an item level request
