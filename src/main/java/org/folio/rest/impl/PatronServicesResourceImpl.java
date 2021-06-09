@@ -21,8 +21,8 @@ import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
-import org.folio.rest.tools.client.Response;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
+import org.folio.util.StringUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -404,10 +404,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
     return getItem(charge, okapiHeaders, httpClient)
-        .thenCompose(item ->getHoldingsRecord(item, httpClient, okapiHeaders))
-        .thenApply(LookupsUtils::verifyAndExtractBody)
-        .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
-        .thenApply(LookupsUtils::verifyAndExtractBody)
+        .thenCompose(item -> getInstance(item, httpClient, okapiHeaders))
         .thenApply(instance -> getItem(charge, instance))
         .thenApply(item -> updateItem(charge, item, account));
   }
@@ -417,19 +414,14 @@ public class PatronServicesResourceImpl implements Patron {
     return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders, httpClient);
   }
 
-  private CompletableFuture<Response> getHoldingsRecord(JsonObject item,
+  private CompletableFuture<JsonObject> getInstance(JsonObject item,
       HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
     try {
-      return httpClient.request("/holdings-storage/holdings/" + item.getString("holdingsRecordId"), okapiHeaders);
-    } catch (Exception e) {
-      throw new CompletionException(e);
-    }
-  }
-
-  private CompletableFuture<Response> getInstance(JsonObject holdingsRecord,
-      HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
-    try {
-      return httpClient.request("/inventory/instances/" + holdingsRecord.getString(Constants.JSON_FIELD_INSTANCE_ID), okapiHeaders);
+      String cql = "holdingsRecords.id==" +
+          StringUtil.cqlEncode(item.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID));
+      return httpClient.request("/inventory/instances?query=" + StringUtil.urlEncode(cql), okapiHeaders)
+          .thenApply(LookupsUtils::verifyAndExtractBody)
+          .thenApply(instances -> instances.getJsonArray("instances").getJsonObject(0));
     } catch (Exception e) {
       throw new CompletionException(e);
     }
