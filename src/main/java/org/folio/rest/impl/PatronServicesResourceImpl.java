@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
@@ -35,10 +36,13 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static org.folio.rest.impl.HoldHelpers.*;
 
 public class PatronServicesResourceImpl implements Patron {
+  private final Logger logger = LogManager.getLogger();
 
   @Validate
   @Override
@@ -72,8 +76,11 @@ public class PatronServicesResourceImpl implements Patron {
                 .thenCompose(charges -> {
                   if (includeCharges) {
                     List<CompletableFuture<Account>> cfs = new ArrayList<>();
+
                     for (Charge charge: account.getCharges()) {
-                      cfs.add(lookupItem(httpClient, charge, account, okapiHeaders));
+                      if (charge.getItem() != null) {
+                        cfs.add(lookupItem(httpClient, charge, account, okapiHeaders));
+                      }
                     }
                     return CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
                         .thenApply(done -> account);
@@ -374,8 +381,11 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : accountsJson) {
         if (o instanceof JsonObject) {
           final JsonObject accountJson = (JsonObject) o;
-          final Item item = new Item().withItemId(accountJson.getString(Constants.JSON_FIELD_ITEM_ID));
-          final Charge charge = getCharge(accountJson, item);
+          Charge charge = getCharge(accountJson);
+          if (accountJson.getString(Constants.JSON_FIELD_ITEM_ID) != null) {
+            final Item item = new Item().withItemId(accountJson.getString(Constants.JSON_FIELD_ITEM_ID));
+            charge.setItem(item);
+          }
           amount += charge.getChargeAmount().getAmount().doubleValue();
           if (includeCharges) {
             charges.add(charge);
@@ -391,9 +401,8 @@ public class PatronServicesResourceImpl implements Patron {
     return account;
   }
 
-  private Charge getCharge(JsonObject chargeJson, Item item) {
+  private Charge getCharge(JsonObject chargeJson) {
     return new Charge()
-        .withItem(item)
         .withAccrualDate(new DateTime(chargeJson.getString("dateCreated"), DateTimeZone.UTC).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
         .withState(chargeJson.getJsonObject("paymentStatus",
