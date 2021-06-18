@@ -38,6 +38,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Checkpoint;
@@ -501,20 +502,18 @@ public class PatronResourceImplTest {
             .end(readMockFile(mockDataFolder + "/renew_create.json"));
         }
       } else if (req.path().equals("/circulation/rules/request-policy")) {
-          if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
-                                                materialTypeId1, loanTypeId1, patronGroupId1, effectiveLocation1))) {
+          // These checks require that the query string parameters be produced in a specific order
+          if (parametersMatch(req, materialTypeId1)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/requestPolicyId_all.json"));
-          } else if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
-            materialTypeId2, loanTypeId1, patronGroupId1, effectiveLocation1))) {
+          } else if (parametersMatch(req, materialTypeId2)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/requestPolicyId_hold.json"));
-          } else if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
-            materialTypeId3, loanTypeId1, patronGroupId1, effectiveLocation1))) {
+          } else if (parametersMatch(req, materialTypeId3)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
@@ -540,6 +539,15 @@ public class PatronResourceImplTest {
       }
     });
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
+  }
+
+  private boolean parametersMatch(HttpServerRequest request, String materialTypeId) {
+    final var queryString = request.query();
+
+    return queryString.contains("item_type_id=" + materialTypeId)
+      && queryString.contains("loan_type_id=" + loanTypeId1)
+      && queryString.contains("patron_type_id=" + patronGroupId1)
+      && queryString.contains("location_id=" + effectiveLocation1);
   }
 
   @AfterEach

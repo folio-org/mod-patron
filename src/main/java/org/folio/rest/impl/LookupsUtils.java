@@ -75,16 +75,6 @@ class LookupsUtils {
     return HttpClientFactory.getHttpClient(okapiURL, tenantId);
   }
 
-  private static CompletableFuture<org.folio.rest.tools.client.Response> get (String path,
-    HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
-
-    try {
-      return httpClient.request(path, okapiHeaders);
-    } catch (Exception e) {
-      throw new CompletionException(e);
-    }
-  }
-
   private static CompletableFuture<LookupsUtils.Response> get (String path,
    Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
@@ -106,13 +96,10 @@ class LookupsUtils {
 
     queryParameters.forEach(request::addQueryParam);
 
-    request
-      .timeout(1000)
-      .send(futureResponse::complete);
+    request.send(futureResponse::complete);
 
     return futureResponse
-      .thenCompose(LookupsUtils::toResponse)
-      .exceptionally(t -> null);
+      .thenCompose(LookupsUtils::toResponse);
   }
 
   private static CompletableFuture<LookupsUtils.Response> get (String path,
