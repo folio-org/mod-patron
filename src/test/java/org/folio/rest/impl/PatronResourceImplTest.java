@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.UrlDecoder;
 import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
@@ -162,12 +163,12 @@ public class PatronResourceImplTest {
           .putHeader("content-type", "text/plain")
           .end("Not Found");
       } else if (req.path().equals("/circulation/loans")) {
-        if (req.query().equals(String.format("limit=%d&query=%%28userId%%3D%%3D%s%%20and%%20status.name%%3D%%3DOpen%%29", Integer.MAX_VALUE, goodUserId))) {
+        if (loansParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/loans_all.json"));
-        } else if (req.query().equals(String.format("limit=%d&query=%%28userId%%3D%%3D%s%%20and%%20status.name%%3D%%3DOpen%%29", 1, goodUserId))) {
+        } else if (loansParametersMatch(req, 1)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -503,17 +504,17 @@ public class PatronResourceImplTest {
         }
       } else if (req.path().equals("/circulation/rules/request-policy")) {
           // These checks require that the query string parameters be produced in a specific order
-          if (parametersMatch(req, materialTypeId1)) {
+          if (rulesParametersMatch(req, materialTypeId1)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/requestPolicyId_all.json"));
-          } else if (parametersMatch(req, materialTypeId2)) {
+          } else if (rulesParametersMatch(req, materialTypeId2)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/requestPolicyId_hold.json"));
-          } else if (parametersMatch(req, materialTypeId3)) {
+          } else if (rulesParametersMatch(req, materialTypeId3)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
@@ -541,7 +542,14 @@ public class PatronResourceImplTest {
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
   }
 
-  private boolean parametersMatch(HttpServerRequest request, String materialTypeId) {
+  private boolean loansParametersMatch(HttpServerRequest request, int limit) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("limit=" + limit)
+      && queryString.contains("query=(userId==" + goodUserId + " and status.name==Open)");
+  }
+
+  private boolean rulesParametersMatch(HttpServerRequest request, String materialTypeId) {
     final var queryString = request.query();
 
     return queryString.contains("item_type_id=" + materialTypeId)
