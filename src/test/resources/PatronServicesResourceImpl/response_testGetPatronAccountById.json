@@ -18,7 +18,7 @@
           "amount" : 50.0,
           "isoCurrencyCode" : "USD"
         },
-        "accrualDate" : "2018-01-31T00:00:01.000+0000",
+        "accrualDate" : "2018-01-31T00:00:01.000+00:00",
         "state" : "Paid Partially",
         "reason" : "damage - rebinding",
         "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
@@ -33,7 +33,7 @@
           "amount" : 25.0,
           "isoCurrencyCode" : "USD"
         },
-        "accrualDate" : "2018-04-30T00:00:01.000+0000",
+        "accrualDate" : "2018-04-30T00:00:01.000+00:00",
         "state" : "Unpaid",
         "reason" : "overdue",
         "feeFineId" : "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0"
@@ -48,7 +48,7 @@
           "amount" : 5.0,
           "isoCurrencyCode" : "USD"
         },
-        "accrualDate" : "2018-05-31T00:00:01.000+0000",
+        "accrualDate" : "2018-05-31T00:00:01.000+00:00",
         "state" : "Paid Partially",
         "reason" : "overdue",
         "feeFineId" : "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0"
@@ -63,7 +63,7 @@
           "amount" : 75.0,
           "isoCurrencyCode" : "USD"
         },
-        "accrualDate" : "2018-06-01T00:00:01.000+0000",
+        "accrualDate" : "2018-06-01T00:00:01.000+00:00",
         "state" : "Paid Partially",
         "reason" : "damage - camera",
         "feeFineId" : "ca295e87-223f-403c-9eee-a152c47bf67f"
@@ -117,8 +117,8 @@
                 "title": "Some Book About Something",
                 "author": "Some Guy; Another Guy"
             },
-            "loanDate": "2018-06-01T11:12:00.000+0000",
-            "dueDate": "2525-01-01T11:12:00.000+0000",
+            "loanDate": "2018-06-01T11:12:00.000+00:00",
+            "dueDate": "2525-01-01T11:12:00.000+00:00",
             "overdue": false
         },
         {
@@ -129,8 +129,8 @@
                 "title": "This Book Is Overdue!",
                 "author": "Tempus Fugit"
             },
-            "loanDate": "2018-03-05T22:01:00.000+0000",
-            "dueDate": "2018-04-01T09:50:00.000+0000",
+            "loanDate": "2018-03-05T22:01:00.000+00:00",
+            "dueDate": "2018-04-01T09:50:00.000+00:00",
             "overdue": true
         },
         {
@@ -141,7 +141,7 @@
                 "title": "風の谷のナウシカ",
                 "author": "宮崎 駿"
             },
-            "loanDate": "2018-06-10T16:30:00.000+0000",
+            "loanDate": "2018-06-10T16:30:00.000+00:00",
             "overdue": false
         }
     ]

@@ -40,6 +40,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <aspectj.version>1.9.6</aspectj.version>
     <raml-module-builder.version>32.1.0</raml-module-builder.version>
+    <vertx.version>4.0.0</vertx.version>
   </properties>
 
   <repositories>
@@ -84,6 +85,10 @@
       <version>${raml-module-builder.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.7.30</version>
@@ -104,7 +109,6 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
-      <version>4.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -478,6 +482,13 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-stack-depchain</artifactId>
+        <version>${vertx.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson</groupId>
         <artifactId>jackson-bom</artifactId>
