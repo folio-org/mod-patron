@@ -58,16 +58,13 @@ public class PatronServicesResourceImpl implements Patron {
             account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrencyCode("USD"));
             account.setTotalChargesCount(0);
 
-            final CompletableFuture<Account> cf1 = httpClient.request("/circulation/loans?limit=" + getLimit(includeLoans) + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
-                .thenApply(LookupsUtils::verifyAndExtractBody)
+            final CompletableFuture<Account> cf1 = getLoans(id, includeLoans, okapiHeaders, httpClient)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = httpClient.request("/circulation/requests?limit=" + getLimit(includeHolds) + "&query=%28requesterId%3D%3D" + id + "%20and%20status%3D%3DOpen%2A%29", okapiHeaders)
-                .thenApply(LookupsUtils::verifyAndExtractBody)
+            final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, okapiHeaders, httpClient)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
-            final CompletableFuture<Account> cf3 = httpClient.request("/accounts?limit=" + getLimit(true) + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
-                .thenApply(LookupsUtils::verifyAndExtractBody)
+            final CompletableFuture<Account> cf3 = getAccounts(id, okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges))
                 .thenCompose(charges -> {
                   if (includeCharges) {
@@ -100,6 +97,30 @@ public class PatronServicesResourceImpl implements Patron {
       asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
       httpClient.closeClient();
     }
+  }
+
+  private CompletableFuture<JsonObject> getAccounts(String id,
+    Map<String, String> okapiHeaders, HttpClientInterface httpClient) throws Exception {
+
+    return httpClient.request("/accounts?limit=" + getLimit(true)
+        + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
+      .thenApply(LookupsUtils::verifyAndExtractBody);
+  }
+
+  private CompletableFuture<JsonObject> getRequests(String id, boolean includeHolds,
+    Map<String, String> okapiHeaders, HttpClientInterface httpClient) throws Exception {
+
+    return httpClient.request("/circulation/requests?limit=" + getLimit(includeHolds)
+        + "&query=%28requesterId%3D%3D" + id + "%20and%20status%3D%3DOpen%2A%29", okapiHeaders)
+      .thenApply(LookupsUtils::verifyAndExtractBody);
+  }
+
+  private CompletableFuture<JsonObject> getLoans(String id, boolean includeLoans,
+    Map<String, String> okapiHeaders, HttpClientInterface httpClient) throws Exception {
+
+    return httpClient.request("/circulation/loans?limit=" + getLimit(includeLoans)
+        + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
+      .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
   @Validate
