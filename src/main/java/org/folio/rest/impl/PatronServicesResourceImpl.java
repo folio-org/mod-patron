@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
 
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
@@ -36,13 +35,10 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import static org.folio.rest.impl.HoldHelpers.*;
 
 public class PatronServicesResourceImpl implements Patron {
-  private final Logger logger = LogManager.getLogger();
 
   @Validate
   @Override
