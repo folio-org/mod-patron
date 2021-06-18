@@ -50,7 +50,7 @@ class RequestObjectFactory {
 
     return CompletableFuture.allOf(userFuture, itemFuture)
       .thenApply(x -> createRequestPolicyIdCriteria(itemFuture, userFuture, requestTypeParams))
-      .thenCompose((RequestTypeParameters criteria) -> lookupRequestPolicyId(criteria))
+      .thenCompose(this::lookupRequestPolicyId)
       .thenCompose(policyIdResponse ->
           LookupsUtils.getRequestPolicy(policyIdResponse.getString("requestPolicyId"), okapiHeaders))
       .thenApply(RequestPolicy::from)
@@ -69,13 +69,7 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<JsonObject> lookupRequestPolicyId(RequestTypeParameters criteria) {
-    String queryString = String.format(
-      "item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
-      criteria.getItemMaterialTypeId(), criteria.getItemLoanTypeId(),
-      criteria.getPatronGroupId(), criteria.getItemLocationId()
-    );
-
-    return LookupsUtils.getRequestPolicyId(queryString, okapiHeaders);
+    return LookupsUtils.getRequestPolicyId(criteria, okapiHeaders);
   }
 
   private RequestTypeParameters createRequestPolicyIdCriteria(CompletableFuture<JsonObject> itemFuture,

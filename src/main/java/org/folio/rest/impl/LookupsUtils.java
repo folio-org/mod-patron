@@ -33,7 +33,12 @@ class LookupsUtils {
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static CompletableFuture<JsonObject> getRequestPolicyId(String queryString, Map<String, String> okapiHeaders) {
+  static CompletableFuture<JsonObject> getRequestPolicyId(RequestTypeParameters criteria, Map<String, String> okapiHeaders) {
+    String queryString = String.format(
+      "item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
+      criteria.getItemMaterialTypeId(), criteria.getItemLoanTypeId(),
+      criteria.getPatronGroupId(), criteria.getItemLocationId());
+
     return get("/circulation/rules/request-policy?" + queryString,
         getHttpClient(okapiHeaders), okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
