@@ -64,7 +64,7 @@ public class PatronServicesResourceImpl implements Patron {
             final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, okapiHeaders)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
-            final CompletableFuture<Account> cf3 = getAccounts(id, okapiHeaders, httpClient)
+            final CompletableFuture<Account> cf3 = getAccounts(id, okapiHeaders)
                 .thenApply(body -> addCharges(account, body, includeCharges))
                 .thenCompose(charges -> {
                   if (includeCharges) {
@@ -99,11 +99,12 @@ public class PatronServicesResourceImpl implements Patron {
     }
   }
 
-  private CompletableFuture<JsonObject> getAccounts(String id,
-    Map<String, String> okapiHeaders, HttpClientInterface httpClient) throws Exception {
+  private CompletableFuture<JsonObject> getAccounts(String id, Map<String, String> okapiHeaders) {
+    final var queryParameters = Map.of(
+      "limit", String.valueOf(getLimit(true)),
+      "query", String.format("(userId==%s and status.name==Open)", id));
 
-    return httpClient.request("/accounts?limit=" + getLimit(true)
-        + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
+    return LookupsUtils.get("/accounts", queryParameters, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
