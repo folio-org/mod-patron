@@ -29,7 +29,7 @@ class LookupsUtils {
   }
 
   static CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders) {
-    return get("/users/" + userId, getHttpClient(okapiHeaders), okapiHeaders)
+    return get("/users/" + userId, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
