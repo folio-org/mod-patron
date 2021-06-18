@@ -325,7 +325,7 @@ public class PatronResourceImplTest {
             .end("internal server error, contact administrator");
         }
       } else if (req.path().equals("/accounts")) {
-        if (req.query().equals(String.format("limit=%d&query=%%28userId%%3D%%3D%s%%20and%%20status.name%%3D%%3DOpen%%29", Integer.MAX_VALUE, goodUserId))) {
+        if (accountParametersMatch(req)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -540,6 +540,13 @@ public class PatronResourceImplTest {
       }
     });
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
+  }
+
+  private boolean accountParametersMatch(HttpServerRequest request) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("limit=" + Integer.MAX_VALUE)
+      && queryString.contains("query=(userId==" + goodUserId + " and status.name==Open)");
   }
 
   private boolean requestsParametersMatch(HttpServerRequest request, int limit) {

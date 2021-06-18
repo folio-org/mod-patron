@@ -61,7 +61,7 @@ public class PatronServicesResourceImpl implements Patron {
             final CompletableFuture<Account> cf1 = getLoans(id, includeLoans, okapiHeaders)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, okapiHeaders, httpClient)
+            final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, okapiHeaders)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
             final CompletableFuture<Account> cf3 = getAccounts(id, okapiHeaders, httpClient)
@@ -108,10 +108,13 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getRequests(String id, boolean includeHolds,
-    Map<String, String> okapiHeaders, HttpClientInterface httpClient) throws Exception {
+    Map<String, String> okapiHeaders) {
 
-    return httpClient.request("/circulation/requests?limit=" + getLimit(includeHolds)
-        + "&query=%28requesterId%3D%3D" + id + "%20and%20status%3D%3DOpen%2A%29", okapiHeaders)
+    final var queryParameters = Map.of(
+      "limit", String.valueOf(getLimit(includeHolds)),
+      "query", String.format("(requesterId==%s and status==Open*)", id));
+
+    return LookupsUtils.get("/circulation/requests", queryParameters, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
