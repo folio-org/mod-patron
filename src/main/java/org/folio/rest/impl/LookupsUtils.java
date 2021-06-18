@@ -13,30 +13,27 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 class LookupsUtils {
+  private LookupsUtils() {}
 
-  private LookupsUtils(){}
-
-  static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders,
-                                               HttpClientInterface httpClient) {
-    return get("/inventory/items/" + itemId, httpClient, okapiHeaders)
+  static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders) {
+    return get("/inventory/items/" + itemId, getHttpClient(okapiHeaders), okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders,
-                                               HttpClientInterface httpClient) {
-    return get("/users/" + userId, httpClient, okapiHeaders)
+  static CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders) {
+    return get("/users/" + userId, getHttpClient(okapiHeaders), okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static CompletableFuture<JsonObject> getRequestPolicyId(String queryString, Map<String, String> okapiHeaders,
-                                                          HttpClientInterface httpClient) {
-    return get("/circulation/rules/request-policy?" + queryString, httpClient, okapiHeaders)
+  static CompletableFuture<JsonObject> getRequestPolicyId(String queryString, Map<String, String> okapiHeaders) {
+    return get("/circulation/rules/request-policy?" + queryString,
+        getHttpClient(okapiHeaders), okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders,
-                                                        HttpClientInterface httpClient) {
-    return get("/request-policy-storage/request-policies/" + requestPolicyId, httpClient, okapiHeaders)
+  static CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
+    return get("/request-policy-storage/request-policies/" + requestPolicyId,
+        getHttpClient(okapiHeaders), okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
@@ -57,8 +54,8 @@ class LookupsUtils {
   }
 
   private static CompletableFuture<Response> get (String path,
-                                                        HttpClientInterface httpClient,
-                                                        Map<String, String> okapiHeaders) {
+    HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
+
     try {
       return httpClient.request(path, okapiHeaders);
     } catch (Exception e) {

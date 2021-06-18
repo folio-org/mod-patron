@@ -49,7 +49,7 @@ public class PatronServicesResourceImpl implements Patron {
     final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
       // Look up the user to ensure that the user exists and is enabled
-        LookupsUtils.getUser(id, okapiHeaders, httpClient)
+        LookupsUtils.getUser(id, okapiHeaders)
         .thenAccept(this::verifyUserEnabled)
         .thenCompose(v -> {
           try {
@@ -141,7 +141,7 @@ public class PatronServicesResourceImpl implements Patron {
     final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     RequestObjectFactory requestFactory = new RequestObjectFactory(okapiHeaders);
 
-    requestFactory.createRequestByItem(id, itemId, entity, httpClient)
+    requestFactory.createRequestByItem(id, itemId, entity)
       .thenCompose(holdJSON -> {
         try {
           if (holdJSON == null) {
@@ -403,7 +403,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
-    return getItem(charge, okapiHeaders, httpClient)
+    return getItem(charge, okapiHeaders)
         .thenCompose(item ->getHoldingsRecord(item, httpClient, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
@@ -412,9 +412,9 @@ public class PatronServicesResourceImpl implements Patron {
         .thenApply(item -> updateItem(charge, item, account));
   }
 
-  private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders, HttpClientInterface httpClient) {
+  private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders) {
 
-    return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders, httpClient);
+    return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders);
   }
 
   private CompletableFuture<Response> getHoldingsRecord(JsonObject item,
