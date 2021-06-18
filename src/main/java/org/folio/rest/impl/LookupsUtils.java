@@ -84,7 +84,9 @@ class LookupsUtils {
     }
   }
 
-  private static CompletableFuture<LookupsUtils.Response> get (String path, Map<String, String> okapiHeaders) {
+  private static CompletableFuture<LookupsUtils.Response> get (String path,
+   Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
+
     Vertx vertx = Vertx.currentContext().owner();
     URL url;
 
@@ -97,13 +99,22 @@ class LookupsUtils {
     final var futureResponse
       = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
 
-    WebClient.create(vertx)
-      .get(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders))
-      .send(futureResponse::complete);
+    final var request = WebClient.create(vertx)
+      .put(url.getPort(), url.getHost(), url.getPath())
+      .putHeaders(buildHeaders(okapiHeaders));
+
+    queryParameters.forEach(request::addQueryParam);
+
+    request.send(futureResponse::complete);
 
     return futureResponse
       .thenCompose(LookupsUtils::toResponse);
+  }
+
+  private static CompletableFuture<LookupsUtils.Response> get (String path,
+    Map<String, String> okapiHeaders) {
+
+    return get(path, Map.of(), okapiHeaders);
   }
 
   private static CompletableFuture<LookupsUtils.Response> toResponse(
