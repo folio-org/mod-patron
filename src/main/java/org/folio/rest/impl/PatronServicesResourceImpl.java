@@ -21,7 +21,6 @@ import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
-import org.folio.rest.tools.client.Response;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -46,7 +45,7 @@ public class PatronServicesResourceImpl implements Patron {
       boolean includeCharges, boolean includeHolds,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
+
     try {
       // Look up the user to ensure that the user exists and is enabled
         LookupsUtils.getUser(id, okapiHeaders)
@@ -70,7 +69,7 @@ public class PatronServicesResourceImpl implements Patron {
                   if (includeCharges) {
                     List<CompletableFuture<Account>> cfs = new ArrayList<>();
                     for (Charge charge: account.getCharges()) {
-                      cfs.add(lookupItem(httpClient, charge, account, okapiHeaders));
+                      cfs.add(lookupItem(charge, account, okapiHeaders));
                     }
                     return CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
                         .thenApply(done -> account);
@@ -86,16 +85,13 @@ public class PatronServicesResourceImpl implements Patron {
         })
         .thenAccept(account -> {
           asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
-          httpClient.closeClient();
         })
         .exceptionally(throwable -> {
           asyncResultHandler.handle(handleError(throwable));
-          httpClient.closeClient();
           return null;
         });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
-      httpClient.closeClient();
     }
   }
 
@@ -430,11 +426,11 @@ public class PatronServicesResourceImpl implements Patron {
         .withReason(chargeJson.getString("feeFineType"));
   }
 
-  private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
+  private CompletableFuture<Account> lookupItem(Charge charge, Account account, Map<String, String> okapiHeaders) {
     return getItem(charge, okapiHeaders)
         .thenCompose(item -> getHoldingsRecord(item, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
-        .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
+        .thenCompose(holding -> getInstance(holding, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenApply(instance -> getItem(charge, instance))
         .thenApply(item -> updateItem(charge, item, account));
@@ -458,15 +454,18 @@ public class PatronServicesResourceImpl implements Patron {
     }
   }
 
-  private CompletableFuture<Response> getInstance(JsonObject holdingsRecord,
-      HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
+  private CompletableFuture<LookupsUtils.Response> getInstance(
+    JsonObject holdingsRecord, Map<String, String> okapiHeaders) {
+
     try {
-      return httpClient.request("/inventory/instances/" + holdingsRecord.getString(Constants.JSON_FIELD_INSTANCE_ID), okapiHeaders);
+      return LookupsUtils.get(
+        "/inventory/instances/" + holdingsRecord.getString(Constants.JSON_FIELD_INSTANCE_ID),
+        okapiHeaders);
+
     } catch (Exception e) {
       throw new CompletionException(e);
     }
   }
-
 
   private Item getItem(Charge charge, JsonObject instance) {
     final String itemId = charge.getItem().getItemId();
