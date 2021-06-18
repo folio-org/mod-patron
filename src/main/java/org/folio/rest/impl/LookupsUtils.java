@@ -75,7 +75,7 @@ class LookupsUtils {
     return HttpClientFactory.getHttpClient(okapiURL, tenantId);
   }
 
-  private static CompletableFuture<LookupsUtils.Response> get (String path,
+  public static CompletableFuture<LookupsUtils.Response> get (String path,
    Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
     Vertx vertx = Vertx.currentContext().owner();
