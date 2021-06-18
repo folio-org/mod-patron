@@ -34,13 +34,14 @@ class LookupsUtils {
   }
 
   static CompletableFuture<JsonObject> getRequestPolicyId(RequestTypeParameters criteria, Map<String, String> okapiHeaders) {
-    String queryString = String.format(
-      "item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
-      criteria.getItemMaterialTypeId(), criteria.getItemLoanTypeId(),
-      criteria.getPatronGroupId(), criteria.getItemLocationId());
+    final var queryParameters = Map.of(
+      "item_type_id", criteria.getItemMaterialTypeId(),
+      "loan_type_id", criteria.getItemLoanTypeId(),
+      "patron_type_id", criteria.getPatronGroupId(),
+      "location_id", criteria.getItemLocationId());
 
-    return get("/circulation/rules/request-policy?" + queryString,
-        getHttpClient(okapiHeaders), okapiHeaders)
+    return get("/circulation/rules/request-policy",
+        queryParameters, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
@@ -100,15 +101,18 @@ class LookupsUtils {
       = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
 
     final var request = WebClient.create(vertx)
-      .put(url.getPort(), url.getHost(), url.getPath())
+      .get(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
 
     queryParameters.forEach(request::addQueryParam);
 
-    request.send(futureResponse::complete);
+    request
+      .timeout(1000)
+      .send(futureResponse::complete);
 
     return futureResponse
-      .thenCompose(LookupsUtils::toResponse);
+      .thenCompose(LookupsUtils::toResponse)
+      .exceptionally(t -> null);
   }
 
   private static CompletableFuture<LookupsUtils.Response> get (String path,
