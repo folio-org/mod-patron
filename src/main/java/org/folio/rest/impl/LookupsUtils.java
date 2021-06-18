@@ -24,7 +24,7 @@ class LookupsUtils {
   private LookupsUtils() {}
 
   static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders) {
-    return get("/inventory/items/" + itemId, getHttpClient(okapiHeaders), okapiHeaders)
+    return get("/inventory/items/" + itemId, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
