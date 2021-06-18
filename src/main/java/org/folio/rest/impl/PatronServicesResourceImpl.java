@@ -432,7 +432,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
     return getItem(charge, okapiHeaders)
-        .thenCompose(item ->getHoldingsRecord(item, httpClient, okapiHeaders))
+        .thenCompose(item -> getHoldingsRecord(item, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
@@ -445,10 +445,14 @@ public class PatronServicesResourceImpl implements Patron {
     return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders);
   }
 
-  private CompletableFuture<Response> getHoldingsRecord(JsonObject item,
-      HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
+  private CompletableFuture<LookupsUtils.Response> getHoldingsRecord(
+    JsonObject item, Map<String, String> okapiHeaders) {
+
     try {
-      return httpClient.request("/holdings-storage/holdings/" + item.getString("holdingsRecordId"), okapiHeaders);
+      return LookupsUtils.get(
+        "/holdings-storage/holdings/" + item.getString("holdingsRecordId"),
+        okapiHeaders);
+
     } catch (Exception e) {
       throw new CompletionException(e);
     }

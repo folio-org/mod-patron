@@ -102,8 +102,8 @@ class LookupsUtils {
       .thenCompose(LookupsUtils::toResponse);
   }
 
-  private static CompletableFuture<LookupsUtils.Response> get (String path,
-    Map<String, String> okapiHeaders) {
+  public static CompletableFuture<LookupsUtils.Response> get(String path,
+                                                             Map<String, String> okapiHeaders) {
 
     return get(path, Map.of(), okapiHeaders);
   }
