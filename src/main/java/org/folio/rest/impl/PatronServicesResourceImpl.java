@@ -158,7 +158,6 @@ public class PatronServicesResourceImpl implements Patron {
       Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     RequestObjectFactory requestFactory = new RequestObjectFactory(okapiHeaders);
 
     requestFactory.createRequestByItem(id, itemId, entity)
@@ -175,26 +174,22 @@ public class PatronServicesResourceImpl implements Patron {
                           ));
 
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors)));
-            httpClient.closeClient();
             return null;
           }
 
-          return httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()), "/circulation/requests", okapiHeaders)
+          return LookupsUtils.post("/circulation/requests", holdJSON, okapiHeaders)
             .thenApply(LookupsUtils::verifyAndExtractBody)
             .thenAccept(body -> {
               final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
               final Hold hold = getHold(body, item);
               asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
-              httpClient.closeClient();
             })
             .exceptionally(throwable -> {
               asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
-              httpClient.closeClient();
               return null;
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
-          httpClient.closeClient();
           return null;
         }
       });
@@ -203,11 +198,10 @@ public class PatronServicesResourceImpl implements Patron {
   @Validate
   @Override
   public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     final Hold[] holds = new Hold[1];
 
     try {
-      httpClient.request(HttpMethod.GET, "/circulation/requests/" + holdId, okapiHeaders)
+      LookupsUtils.get("/circulation/requests/" + holdId, okapiHeaders)
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenApply( body -> {
           JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
@@ -218,27 +212,22 @@ public class PatronServicesResourceImpl implements Patron {
         })
         .thenCompose( anUpdatedRequest -> {
           try {
-            return httpClient.request(HttpMethod.PUT, Buffer.buffer(anUpdatedRequest.toString()), "/circulation/requests/" + holdId, okapiHeaders);
+            return LookupsUtils.put("/circulation/requests/" + holdId, anUpdatedRequest, okapiHeaders);
           } catch (Exception e) {
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-              httpClient.closeClient();
               return null;
             }
         })
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenAccept(
-            body -> {
-              asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0])));
-              httpClient.closeClient();
-            })
+            body -> asyncResultHandler.handle(Future.succeededFuture(
+              PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0]))))
         .exceptionally(throwable -> {
             asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
-            httpClient.closeClient();
             return null;
         });
     } catch (Exception e) {
       asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-      httpClient.closeClient();
     }
   }
 
@@ -259,26 +248,21 @@ public class PatronServicesResourceImpl implements Patron {
           new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
     }
 
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
-      httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()),
-          "/circulation/requests/instances", okapiHeaders)
+      LookupsUtils.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID),
                 body.getJsonObject(Constants.JSON_FIELD_ITEM));
             final Hold hold = getHold(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
-            httpClient.closeClient();
           })
           .exceptionally(throwable -> {
             asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
-            httpClient.closeClient();
             return null;
           });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
-      httpClient.closeClient();
     }
   }
 

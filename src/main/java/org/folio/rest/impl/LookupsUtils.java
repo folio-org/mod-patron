@@ -6,11 +6,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.apache.commons.lang.StringUtils;
 import org.folio.patron.rest.exceptions.HttpException;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.tools.client.HttpClientFactory;
-import org.folio.rest.tools.client.interfaces.HttpClientInterface;
-import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.MultiMap;
@@ -50,32 +47,21 @@ class LookupsUtils {
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static JsonObject verifyAndExtractBody(org.folio.rest.tools.client.Response response) {
-    if (!org.folio.rest.tools.client.Response.isSuccess(response.getCode())) {
-      throw new CompletionException(new HttpException(response.getCode(),
-        response.getError().getString("errorMessage")));
-    }
-
-    return response.getBody();
-  }
-
   static JsonObject verifyAndExtractBody(Response response) {
     if (!response.isSuccess()) {
       throw new CompletionException(new HttpException(response.statusCode,
         response.body));
     }
 
+    // Parsing an emppty body to JSON causes an exception
+    if (StringUtils.isBlank(response.body)) {
+      return null;
+    }
+
     return new JsonObject(response.body);
   }
 
-  static HttpClientInterface getHttpClient(Map<String, String> okapiHeaders) {
-    final String okapiURL = okapiHeaders.getOrDefault("X-Okapi-Url", "");
-    final String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-
-    return HttpClientFactory.getHttpClient(okapiURL, tenantId);
-  }
-
-  public static CompletableFuture<LookupsUtils.Response> post (String path,
+  public static CompletableFuture<LookupsUtils.Response> post(String path,
     JsonObject body, Map<String, String> okapiHeaders) {
 
     Vertx vertx = Vertx.currentContext().owner();
@@ -101,8 +87,35 @@ class LookupsUtils {
       .thenCompose(LookupsUtils::toResponse);
   }
 
+  public static CompletableFuture<LookupsUtils.Response> put(String path,
+    JsonObject body, Map<String, String> okapiHeaders) {
 
-  public static CompletableFuture<LookupsUtils.Response> get (String path,
+    Vertx vertx = Vertx.currentContext().owner();
+    URL url;
+
+    try {
+      url = new URL(buildUri(path, okapiHeaders));
+    } catch (MalformedURLException e) {
+      throw new CompletionException(e.getCause());
+    }
+
+    final var futureResponse
+      = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
+
+    final var request = WebClient.create(vertx)
+      .put(url.getPort(), url.getHost(), url.getPath())
+      .putHeaders(buildHeaders(okapiHeaders));
+
+    request
+      .timeout(1000)
+      .sendJson(body, futureResponse::complete);
+
+    return futureResponse
+      .thenCompose(LookupsUtils::toResponse)
+      .exceptionally(t -> null);
+  }
+
+  public static CompletableFuture<LookupsUtils.Response> get(String path,
    Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
     Vertx vertx = Vertx.currentContext().owner();
