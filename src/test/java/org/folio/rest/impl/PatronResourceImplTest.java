@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.UrlDecoder;
@@ -18,7 +18,7 @@ import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Hold;
-import org.folio.rest.tools.PomReader;
+import org.folio.rest.tools.utils.ModuleName;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -125,8 +125,8 @@ public class PatronResourceImplTest {
 
   @BeforeEach
   public void setUp(Vertx vertx, VertxTestContext context) throws Exception {
-    moduleName = PomReader.INSTANCE.getModuleName().replaceAll("_", "-");
-    moduleVersion = PomReader.INSTANCE.getVersion();
+    moduleName = ModuleName.getModuleName().replaceAll("_", "-");
+    moduleVersion = ModuleName.getModuleVersion();
     moduleId = moduleName + "-" + moduleVersion;
     logger.info("Test setup starting for " + moduleId);
 
