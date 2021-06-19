@@ -17,7 +17,6 @@ import org.folio.okapi.common.UrlDecoder;
 import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.tools.utils.ModuleName;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
@@ -922,7 +921,7 @@ public class PatronResourceImplTest {
 
     String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
 
-    final Hold holdCancelResponse = given()
+    final var holdCancelResponse = given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
@@ -938,10 +937,12 @@ public class PatronResourceImplTest {
         .and().assertThat().contentType(ContentType.JSON)
         .and().assertThat().statusCode(200)
       .extract()
-        .as(Hold.class);
+        .asString();
 
-    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
-    assertEquals(expectedHold, holdCancelResponse);
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
+
+    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
+
     // Test done
     logger.info("Test done");
   }
@@ -955,7 +956,7 @@ public class PatronResourceImplTest {
     jsonBody.remove("cancelledDate");
     aBody = jsonBody.encodePrettily();
 
-    final Hold holdCancelResponse = given()
+    final var holdCancelResponse = given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
@@ -972,10 +973,12 @@ public class PatronResourceImplTest {
         .and().assertThat().contentType(ContentType.JSON)
         .and().assertThat().statusCode(200)
       .extract()
-        .as(Hold.class);
+        .asString();
 
-    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
-    assertEquals(expectedHold, holdCancelResponse);
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
+
+    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
+
     // Test done
     logger.info("Test done");
   }
@@ -1005,8 +1008,14 @@ public class PatronResourceImplTest {
       .extract()
         .as(Errors.class);
 
-    final Errors expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/hold_cancel_error.json"), Errors.class);
-    assertEquals(expectedErrors, holdErrorResponse);
+    assertEquals(1, holdErrorResponse.getErrors().size());
+    assertEquals("Cannot edit a closed request",
+      holdErrorResponse.getErrors().get(0).getMessage());
+    assertEquals(1, holdErrorResponse.getErrors().get(0).getParameters().size());
+    assertEquals("id",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals("69f059dd-e8ad-43a9-b2d7-d35a0ad3ab1b",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getValue());
 
     // Test done
     logger.info("Test done");
@@ -1016,7 +1025,7 @@ public class PatronResourceImplTest {
   public final void testPostPatronAccountByIdInstanceByInstanceIdHold() {
     logger.info("Testing creating a hold on an instance for the specified user");
 
-    final Hold hold = given()
+    final var hold = given()
         .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader))
         .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
         .and().body(readMockFile(mockDataFolder
@@ -1028,11 +1037,11 @@ public class PatronResourceImplTest {
         .and().assertThat().contentType(ContentType.JSON)
         .and().assertThat().statusCode(201)
       .extract()
-        .as(Hold.class);
+        .asString();
 
-    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"), Hold.class);
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"));
 
-    assertEquals(expectedHold, hold);
+    verifyHold(expectedHold, new JsonObject(hold));
 
     // Test done
     logger.info("Test done");
@@ -1084,8 +1093,14 @@ public class PatronResourceImplTest {
       .extract()
         .as(Errors.class);
 
-    final var expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/instance_hold_bad_instance_id.json"), Errors.class);
-    assertEquals(expectedErrors, holdErrorResponse);
+    assertEquals(1, holdErrorResponse.getErrors().size());
+    assertEquals("No instance with ID 68cb9692-aa5f-459d-8791-f79486c11225 exists",
+      holdErrorResponse.getErrors().get(0).getMessage());
+    assertEquals(1, holdErrorResponse.getErrors().get(0).getParameters().size());
+    assertEquals("instanceId",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals("68cb9692-aa5f-459d-8791-f79486c11225",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getValue());
   }
 
   @Test
@@ -1108,8 +1123,14 @@ public class PatronResourceImplTest {
         .extract()
         .as(Errors.class);
 
-    final var expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/item_hold_bad_item_id.json"), Errors.class);
-    assertEquals(expectedErrors, holdErrorResponse);
+    assertEquals(1, holdErrorResponse.getErrors().size());
+    assertEquals("No item with ID 3dda4eb9-a156-474c-829f-bd5a386f382c",
+      holdErrorResponse.getErrors().get(0).getMessage());
+    assertEquals(1, holdErrorResponse.getErrors().get(0).getParameters().size());
+    assertEquals("itemId",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals("3dda4eb9-a156-474c-829f-bd5a386f382c",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getValue());
   }
 
   @ParameterizedTest
