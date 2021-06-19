@@ -135,24 +135,20 @@ public class PatronServicesResourceImpl implements Patron {
         .put(Constants.JSON_FIELD_ITEM_ID, itemId)
         .put(Constants.JSON_FIELD_USER_ID, id);
 
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
-      httpClient.request(HttpMethod.POST, Buffer.buffer(renewalJSON.toString()), "/circulation/renew-by-id", okapiHeaders)
+      LookupsUtils.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
           .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
             final Loan hold = getLoan(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
-            httpClient.closeClient();
           })
           .exceptionally(throwable -> {
             asyncResultHandler.handle(handleRenewPOSTError(throwable));
-            httpClient.closeClient();
             return null;
           });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
-      httpClient.closeClient();
     }
   }
 

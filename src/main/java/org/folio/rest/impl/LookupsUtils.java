@@ -75,6 +75,33 @@ class LookupsUtils {
     return HttpClientFactory.getHttpClient(okapiURL, tenantId);
   }
 
+  public static CompletableFuture<LookupsUtils.Response> post (String path,
+    JsonObject body, Map<String, String> okapiHeaders) {
+
+    Vertx vertx = Vertx.currentContext().owner();
+    URL url;
+
+    try {
+      url = new URL(buildUri(path, okapiHeaders));
+    } catch (MalformedURLException e) {
+      throw new CompletionException(e.getCause());
+    }
+
+    final var futureResponse
+      = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
+
+    final var request = WebClient.create(vertx)
+      .post(url.getPort(), url.getHost(), url.getPath())
+      .putHeaders(buildHeaders(okapiHeaders));
+
+
+    request.sendJson(body, futureResponse::complete);
+
+    return futureResponse
+      .thenCompose(LookupsUtils::toResponse);
+  }
+
+
   public static CompletableFuture<LookupsUtils.Response> get (String path,
    Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
@@ -103,7 +130,7 @@ class LookupsUtils {
   }
 
   public static CompletableFuture<LookupsUtils.Response> get(String path,
-                                                             Map<String, String> okapiHeaders) {
+    Map<String, String> okapiHeaders) {
 
     return get(path, Map.of(), okapiHeaders);
   }
