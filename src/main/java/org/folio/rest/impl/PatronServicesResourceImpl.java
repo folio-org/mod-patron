@@ -72,8 +72,11 @@ public class PatronServicesResourceImpl implements Patron {
                 .thenCompose(charges -> {
                   if (includeCharges) {
                     List<CompletableFuture<Account>> cfs = new ArrayList<>();
+
                     for (Charge charge: account.getCharges()) {
-                      cfs.add(lookupItem(httpClient, charge, account, okapiHeaders));
+                      if (charge.getItem() != null) {
+                        cfs.add(lookupItem(httpClient, charge, account, okapiHeaders));
+                      }
                     }
                     return CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
                         .thenApply(done -> account);
@@ -374,8 +377,11 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : accountsJson) {
         if (o instanceof JsonObject) {
           final JsonObject accountJson = (JsonObject) o;
-          final Item item = new Item().withItemId(accountJson.getString(Constants.JSON_FIELD_ITEM_ID));
-          final Charge charge = getCharge(accountJson, item);
+          Charge charge = getCharge(accountJson);
+          if (accountJson.getString(Constants.JSON_FIELD_ITEM_ID) != null) {
+            final Item item = new Item().withItemId(accountJson.getString(Constants.JSON_FIELD_ITEM_ID));
+            charge.setItem(item);
+          }
           amount += charge.getChargeAmount().getAmount().doubleValue();
           if (includeCharges) {
             charges.add(charge);
@@ -391,9 +397,8 @@ public class PatronServicesResourceImpl implements Patron {
     return account;
   }
 
-  private Charge getCharge(JsonObject chargeJson, Item item) {
+  private Charge getCharge(JsonObject chargeJson) {
     return new Charge()
-        .withItem(item)
         .withAccrualDate(new DateTime(chargeJson.getString("dateCreated"), DateTimeZone.UTC).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
         .withState(chargeJson.getJsonObject("paymentStatus",
