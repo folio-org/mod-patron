@@ -12,7 +12,7 @@
           "amount" : 100.0,
           "isoCurrencyCode" : "USD"
         },
-        "accrualDate" : "2018-01-30T00:00:01.000+0000",
+        "accrualDate" : "2018-01-30T00:00:01.000+00:00",
         "state" : "Unpaid",
         "reason" : "no item"
       },
