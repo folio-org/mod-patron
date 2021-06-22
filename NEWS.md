@@ -1,6 +1,8 @@
 ## 4.5.0 2021-06-18
 
+ * Accounts without item data attached no longer result in errors when using "includeCharges" flag (MODPATRON-59)
  * Requires `circulation 9.5 10.0 or 11.0` ([MODPATRON-52](https://issues.folio.org/browse/MODPATRON-52), [MODPATRON-54](https://issues.folio.org/browse/MODPATRON-54))
+
 
 ## 4.4.0 2021-03-15
 
