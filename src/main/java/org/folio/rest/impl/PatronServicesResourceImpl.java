@@ -35,10 +35,13 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import static org.folio.rest.impl.HoldHelpers.*;
 
 public class PatronServicesResourceImpl implements Patron {
+  private static final Logger logger = LogManager.getLogger(PatronServicesResourceImpl.class);
 
   @Validate
   @Override
@@ -48,6 +51,7 @@ public class PatronServicesResourceImpl implements Patron {
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
+
       // Look up the user to ensure that the user exists and is enabled
         LookupsUtils.getUser(id, okapiHeaders, httpClient)
         .thenAccept(this::verifyUserEnabled)
@@ -363,7 +367,7 @@ public class PatronServicesResourceImpl implements Patron {
   private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
     final int totalCharges = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
-
+    logger.info("response from accounts: " + body.toString());
     account.setTotalChargesCount(totalCharges);
     account.setCharges(charges);
 
@@ -393,8 +397,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   private Charge getCharge(JsonObject chargeJson, Item item) {
     return new Charge()
-        .withItem(item)
-        .withAccrualDate(new DateTime(chargeJson.getString("dateCreated"), DateTimeZone.UTC).toDate())
+        .withAccrualDate(new DateTime(chargeJson.getJsonObject("metadata").getString("createdDate"), DateTimeZone.UTC).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
         .withState(chargeJson.getJsonObject("paymentStatus",
             new JsonObject().put(Constants.JSON_FIELD_NAME,  "Unknown"))
