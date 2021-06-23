@@ -48,7 +48,6 @@ public class PatronServicesResourceImpl implements Patron {
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
-
       // Look up the user to ensure that the user exists and is enabled
         LookupsUtils.getUser(id, okapiHeaders, httpClient)
         .thenAccept(this::verifyUserEnabled)
