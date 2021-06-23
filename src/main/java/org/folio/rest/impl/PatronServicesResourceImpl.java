@@ -35,13 +35,10 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 import static org.folio.rest.impl.HoldHelpers.*;
 
 public class PatronServicesResourceImpl implements Patron {
-  private static final Logger logger = LogManager.getLogger(PatronServicesResourceImpl.class);
 
   @Validate
   @Override
@@ -367,7 +364,6 @@ public class PatronServicesResourceImpl implements Patron {
   private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
     final int totalCharges = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
-    logger.info("response from accounts: " + body.toString());
     account.setTotalChargesCount(totalCharges);
     account.setCharges(charges);
 
