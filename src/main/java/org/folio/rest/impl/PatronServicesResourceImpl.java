@@ -366,7 +366,6 @@ public class PatronServicesResourceImpl implements Patron {
   private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
     final int totalCharges = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
-
     account.setTotalChargesCount(totalCharges);
     account.setCharges(charges);
 
@@ -399,7 +398,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   private Charge getCharge(JsonObject chargeJson) {
     return new Charge()
-        .withAccrualDate(new DateTime(chargeJson.getString("dateCreated"), DateTimeZone.UTC).toDate())
+        .withAccrualDate(new DateTime(chargeJson.getJsonObject("metadata").getString("createdDate"), DateTimeZone.UTC).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
         .withState(chargeJson.getJsonObject("paymentStatus",
             new JsonObject().put(Constants.JSON_FIELD_NAME,  "Unknown"))
