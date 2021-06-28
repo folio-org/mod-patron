@@ -111,8 +111,7 @@ class LookupsUtils {
       .sendJson(body, futureResponse::complete);
 
     return futureResponse
-      .thenCompose(LookupsUtils::toResponse)
-      .exceptionally(t -> null);
+      .thenCompose(LookupsUtils::toResponse);
   }
 
   public static CompletableFuture<LookupsUtils.Response> get(String path,

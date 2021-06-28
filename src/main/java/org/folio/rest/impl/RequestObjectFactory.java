@@ -54,8 +54,7 @@ class RequestObjectFactory {
       .thenCompose(policyIdResponse ->
           LookupsUtils.getRequestPolicy(policyIdResponse.getString("requestPolicyId"), okapiHeaders))
       .thenApply(RequestPolicy::from)
-      .thenApply(requestPolicy -> getRequestType(requestPolicy, requestTypeParams.getItemStatus()))
-      .exceptionally(t -> null);
+      .thenApply(requestPolicy -> getRequestType(requestPolicy, requestTypeParams.getItemStatus()));
   }
 
   private RequestType getRequestType(RequestPolicy policy,  ItemStatus itemStatus) {
