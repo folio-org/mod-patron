@@ -605,7 +605,6 @@ public class PatronResourceImplTest {
           .extract().response();
 
     final String body = r.getBody().asString();
-    logger.info("response: " + body);
     final JsonObject json = new JsonObject(body);
     final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testGetPatronAccountById.json"));
 
