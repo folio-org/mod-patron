@@ -1,7 +1,7 @@
 ## 4.4.1 (IN PROGRESS)
-
+ * Accounts now include correct accrual date when using the "includeCharges" flag (MODPATRON-62)
  * Accounts without item data attached no longer result in errors when using "includeCharges" flag (MODPATRON-59)
- 
+
 ## 4.4.0 2021-03-15
 
 * Introduces `patron comments` for requests ([MODPATRON-4](https://issues.folio.org/browse/MODPATRON-4))

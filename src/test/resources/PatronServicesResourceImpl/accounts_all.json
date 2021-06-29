@@ -2,13 +2,15 @@
   "accounts": [{ 
     "amount": 100.0,
     "remaining": 100.0,
-    "dateCreated": "2018-01-30T00:00:01Z",
-    "dateUpdated": "2018-01-30T00:00:01Z",
     "status": {
       "name": "Open"
     },
     "paymentStatus": {
       "name": "Unpaid"
+    },
+    "metadata": {
+      "createdDate": "2018-01-30T00:00:01Z",
+      "updatedDate":"2018-01-30T00:00:01Z"
     },
     "feeFineType": "no item",
     "feeFineOwner": "Main library Ciculation Desk",
@@ -20,13 +22,15 @@
     "amount": 100.0,
     "remaining": 50.0,
     "accountTransaction": 1,
-    "dateCreated": "2018-01-31T00:00:01Z",
-    "dateUpdated": "2018-01-31T00:00:01Z",
     "status": {
       "name": "Open"
     },
     "paymentStatus": {
       "name": "Paid Partially"
+    },
+    "metadata":{
+      "createdDate": "2018-01-31T00:00:01Z",
+      "updatedDate": "2018-01-31T00:00:01Z"
     },
     "feeFineType": "damage - rebinding",
     "feeFineOwner": "Main library Ciculation Desk",
@@ -47,13 +51,15 @@
     "amount": 25.0,
     "remaining": 25.0,
     "accountTransaction": 2,
-    "dateCreated": "2018-04-30T00:00:01Z",
-    "dateUpdated": "2018-04-30T00:00:01Z",
     "status": {
       "name": "Open"
     },
     "paymentStatus": {
       "name": "Unpaid"
+    },
+    "metadata": {
+      "createdDate": "2018-04-30T00:00:01Z",
+      "updatedDate": "2018-04-30T00:00:01Z"
     },
     "feeFineType": "overdue",
     "feeFineOwner": "Main library Ciculation Desk",
@@ -74,13 +80,15 @@
     "amount": 10.0,
     "remaining": 5.0,
     "accountTransaction": 3,
-    "dateCreated": "2018-05-31T00:00:01Z",
-    "dateUpdated": "2018-05-31T00:00:01Z",
     "status": {
       "name": "Open"
     },
     "paymentStatus": {
       "name": "Paid Partially"
+    },
+    "metadata": {
+      "createdDate": "2018-05-31T00:00:01Z",
+      "updatedDate": "2018-05-31T00:00:01Z"
     },
     "feeFineType": "overdue",
     "feeFineOwner": "Main library Ciculation Desk",
@@ -101,13 +109,15 @@
     "amount": 500.0,
     "remaining": 75.0,
     "accountTransaction": 4,
-    "dateCreated": "2018-06-01T00:00:01Z",
-    "dateUpdated": "2018-06-01T00:00:01Z",
     "status": {
       "name": "Open"
     },
     "paymentStatus": {
       "name": "Paid Partially"
+    },
+    "metadata": {
+      "createdDate": "2018-06-01T00:00:01Z",
+      "updatedDate": "2018-06-01T00:00:01Z"
     },
     "feeFineType": "damage - camera",
     "feeFineOwner": "Main library Ciculation Desk",
