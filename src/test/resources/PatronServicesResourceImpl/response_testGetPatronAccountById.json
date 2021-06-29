@@ -1,12 +1,21 @@
 {
     "totalCharges": {
-        "amount": 155.0,
+        "amount": 255.0,
         "isoCurrencyCode": "USD"
     },
-    "totalChargesCount": 4,
+    "totalChargesCount": 5,
     "totalLoans": 3,
     "totalHolds": 3,
     "charges": [
+      {
+        "chargeAmount" : {
+          "amount" : 100.0,
+          "isoCurrencyCode" : "USD"
+        },
+        "accrualDate" : "2018-01-30T00:00:01.000+0000",
+        "state" : "Unpaid",
+        "reason" : "no item"
+      },
       {
         "item" : {
           "instanceId" : "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
@@ -20,8 +29,7 @@
         },
         "accrualDate" : "2018-01-31T00:00:01.000+0000",
         "state" : "Paid Partially",
-        "reason" : "damage - rebinding",
-        "feeFineId" : "881c628b-e1c4-4711-b9d7-090af40f6a8f"
+        "reason" : "damage - rebinding"
       }, {
         "item" : {
           "instanceId" : "75d0799a-66d8-46cf-a7e3-ed7390425112",
@@ -35,8 +43,7 @@
         },
         "accrualDate" : "2018-04-30T00:00:01.000+0000",
         "state" : "Unpaid",
-        "reason" : "overdue",
-        "feeFineId" : "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0"
+        "reason" : "overdue"
       }, {
         "item" : {
           "instanceId" : "f3482bed-a7e9-4f07-beb0-ebd693331350",
@@ -50,8 +57,7 @@
         },
         "accrualDate" : "2018-05-31T00:00:01.000+0000",
         "state" : "Paid Partially",
-        "reason" : "overdue",
-        "feeFineId" : "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0"
+        "reason" : "overdue"
       }, {
         "item" : {
           "instanceId" : "c394b514-9fd0-496d-ab9a-aec777facc1b",
