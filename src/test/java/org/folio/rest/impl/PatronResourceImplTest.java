@@ -100,6 +100,7 @@ public class PatronResourceImplTest {
   private final String book2Barcode = "1234567891";
   private final String book3Barcode = "1234567892";
   private final String cameraBarcode = "1234567893";
+  private final String feeFineNoItemId = "771b629b-e2c4-4711-b9d7-091af40f6b8b";
   private final String feeFineOverdueId = "cdf3970f-7ed2-4dae-8ae3-a8250a83a9a0";
   private final String feeFineDamageBookId = "881c628b-e1c4-4711-b9d7-090af40f6a8f";
   private final String feeFineDamageEquipmentId = "ca295e87-223f-403c-9eee-a152c47bf67f";
@@ -432,6 +433,11 @@ public class PatronResourceImplTest {
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
+      } else if (req.path().equals("/feefines/" + feeFineNoItemId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/feefine_no_item.json"));
       } else if (req.path().equals("/feefines/" + feeFineOverdueId)) {
         req.response()
           .setStatusCode(200)
@@ -562,16 +568,16 @@ public class PatronResourceImplTest {
     assertEquals(3, json.getJsonArray("holds").size());
 
     JsonObject money = json.getJsonObject("totalCharges");
-    assertEquals(155.0, money.getDouble("amount"));
+    assertEquals(255.0, money.getDouble("amount"));
     assertEquals("USD", money.getString("isoCurrencyCode"));
-    assertEquals(4, json.getInteger("totalChargesCount"));
-    assertEquals(4, json.getJsonArray("charges").size());
+    assertEquals(5, json.getInteger("totalChargesCount"));
+    assertEquals(5, json.getJsonArray("charges").size());
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
       final JsonObject jo = json.getJsonArray("charges").getJsonObject(i);
 
       boolean found = false;
-      for (int j = 0; j < 4; j++) {
+      for (int j = 0; j < 5; j++) {
         final JsonObject expectedJO = expectedJson.getJsonArray("charges").getJsonObject(j);
         if (verifyCharge(expectedJO, jo)) {
           found = true;
@@ -649,9 +655,9 @@ public class PatronResourceImplTest {
     assertEquals(0, json.getJsonArray("holds").size());
 
     final JsonObject money = json.getJsonObject("totalCharges");
-    assertEquals(155.0, money.getDouble("amount"));
+    assertEquals(255.0, money.getDouble("amount"));
     assertEquals("USD", money.getString("isoCurrencyCode"));
-    assertEquals(4, json.getInteger("totalChargesCount"));
+    assertEquals(5, json.getInteger("totalChargesCount"));
     assertEquals(0, json.getJsonArray("charges").size());
 
     // Test done
@@ -1204,10 +1210,12 @@ public class PatronResourceImplTest {
     if (expectedCharge.getString("accrualDate").equals(actualCharge.getString("accrualDate"))) {
       assertEquals(expectedCharge.getString("state"), actualCharge.getString("state"));
       assertEquals(expectedCharge.getString("reason"), actualCharge.getString("reason"));
-
       verifyAmount(expectedCharge.getJsonObject("chargeAmount"), actualCharge.getJsonObject("chargeAmount"));
-
-      return verifyItem(expectedCharge.getJsonObject("item"), actualCharge.getJsonObject("item"));
+      if (expectedCharge.getJsonObject("item") != null) {
+        return verifyItem(expectedCharge.getJsonObject("item"), actualCharge.getJsonObject("item"));
+      } else {
+        return true;
+      }
     }
 
     return false;
