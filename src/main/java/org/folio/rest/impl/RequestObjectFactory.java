@@ -28,7 +28,8 @@ class RequestObjectFactory {
             .put("requestType", requestType.getValue())
             .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
             .put("fulfilmentPreference", Constants.JSON_VALUE_HOLD_SHELF)
-            .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId());
+            .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+            .put(Constants.JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
           if (entity.getExpirationDate() != null) {
             holdJSON.put(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE,

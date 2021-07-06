@@ -241,7 +241,8 @@ public class PatronServicesResourceImpl implements Patron {
         .put(Constants.JSON_FIELD_INSTANCE_ID, instanceId)
         .put("requesterId", id)
         .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-        .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId());
+        .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+        .put(Constants.JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
     if (entity.getExpirationDate() != null) {
       holdJSON.put(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE,
