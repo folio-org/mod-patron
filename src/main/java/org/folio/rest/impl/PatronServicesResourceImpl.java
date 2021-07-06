@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.folio.integration.http.Response;
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
 import org.folio.rest.annotations.Validate;
@@ -423,7 +424,7 @@ public class PatronServicesResourceImpl implements Patron {
     return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders);
   }
 
-  private CompletableFuture<LookupsUtils.Response> getHoldingsRecord(
+  private CompletableFuture<Response> getHoldingsRecord(
     JsonObject item, Map<String, String> okapiHeaders) {
 
     try {
@@ -436,7 +437,7 @@ public class PatronServicesResourceImpl implements Patron {
     }
   }
 
-  private CompletableFuture<LookupsUtils.Response> getInstance(
+  private CompletableFuture<Response> getInstance(
     JsonObject holdingsRecord, Map<String, String> okapiHeaders) {
 
     try {
