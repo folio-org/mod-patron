@@ -21,8 +21,6 @@ import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
-import org.folio.rest.tools.client.Response;
-import org.folio.rest.tools.client.interfaces.HttpClientInterface;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -30,8 +28,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -46,10 +42,10 @@ public class PatronServicesResourceImpl implements Patron {
       boolean includeCharges, boolean includeHolds,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
+
     try {
       // Look up the user to ensure that the user exists and is enabled
-        LookupsUtils.getUser(id, okapiHeaders, httpClient)
+        LookupsUtils.getUser(id, okapiHeaders)
         .thenAccept(this::verifyUserEnabled)
         .thenCompose(v -> {
           try {
@@ -58,16 +54,13 @@ public class PatronServicesResourceImpl implements Patron {
             account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrencyCode("USD"));
             account.setTotalChargesCount(0);
 
-            final CompletableFuture<Account> cf1 = httpClient.request("/circulation/loans?limit=" + getLimit(includeLoans) + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
-                .thenApply(LookupsUtils::verifyAndExtractBody)
+            final CompletableFuture<Account> cf1 = getLoans(id, includeLoans, okapiHeaders)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = httpClient.request("/circulation/requests?limit=" + getLimit(includeHolds) + "&query=%28requesterId%3D%3D" + id + "%20and%20status%3D%3DOpen%2A%29", okapiHeaders)
-                .thenApply(LookupsUtils::verifyAndExtractBody)
+            final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, okapiHeaders)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
-            final CompletableFuture<Account> cf3 = httpClient.request("/accounts?limit=" + getLimit(true) + "&query=%28userId%3D%3D" + id + "%20and%20status.name%3D%3DOpen%29", okapiHeaders)
-                .thenApply(LookupsUtils::verifyAndExtractBody)
+            final CompletableFuture<Account> cf3 = getAccounts(id, okapiHeaders)
                 .thenApply(body -> addCharges(account, body, includeCharges))
                 .thenCompose(charges -> {
                   if (includeCharges) {
@@ -75,7 +68,7 @@ public class PatronServicesResourceImpl implements Patron {
 
                     for (Charge charge: account.getCharges()) {
                       if (charge.getItem() != null) {
-                        cfs.add(lookupItem(httpClient, charge, account, okapiHeaders));
+                        cfs.add(lookupItem(charge, account, okapiHeaders));
                       }
                     }
                     return CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
@@ -92,17 +85,45 @@ public class PatronServicesResourceImpl implements Patron {
         })
         .thenAccept(account -> {
           asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
-          httpClient.closeClient();
         })
         .exceptionally(throwable -> {
           asyncResultHandler.handle(handleError(throwable));
-          httpClient.closeClient();
           return null;
         });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
-      httpClient.closeClient();
     }
+  }
+
+  private CompletableFuture<JsonObject> getAccounts(String id, Map<String, String> okapiHeaders) {
+    final var queryParameters = Map.of(
+      "limit", String.valueOf(getLimit(true)),
+      "query", String.format("(userId==%s and status.name==Open)", id));
+
+    return LookupsUtils.get("/accounts", queryParameters, okapiHeaders)
+      .thenApply(LookupsUtils::verifyAndExtractBody);
+  }
+
+  private CompletableFuture<JsonObject> getRequests(String id, boolean includeHolds,
+    Map<String, String> okapiHeaders) {
+
+    final var queryParameters = Map.of(
+      "limit", String.valueOf(getLimit(includeHolds)),
+      "query", String.format("(requesterId==%s and status==Open*)", id));
+
+    return LookupsUtils.get("/circulation/requests", queryParameters, okapiHeaders)
+      .thenApply(LookupsUtils::verifyAndExtractBody);
+  }
+
+  private CompletableFuture<JsonObject> getLoans(String id, boolean includeLoans,
+    Map<String, String> okapiHeaders) {
+
+    final var queryParameters = Map.of(
+      "limit", String.valueOf(getLimit(includeLoans)),
+      "query", String.format("(userId==%s and status.name==Open)", id));
+
+    return LookupsUtils.get("/circulation/loans", queryParameters, okapiHeaders)
+      .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
   @Validate
@@ -114,24 +135,20 @@ public class PatronServicesResourceImpl implements Patron {
         .put(Constants.JSON_FIELD_ITEM_ID, itemId)
         .put(Constants.JSON_FIELD_USER_ID, id);
 
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
-      httpClient.request(HttpMethod.POST, Buffer.buffer(renewalJSON.toString()), "/circulation/renew-by-id", okapiHeaders)
+      LookupsUtils.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
           .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
             final Loan hold = getLoan(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
-            httpClient.closeClient();
           })
           .exceptionally(throwable -> {
             asyncResultHandler.handle(handleRenewPOSTError(throwable));
-            httpClient.closeClient();
             return null;
           });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
-      httpClient.closeClient();
     }
   }
 
@@ -141,10 +158,9 @@ public class PatronServicesResourceImpl implements Patron {
       Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     RequestObjectFactory requestFactory = new RequestObjectFactory(okapiHeaders);
 
-    requestFactory.createRequestByItem(id, itemId, entity, httpClient)
+    requestFactory.createRequestByItem(id, itemId, entity)
       .thenCompose(holdJSON -> {
         try {
           if (holdJSON == null) {
@@ -158,26 +174,22 @@ public class PatronServicesResourceImpl implements Patron {
                           ));
 
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors)));
-            httpClient.closeClient();
             return null;
           }
 
-          return httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()), "/circulation/requests", okapiHeaders)
+          return LookupsUtils.post("/circulation/requests", holdJSON, okapiHeaders)
             .thenApply(LookupsUtils::verifyAndExtractBody)
             .thenAccept(body -> {
               final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
               final Hold hold = getHold(body, item);
               asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
-              httpClient.closeClient();
             })
             .exceptionally(throwable -> {
               asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
-              httpClient.closeClient();
               return null;
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
-          httpClient.closeClient();
           return null;
         }
       });
@@ -186,11 +198,10 @@ public class PatronServicesResourceImpl implements Patron {
   @Validate
   @Override
   public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     final Hold[] holds = new Hold[1];
 
     try {
-      httpClient.request(HttpMethod.GET, "/circulation/requests/" + holdId, okapiHeaders)
+      LookupsUtils.get("/circulation/requests/" + holdId, okapiHeaders)
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenApply( body -> {
           JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
@@ -201,27 +212,22 @@ public class PatronServicesResourceImpl implements Patron {
         })
         .thenCompose( anUpdatedRequest -> {
           try {
-            return httpClient.request(HttpMethod.PUT, Buffer.buffer(anUpdatedRequest.toString()), "/circulation/requests/" + holdId, okapiHeaders);
+            return LookupsUtils.put("/circulation/requests/" + holdId, anUpdatedRequest, okapiHeaders);
           } catch (Exception e) {
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-              httpClient.closeClient();
               return null;
             }
         })
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenAccept(
-            body -> {
-              asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0])));
-              httpClient.closeClient();
-            })
+            body -> asyncResultHandler.handle(Future.succeededFuture(
+              PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0]))))
         .exceptionally(throwable -> {
             asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
-            httpClient.closeClient();
             return null;
         });
     } catch (Exception e) {
       asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-      httpClient.closeClient();
     }
   }
 
@@ -243,26 +249,21 @@ public class PatronServicesResourceImpl implements Patron {
           new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
     }
 
-    final HttpClientInterface httpClient = LookupsUtils.getHttpClient(okapiHeaders);
     try {
-      httpClient.request(HttpMethod.POST, Buffer.buffer(holdJSON.toString()),
-          "/circulation/requests/instances", okapiHeaders)
+      LookupsUtils.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID),
                 body.getJsonObject(Constants.JSON_FIELD_ITEM));
             final Hold hold = getHold(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
-            httpClient.closeClient();
           })
           .exceptionally(throwable -> {
             asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
-            httpClient.closeClient();
             return null;
           });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
-      httpClient.closeClient();
     }
   }
 
@@ -407,39 +408,46 @@ public class PatronServicesResourceImpl implements Patron {
         .withReason(chargeJson.getString("feeFineType"));
   }
 
-  private CompletableFuture<Account> lookupItem(HttpClientInterface httpClient, Charge charge, Account account, Map<String, String> okapiHeaders) {
-    return getItem(charge, okapiHeaders, httpClient)
-        .thenCompose(item ->getHoldingsRecord(item, httpClient, okapiHeaders))
+  private CompletableFuture<Account> lookupItem(Charge charge, Account account, Map<String, String> okapiHeaders) {
+    return getItem(charge, okapiHeaders)
+        .thenCompose(item -> getHoldingsRecord(item, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
-        .thenCompose(holding -> getInstance(holding, httpClient, okapiHeaders))
+        .thenCompose(holding -> getInstance(holding, okapiHeaders))
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenApply(instance -> getItem(charge, instance))
         .thenApply(item -> updateItem(charge, item, account));
   }
 
-  private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders, HttpClientInterface httpClient) {
+  private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders) {
 
-    return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders, httpClient);
+    return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders);
   }
 
-  private CompletableFuture<Response> getHoldingsRecord(JsonObject item,
-      HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
+  private CompletableFuture<LookupsUtils.Response> getHoldingsRecord(
+    JsonObject item, Map<String, String> okapiHeaders) {
+
     try {
-      return httpClient.request("/holdings-storage/holdings/" + item.getString("holdingsRecordId"), okapiHeaders);
+      return LookupsUtils.get(
+        "/holdings-storage/holdings/" + item.getString("holdingsRecordId"),
+        okapiHeaders);
+
     } catch (Exception e) {
       throw new CompletionException(e);
     }
   }
 
-  private CompletableFuture<Response> getInstance(JsonObject holdingsRecord,
-      HttpClientInterface httpClient, Map<String, String> okapiHeaders) {
+  private CompletableFuture<LookupsUtils.Response> getInstance(
+    JsonObject holdingsRecord, Map<String, String> okapiHeaders) {
+
     try {
-      return httpClient.request("/inventory/instances/" + holdingsRecord.getString(Constants.JSON_FIELD_INSTANCE_ID), okapiHeaders);
+      return LookupsUtils.get(
+        "/inventory/instances/" + holdingsRecord.getString(Constants.JSON_FIELD_INSTANCE_ID),
+        okapiHeaders);
+
     } catch (Exception e) {
       throw new CompletionException(e);
     }
   }
-
 
   private Item getItem(Charge charge, JsonObject instance) {
     final String itemId = charge.getItem().getItemId();

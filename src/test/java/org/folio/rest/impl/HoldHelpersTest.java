@@ -28,7 +28,7 @@ class HoldHelpersTest {
     final String cancellationReasonId = "dd238b5b-01fc-4205-83b8-888888888888";
     final String requestId = "dd238b5b-01fc-4205-83b8-888888888888";
     final String holdCancellationReason = "I really don't want it anymore";
-    final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSZ");
+    final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
     Date canceledDate = DateTime.now().toDate();
     String canceledDateString = formatter.format(canceledDate);
