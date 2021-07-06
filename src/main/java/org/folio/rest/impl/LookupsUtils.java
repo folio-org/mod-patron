@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.folio.integration.http.Response;
 import org.folio.patron.rest.exceptions.HttpException;
 
 import io.vertx.core.AsyncResult;
@@ -60,8 +61,8 @@ class LookupsUtils {
     return new JsonObject(response.body);
   }
 
-  public static CompletableFuture<LookupsUtils.Response> post(String path,
-    JsonObject body, Map<String, String> okapiHeaders) {
+  public static CompletableFuture<Response> post(String path,
+                                                 JsonObject body, Map<String, String> okapiHeaders) {
 
     Vertx vertx = Vertx.currentContext().owner();
     URL url;
@@ -86,8 +87,8 @@ class LookupsUtils {
       .thenCompose(LookupsUtils::toResponse);
   }
 
-  public static CompletableFuture<LookupsUtils.Response> put(String path,
-    JsonObject body, Map<String, String> okapiHeaders) {
+  public static CompletableFuture<Response> put(String path,
+                                                JsonObject body, Map<String, String> okapiHeaders) {
 
     Vertx vertx = Vertx.currentContext().owner();
     URL url;
@@ -113,8 +114,8 @@ class LookupsUtils {
       .thenCompose(LookupsUtils::toResponse);
   }
 
-  public static CompletableFuture<LookupsUtils.Response> get(String path,
-   Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
+  public static CompletableFuture<Response> get(String path,
+                                                Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
     Vertx vertx = Vertx.currentContext().owner();
     URL url;
@@ -140,13 +141,13 @@ class LookupsUtils {
       .thenCompose(LookupsUtils::toResponse);
   }
 
-  public static CompletableFuture<LookupsUtils.Response> get(String path,
-    Map<String, String> okapiHeaders) {
+  public static CompletableFuture<Response> get(String path,
+                                                Map<String, String> okapiHeaders) {
 
     return get(path, Map.of(), okapiHeaders);
   }
 
-  private static CompletableFuture<LookupsUtils.Response> toResponse(
+  private static CompletableFuture<Response> toResponse(
     AsyncResult<HttpResponse<Buffer>> result) {
 
     if (result.failed()) {
@@ -170,19 +171,5 @@ class LookupsUtils {
   private static MultiMap buildHeaders(Map<String, String> okapiHeaders) {
     return MultiMap.caseInsensitiveMultiMap()
       .addAll(okapiHeaders);
-  }
-
-  public static class Response {
-    public final int statusCode;
-    public final String body;
-
-    public Response(int statusCode, String body) {
-      this.statusCode = statusCode;
-      this.body = body;
-    }
-
-    public boolean isSuccess() {
-      return statusCode >= 200 && statusCode < 300;
-    }
   }
 }
