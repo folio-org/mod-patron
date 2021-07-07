@@ -24,13 +24,7 @@ public class VertxOkapiHttpClient {
   public CompletableFuture<Response> post(String path, JsonObject body,
     Map<String, String> okapiHeaders) {
 
-    URL url;
-
-    try {
-      url = new URL(buildUri(path, okapiHeaders));
-    } catch (MalformedURLException e) {
-      throw new CompletionException(e.getCause());
-    }
+    URL url = buildUrl(path, okapiHeaders);
 
     final var futureResponse
       = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
@@ -48,13 +42,7 @@ public class VertxOkapiHttpClient {
   public CompletableFuture<Response> put(String path, JsonObject body,
     Map<String, String> okapiHeaders) {
 
-    URL url;
-
-    try {
-      url = new URL(buildUri(path, okapiHeaders));
-    } catch (MalformedURLException e) {
-      throw new CompletionException(e.getCause());
-    }
+    URL url = buildUrl(path, okapiHeaders);
 
     final var futureResponse
       = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
@@ -69,10 +57,15 @@ public class VertxOkapiHttpClient {
       .thenCompose(this::toResponse);
   }
 
-  private static String buildUri(String path, Map<String, String> okapiHeaders) {
-    final String okapiURL = okapiHeaders.getOrDefault("X-Okapi-Url", "");
+  private URL buildUrl(String path, Map<String, String> okapiHeaders) {
+    try {
+      final var okapiURL = okapiHeaders.getOrDefault("X-Okapi-Url", "");
 
-    return okapiURL + path;
+      return new URL(okapiURL + path);
+
+    } catch (MalformedURLException e) {
+      throw new CompletionException(e.getCause());
+    }
   }
 
   private static MultiMap buildHeaders(Map<String, String> okapiHeaders) {
