@@ -15,10 +15,10 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class VertxOkapiHttpClient {
-  private final Vertx vertx;
+  private final WebClient client;
 
   public VertxOkapiHttpClient(Vertx vertx) {
-    this.vertx = vertx;
+    client = WebClient.create(vertx);
   }
 
   public CompletableFuture<Response> post(String path, JsonObject body,
@@ -29,7 +29,8 @@ public class VertxOkapiHttpClient {
     final var futureResponse
       = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
 
-    final var request = WebClient.create(vertx)
+
+    final var request = client
       .post(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
 
@@ -47,7 +48,7 @@ public class VertxOkapiHttpClient {
     final var futureResponse
       = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
 
-    final var request = WebClient.create(vertx)
+    final var request = client
       .put(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
 
