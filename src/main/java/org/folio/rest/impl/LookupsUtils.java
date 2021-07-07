@@ -71,30 +71,11 @@ class LookupsUtils {
   }
 
   public static CompletableFuture<Response> put(String path,
-                                                JsonObject body, Map<String, String> okapiHeaders) {
+    JsonObject body, Map<String, String> okapiHeaders) {
 
-    Vertx vertx = Vertx.currentContext().owner();
-    URL url;
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
 
-    try {
-      url = new URL(buildUri(path, okapiHeaders));
-    } catch (MalformedURLException e) {
-      throw new CompletionException(e.getCause());
-    }
-
-    final var futureResponse
-      = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
-
-    final var request = WebClient.create(vertx)
-      .put(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
-
-    request
-      .timeout(1000)
-      .sendJson(body, futureResponse::complete);
-
-    return futureResponse
-      .thenCompose(LookupsUtils::toResponse);
+    return client.put(path, body, okapiHeaders);
   }
 
   public static CompletableFuture<Response> get(String path,

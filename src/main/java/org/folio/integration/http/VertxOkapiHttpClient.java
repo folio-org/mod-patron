@@ -21,8 +21,8 @@ public class VertxOkapiHttpClient {
     this.vertx = vertx;
   }
 
-  public CompletableFuture<Response> post(String path,
-    JsonObject body, Map<String, String> okapiHeaders) {
+  public CompletableFuture<Response> post(String path, JsonObject body,
+    Map<String, String> okapiHeaders) {
 
     URL url;
 
@@ -37,6 +37,30 @@ public class VertxOkapiHttpClient {
 
     final var request = WebClient.create(vertx)
       .post(url.getPort(), url.getHost(), url.getPath())
+      .putHeaders(buildHeaders(okapiHeaders));
+
+    request.sendJson(body, futureResponse::complete);
+
+    return futureResponse
+      .thenCompose(this::toResponse);
+  }
+
+  public CompletableFuture<Response> put(String path, JsonObject body,
+    Map<String, String> okapiHeaders) {
+
+    URL url;
+
+    try {
+      url = new URL(buildUri(path, okapiHeaders));
+    } catch (MalformedURLException e) {
+      throw new CompletionException(e.getCause());
+    }
+
+    final var futureResponse
+      = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
+
+    final var request = WebClient.create(vertx)
+      .put(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
 
     request.sendJson(body, futureResponse::complete);
