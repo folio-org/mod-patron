@@ -8,6 +8,7 @@ import java.util.concurrent.CompletionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.http.Response;
+import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
 
 import io.vertx.core.AsyncResult;
@@ -62,29 +63,11 @@ class LookupsUtils {
   }
 
   public static CompletableFuture<Response> post(String path,
-                                                 JsonObject body, Map<String, String> okapiHeaders) {
+    JsonObject body, Map<String, String> okapiHeaders) {
 
-    Vertx vertx = Vertx.currentContext().owner();
-    URL url;
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
 
-    try {
-      url = new URL(buildUri(path, okapiHeaders));
-    } catch (MalformedURLException e) {
-      throw new CompletionException(e.getCause());
-    }
-
-    final var futureResponse
-      = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
-
-    final var request = WebClient.create(vertx)
-      .post(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
-
-
-    request.sendJson(body, futureResponse::complete);
-
-    return futureResponse
-      .thenCompose(LookupsUtils::toResponse);
+    return client.post(path, body, okapiHeaders);
   }
 
   public static CompletableFuture<Response> put(String path,
