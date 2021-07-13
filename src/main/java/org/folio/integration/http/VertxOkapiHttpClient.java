@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
@@ -26,18 +26,11 @@ public class VertxOkapiHttpClient {
 
     URL url = buildUrl(path, okapiHeaders);
 
-    final var futureResponse
-      = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
-
-
     final var request = client
       .post(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
 
-    request.sendJson(body, futureResponse::complete);
-
-    return futureResponse
-      .thenCompose(this::toResponse);
+    return makeRequestWithBody(request, body);
   }
 
   public CompletableFuture<Response> put(String path, JsonObject body,
@@ -45,17 +38,20 @@ public class VertxOkapiHttpClient {
 
     URL url = buildUrl(path, okapiHeaders);
 
-    final var futureResponse
-      = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
-
     final var request = client
       .put(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
 
-    request.sendJson(body, futureResponse::complete);
+    return makeRequestWithBody(request, body);
+  }
 
-    return futureResponse
-      .thenCompose(this::toResponse);
+  private CompletableFuture<Response> makeRequestWithBody(
+    HttpRequest<Buffer> request, JsonObject body) {
+
+    return request.sendJson(body)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .thenApply(this::toResponse);
   }
 
   private URL buildUrl(String path, Map<String, String> okapiHeaders) {
@@ -74,18 +70,7 @@ public class VertxOkapiHttpClient {
       .addAll(okapiHeaders);
   }
 
-  private CompletableFuture<Response> toResponse(
-    AsyncResult<HttpResponse<Buffer>> result) {
-
-    if (result.failed()) {
-      return CompletableFuture.failedFuture(result.cause());
-    }
-
-    final var response = result.result();
-
-    final var mappedResponse = new Response(response.statusCode(),
-      response.bodyAsString());
-
-    return CompletableFuture.completedFuture(mappedResponse);
+  private Response toResponse(HttpResponse<Buffer> response) {
+    return new Response(response.statusCode(), response.bodyAsString());
   }
 }
