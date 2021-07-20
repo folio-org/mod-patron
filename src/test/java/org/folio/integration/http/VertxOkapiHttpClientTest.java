@@ -3,13 +3,16 @@ package org.folio.integration.http;
 import static com.github.tomakehurst.wiremock.client.WireMock.created;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
+import static org.folio.HttpStatus.HTTP_OK;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -50,17 +53,36 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  public void canPostWithJson() {
-    final String locationResponseHeader = "/a-different-location";
+  public void canGetJson() {
+    final var getEndpoint = matchingFolioHeaders(get(urlPathEqualTo("/record")));
 
+    fakeWebServer.stubFor(getEndpoint.willReturn(ok()
+      .withBody(dummyJsonResponseBody())
+      .withHeader("Content-Type", "application/json")));
+
+    final var client = createClient();
+
+    final var getCompleted = client.get(
+      "/record", Headers.toMap(fakeWebServer.baseUrl()));
+
+    final var response = getCompleted.get(2, SECONDS);
+
+    assertThat(response.statusCode, is(HTTP_OK.toInt()));
+    assertThat(asJson(response.body).getString("message"), is("hello"));
+
+    assertThat(countOfRequestsMadeTo(getEndpoint), is(1));
+  }
+
+  @SneakyThrows
+  @Test
+  public void canPostWithJson() {
     final var postEndpoint = matchingFolioHeaders(post(urlPathEqualTo("/record")))
       .withHeader("Content-Type", equalTo("application/json"))
       .withRequestBody(equalToJson(dummyJsonRequestBody().encodePrettily()));
 
     fakeWebServer.stubFor(postEndpoint.willReturn(created()
       .withBody(dummyJsonResponseBody())
-      .withHeader("Content-Type", "application/json")
-      .withHeader("Location", locationResponseHeader)));
+      .withHeader("Content-Type", "application/json")));
 
     final var client = createClient();
 
