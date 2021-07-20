@@ -1,7 +1,5 @@
 package org.folio.rest.impl;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -11,13 +9,8 @@ import org.folio.integration.http.Response;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
 
 class LookupsUtils {
   private LookupsUtils() {}
@@ -81,28 +74,9 @@ class LookupsUtils {
   public static CompletableFuture<Response> get(String path,
     Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
-    Vertx vertx = Vertx.currentContext().owner();
-    URL url;
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
 
-    try {
-      url = new URL(buildUri(path, okapiHeaders));
-    } catch (MalformedURLException e) {
-      throw new CompletionException(e.getCause());
-    }
-
-    final var futureResponse
-      = new CompletableFuture<AsyncResult<HttpResponse<Buffer>>>();
-
-    final var request = WebClient.create(vertx)
-      .get(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
-
-    queryParameters.forEach(request::addQueryParam);
-
-    request.send(futureResponse::complete);
-
-    return futureResponse
-      .thenCompose(LookupsUtils::toResponse);
+    return client.get(path, queryParameters, okapiHeaders);
   }
 
   public static CompletableFuture<Response> get(String path,
@@ -110,32 +84,6 @@ class LookupsUtils {
 
     final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
 
-    return client.get(path, okapiHeaders);
-  }
-
-  private static CompletableFuture<Response> toResponse(
-    AsyncResult<HttpResponse<Buffer>> result) {
-
-    if (result.failed()) {
-      return CompletableFuture.failedFuture(result.cause());
-    }
-
-    final var response = result.result();
-
-    final var mappedResponse = new Response(response.statusCode(),
-      response.bodyAsString());
-
-    return CompletableFuture.completedFuture(mappedResponse);
-  }
-
-  private static String buildUri(String path, Map<String, String> okapiHeaders) {
-    final String okapiURL = okapiHeaders.getOrDefault("X-Okapi-Url", "");
-
-    return okapiURL + path;
-  }
-
-  private static MultiMap buildHeaders(Map<String, String> okapiHeaders) {
-    return MultiMap.caseInsensitiveMultiMap()
-      .addAll(okapiHeaders);
+    return client.get(path, Map.of(), okapiHeaders);
   }
 }

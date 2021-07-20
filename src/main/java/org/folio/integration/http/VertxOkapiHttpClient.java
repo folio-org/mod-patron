@@ -22,11 +22,19 @@ public class VertxOkapiHttpClient {
   }
 
   public CompletableFuture<Response> get(String path, Map<String, String> okapiHeaders) {
+    return get(path, Map.of(), okapiHeaders);
+  }
+
+  public CompletableFuture<Response> get(String path,
+    Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
+
     URL url = buildUrl(path, okapiHeaders);
 
     final var request = client
       .get(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
+
+    queryParameters.forEach(request::addQueryParam);
 
     return request.send()
       .toCompletionStage()
