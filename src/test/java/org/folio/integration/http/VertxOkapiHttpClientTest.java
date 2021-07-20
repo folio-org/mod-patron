@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -64,6 +65,32 @@ class VertxOkapiHttpClientTest {
 
     final var getCompleted = client.get(
       "/record", Headers.toMap(fakeWebServer.baseUrl()));
+
+    final var response = getCompleted.get(2, SECONDS);
+
+    assertThat(response.statusCode, is(HTTP_OK.toInt()));
+    assertThat(asJson(response.body).getString("message"), is("hello"));
+
+    assertThat(countOfRequestsMadeTo(getEndpoint), is(1));
+  }
+
+  @SneakyThrows
+  @Test
+  public void canGetJsonUsingQueryParameters() {
+    final var getEndpoint = matchingFolioHeaders(get(urlPathEqualTo("/record")))
+      .withQueryParam("first-parameter", equalTo("foo"))
+      .withQueryParam("second-parameter", equalTo("bar"));
+
+    fakeWebServer.stubFor(matchingFolioHeaders(getEndpoint)
+      .willReturn(okJson(dummyJsonResponseBody())));
+
+    final var client = createClient();
+
+    final var queryParameters
+      = Map.of("first-parameter", "foo", "second-parameter", "bar");
+
+    final var getCompleted = client.get(
+      "/record", queryParameters, Headers.toMap(fakeWebServer.baseUrl()));
 
     final var response = getCompleted.get(2, SECONDS);
 
