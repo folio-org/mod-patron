@@ -79,7 +79,7 @@ class LookupsUtils {
   }
 
   public static CompletableFuture<Response> get(String path,
-                                                Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
+    Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
     Vertx vertx = Vertx.currentContext().owner();
     URL url;
@@ -106,9 +106,11 @@ class LookupsUtils {
   }
 
   public static CompletableFuture<Response> get(String path,
-                                                Map<String, String> okapiHeaders) {
+    Map<String, String> okapiHeaders) {
 
-    return get(path, Map.of(), okapiHeaders);
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
+    return client.get(path, okapiHeaders);
   }
 
   private static CompletableFuture<Response> toResponse(

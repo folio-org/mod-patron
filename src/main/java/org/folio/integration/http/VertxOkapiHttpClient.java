@@ -21,6 +21,19 @@ public class VertxOkapiHttpClient {
     client = WebClient.create(vertx);
   }
 
+  public CompletableFuture<Response> get(String path, Map<String, String> okapiHeaders) {
+    URL url = buildUrl(path, okapiHeaders);
+
+    final var request = client
+      .get(url.getPort(), url.getHost(), url.getPath())
+      .putHeaders(buildHeaders(okapiHeaders));
+
+    return request.send()
+      .toCompletionStage()
+      .toCompletableFuture()
+      .thenApply(this::toResponse);
+  }
+
   public CompletableFuture<Response> post(String path, JsonObject body,
     Map<String, String> okapiHeaders) {
 
