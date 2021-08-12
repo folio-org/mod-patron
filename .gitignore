@@ -5,3 +5,4 @@
 /.checkstyle
 /.vertx/
 *.iml
+.idea
