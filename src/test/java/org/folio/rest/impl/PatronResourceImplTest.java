@@ -40,6 +40,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
@@ -74,7 +75,6 @@ public class PatronResourceImplTest {
   private final String inactiveUserId = "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4";
   private final String badUserId = "3ed07e77-a5c9-47c8-bb0b-381099e10a42";
   private final String goodItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
-  private final String goodCancelItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
   private final String badItemId = "3dda4eb9-a156-474c-829f-bd5a386f382c";
   private final String goodInstanceId = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
   private final String badInstanceId = "68cb9692-aa5f-459d-8791-f79486c11225";
@@ -125,6 +125,8 @@ public class PatronResourceImplTest {
 
   @BeforeEach
   public void setUp(Vertx vertx, VertxTestContext context) throws Exception {
+    vertx.exceptionHandler(context::failNow);
+
     moduleName = ModuleName.getModuleName().replaceAll("_", "-");
     moduleVersion = ModuleName.getModuleVersion();
     moduleId = moduleName + "-" + moduleVersion;
@@ -353,46 +355,29 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/chargeitem_camera.json"));
-      } else if (req.path().equals("/holdings-storage/holdings/" + holdingsBook1Id)) {
+      } else if (req.path().equals("/inventory/instances")) {
+        if (req.query() == null || ! req.query().matches("query=holdingsRecords\\.id%3D%3D%22.*%22")) {
+          req.response().setStatusCode(500).end("Unexpected /inventory/instances query: " + req.query());
+          return;
+        }
+        String file;
+        String id = req.query().substring(33, req.query().length() - 3);
+        switch (id) {
+        case holdingsBook1Id:  file = "/instance_book1.json";  break;
+        case holdingsBook2Id:  file = "/instance_book2.json";  break;
+        case holdingsBook3Id:  file = "/instance_book3.json";  break;
+        case holdingsCameraId: file = "/instance_camera.json"; break;
+        default:
+          req.response().setStatusCode(500).end(
+              "Unexpected holdings id " + id + " in /inventory/instances query: " + req.query());
+          return;
+        }
+        JsonObject instance = new JsonObject(readMockFile(mockDataFolder + file));
+        JsonObject instances = new JsonObject().put("instances", new JsonArray().add(instance));
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/holdings_book1.json"));
-      } else if (req.path().equals("/holdings-storage/holdings/" + holdingsBook2Id)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/holdings_book2.json"));
-      } else if (req.path().equals("/holdings-storage/holdings/" + holdingsBook3Id)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/holdings_book3.json"));
-      } else if (req.path().equals("/holdings-storage/holdings/" + holdingsCameraId)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/holdings_camera.json"));
-      } else if (req.path().equals("/inventory/instances/" + instanceBook1Id)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/instance_book1.json"));
-      } else if (req.path().equals("/inventory/instances/" + instanceBook2Id)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/instance_book2.json"));
-      } else if (req.path().equals("/inventory/instances/" + instanceBook3Id)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/instance_book3.json"));
-      } else if (req.path().equals("/inventory/instances/" + instanceCameraId)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/instance_camera.json"));
+          .end(instances.encodePrettily());
       } else if (req.path().equals("/inventory/items/" + itemBook1Id)) {
         req.response()
           .setStatusCode(200)
