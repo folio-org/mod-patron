@@ -125,6 +125,8 @@ public class PatronResourceImplTest {
 
   @BeforeEach
   public void setUp(Vertx vertx, VertxTestContext context) throws Exception {
+    vertx.exceptionHandler(context::failNow);
+
     moduleName = ModuleName.getModuleName().replaceAll("_", "-");
     moduleVersion = ModuleName.getModuleVersion();
     moduleId = moduleName + "-" + moduleVersion;
@@ -354,8 +356,8 @@ public class PatronResourceImplTest {
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/chargeitem_camera.json"));
       } else if (req.path().equals("/inventory/instances")) {
-        if (! req.query().matches("query=holdingsRecords\\.id%3D%3D%22.*%22")) {
-          req.response().setStatusCode(500).end("Unexpected query: " + req.query());
+        if (req.query() == null || ! req.query().matches("query=holdingsRecords\\.id%3D%3D%22.*%22")) {
+          req.response().setStatusCode(500).end("Unexpected /inventory/instances query: " + req.query());
           return;
         }
         String file;
@@ -366,7 +368,8 @@ public class PatronResourceImplTest {
         case holdingsBook3Id:  file = "/instance_book3.json";  break;
         case holdingsCameraId: file = "/instance_camera.json"; break;
         default:
-          req.response().setStatusCode(500).end("Unexpected holdings id " + id + " in query: " + req.query());
+          req.response().setStatusCode(500).end(
+              "Unexpected holdings id " + id + " in /inventory/instances query: " + req.query());
           return;
         }
         JsonObject instance = new JsonObject(readMockFile(mockDataFolder + file));

@@ -21,7 +21,6 @@ import org.folio.rest.jaxrs.model.Loan;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
-import org.folio.rest.tools.client.interfaces.HttpClientInterface;
 import org.folio.util.StringUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -412,10 +411,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   private CompletableFuture<Account> lookupItem(Charge charge, Account account, Map<String, String> okapiHeaders) {
     return getItem(charge, okapiHeaders)
-        .thenCompose(item -> getHoldingsRecord(item, okapiHeaders))
-        .thenApply(LookupsUtils::verifyAndExtractBody)
-        .thenCompose(holding -> getInstance(holding, okapiHeaders))
-        .thenApply(LookupsUtils::verifyAndExtractBody)
+        .thenCompose(item -> getInstance(item, okapiHeaders))
         .thenApply(instance -> getItem(charge, instance))
         .thenApply(item -> updateItem(charge, item, account));
   }
@@ -425,27 +421,15 @@ public class PatronServicesResourceImpl implements Patron {
     return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders);
   }
 
-  private CompletableFuture<LookupsUtils.Response> getHoldingsRecord(
+  private CompletableFuture<JsonObject> getInstance(
     JsonObject item, Map<String, String> okapiHeaders) {
 
     try {
-      return LookupsUtils.get(
-        "/holdings-storage/holdings/" + item.getString("holdingsRecordId"),
-        okapiHeaders);
-
-    } catch (Exception e) {
-      throw new CompletionException(e);
-    }
-  }
-
-  private CompletableFuture<LookupsUtils.Response> getInstance(
-    JsonObject holdingsRecord, Map<String, String> okapiHeaders) {
-
-    try {
-      return LookupsUtils.get(
-        "/inventory/instances/" + holdingsRecord.getString(Constants.JSON_FIELD_INSTANCE_ID),
-        okapiHeaders);
-
+      String cql = "holdingsRecords.id==" +
+          StringUtil.cqlEncode(item.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID));
+      return LookupsUtils.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
+          .thenApply(LookupsUtils::verifyAndExtractBody)
+          .thenApply(instances -> instances.getJsonArray("instances").getJsonObject(0));
     } catch (Exception e) {
       throw new CompletionException(e);
     }
