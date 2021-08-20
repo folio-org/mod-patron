@@ -10,14 +10,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.UrlDecoder;
 import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Hold;
-import org.folio.rest.tools.PomReader;
+import org.folio.rest.tools.utils.ModuleName;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -38,6 +38,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -124,8 +125,8 @@ public class PatronResourceImplTest {
 
   @BeforeEach
   public void setUp(Vertx vertx, VertxTestContext context) throws Exception {
-    moduleName = PomReader.INSTANCE.getModuleName().replaceAll("_", "-");
-    moduleVersion = PomReader.INSTANCE.getVersion();
+    moduleName = ModuleName.getModuleName().replaceAll("_", "-");
+    moduleVersion = ModuleName.getModuleVersion();
     moduleId = moduleName + "-" + moduleVersion;
     logger.info("Test setup starting for " + moduleId);
 
@@ -162,12 +163,12 @@ public class PatronResourceImplTest {
           .putHeader("content-type", "text/plain")
           .end("Not Found");
       } else if (req.path().equals("/circulation/loans")) {
-        if (req.query().equals(String.format("limit=%d&query=%%28userId%%3D%%3D%s%%20and%%20status.name%%3D%%3DOpen%%29", Integer.MAX_VALUE, goodUserId))) {
+        if (loansParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/loans_all.json"));
-        } else if (req.query().equals(String.format("limit=%d&query=%%28userId%%3D%%3D%s%%20and%%20status.name%%3D%%3DOpen%%29", 1, goodUserId))) {
+        } else if (loansParametersMatch(req, 1)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -220,12 +221,12 @@ public class PatronResourceImplTest {
             });
           }
         } else {
-            if (req.query().equals(String.format("limit=%d&query=%%28requesterId%%3D%%3D%s%%20and%%20status%%3D%%3DOpen%%2A%%29", Integer.MAX_VALUE, goodUserId))) {
+            if (requestsParametersMatch(req, Integer.MAX_VALUE)) {
               req.response()
                 .setStatusCode(200)
                 .putHeader("content-type", "application/json")
                 .end(readMockFile(mockDataFolder + "/holds_all.json"));
-            } else if (req.query().equals(String.format("limit=%d&query=%%28requesterId%%3D%%3D%s%%20and%%20status%%3D%%3DOpen%%2A%%29", 1, goodUserId))) {
+            } else if (requestsParametersMatch(req, 1)) {
               req.response()
                 .setStatusCode(200)
                 .putHeader("content-type", "application/json")
@@ -324,7 +325,7 @@ public class PatronResourceImplTest {
             .end("internal server error, contact administrator");
         }
       } else if (req.path().equals("/accounts")) {
-        if (req.query().equals(String.format("limit=%d&query=%%28userId%%3D%%3D%s%%20and%%20status.name%%3D%%3DOpen%%29", Integer.MAX_VALUE, goodUserId))) {
+        if (accountParametersMatch(req)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -489,20 +490,18 @@ public class PatronResourceImplTest {
             .end(readMockFile(mockDataFolder + "/renew_create.json"));
         }
       } else if (req.path().equals("/circulation/rules/request-policy")) {
-          if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
-                                                materialTypeId1, loanTypeId1, patronGroupId1, effectiveLocation1))) {
+          // These checks require that the query string parameters be produced in a specific order
+          if (rulesParametersMatch(req, materialTypeId1)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/requestPolicyId_all.json"));
-          } else if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
-            materialTypeId2, loanTypeId1, patronGroupId1, effectiveLocation1))) {
+          } else if (rulesParametersMatch(req, materialTypeId2)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/requestPolicyId_hold.json"));
-          } else if (req.query().equals(String.format("item_type_id=%s&loan_type_id=%s&patron_type_id=%s&location_id=%s",
-            materialTypeId3, loanTypeId1, patronGroupId1, effectiveLocation1))) {
+          } else if (rulesParametersMatch(req, materialTypeId3)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
@@ -528,6 +527,36 @@ public class PatronResourceImplTest {
       }
     });
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
+  }
+
+  private boolean accountParametersMatch(HttpServerRequest request) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("limit=" + Integer.MAX_VALUE)
+      && queryString.contains("query=(userId==" + goodUserId + " and status.name==Open)");
+  }
+
+  private boolean requestsParametersMatch(HttpServerRequest request, int limit) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("limit=" + limit)
+      && queryString.contains("query=(requesterId==" + goodUserId + " and status==Open*)");
+  }
+
+  private boolean loansParametersMatch(HttpServerRequest request, int limit) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("limit=" + limit)
+      && queryString.contains("query=(userId==" + goodUserId + " and status.name==Open)");
+  }
+
+  private boolean rulesParametersMatch(HttpServerRequest request, String materialTypeId) {
+    final var queryString = request.query();
+
+    return queryString.contains("item_type_id=" + materialTypeId)
+      && queryString.contains("loan_type_id=" + loanTypeId1)
+      && queryString.contains("patron_type_id=" + patronGroupId1)
+      && queryString.contains("location_id=" + effectiveLocation1);
   }
 
   @AfterEach
@@ -880,7 +909,7 @@ public class PatronResourceImplTest {
 
     String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
 
-    final Hold holdCancelResponse = given()
+    final var holdCancelResponse = given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
@@ -896,10 +925,12 @@ public class PatronResourceImplTest {
         .and().assertThat().contentType(ContentType.JSON)
         .and().assertThat().statusCode(200)
       .extract()
-        .as(Hold.class);
+        .asString();
 
-    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
-    assertEquals(expectedHold, holdCancelResponse);
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
+
+    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
+
     // Test done
     logger.info("Test done");
   }
@@ -913,7 +944,7 @@ public class PatronResourceImplTest {
     jsonBody.remove("cancelledDate");
     aBody = jsonBody.encodePrettily();
 
-    final Hold holdCancelResponse = given()
+    final var holdCancelResponse = given()
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
@@ -930,10 +961,12 @@ public class PatronResourceImplTest {
         .and().assertThat().contentType(ContentType.JSON)
         .and().assertThat().statusCode(200)
       .extract()
-        .as(Hold.class);
+        .asString();
 
-    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"), Hold.class);
-    assertEquals(expectedHold, holdCancelResponse);
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
+
+    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
+
     // Test done
     logger.info("Test done");
   }
@@ -963,8 +996,14 @@ public class PatronResourceImplTest {
       .extract()
         .as(Errors.class);
 
-    final Errors expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/hold_cancel_error.json"), Errors.class);
-    assertEquals(expectedErrors, holdErrorResponse);
+    assertEquals(1, holdErrorResponse.getErrors().size());
+    assertEquals("Cannot edit a closed request",
+      holdErrorResponse.getErrors().get(0).getMessage());
+    assertEquals(1, holdErrorResponse.getErrors().get(0).getParameters().size());
+    assertEquals("id",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals("69f059dd-e8ad-43a9-b2d7-d35a0ad3ab1b",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getValue());
 
     // Test done
     logger.info("Test done");
@@ -974,7 +1013,7 @@ public class PatronResourceImplTest {
   public final void testPostPatronAccountByIdInstanceByInstanceIdHold() {
     logger.info("Testing creating a hold on an instance for the specified user");
 
-    final Hold hold = given()
+    final var hold = given()
         .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader))
         .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
         .and().body(readMockFile(mockDataFolder
@@ -986,11 +1025,11 @@ public class PatronResourceImplTest {
         .and().assertThat().contentType(ContentType.JSON)
         .and().assertThat().statusCode(201)
       .extract()
-        .as(Hold.class);
+        .asString();
 
-    final Hold expectedHold = Json.decodeValue(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"), Hold.class);
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"));
 
-    assertEquals(expectedHold, hold);
+    verifyHold(expectedHold, new JsonObject(hold));
 
     // Test done
     logger.info("Test done");
@@ -1042,8 +1081,14 @@ public class PatronResourceImplTest {
       .extract()
         .as(Errors.class);
 
-    final var expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/instance_hold_bad_instance_id.json"), Errors.class);
-    assertEquals(expectedErrors, holdErrorResponse);
+    assertEquals(1, holdErrorResponse.getErrors().size());
+    assertEquals("No instance with ID 68cb9692-aa5f-459d-8791-f79486c11225 exists",
+      holdErrorResponse.getErrors().get(0).getMessage());
+    assertEquals(1, holdErrorResponse.getErrors().get(0).getParameters().size());
+    assertEquals("instanceId",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals("68cb9692-aa5f-459d-8791-f79486c11225",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getValue());
   }
 
   @Test
@@ -1066,8 +1111,14 @@ public class PatronResourceImplTest {
         .extract()
         .as(Errors.class);
 
-    final var expectedErrors = Json.decodeValue(readMockFile(mockDataFolder + "/item_hold_bad_item_id.json"), Errors.class);
-    assertEquals(expectedErrors, holdErrorResponse);
+    assertEquals(1, holdErrorResponse.getErrors().size());
+    assertEquals("No item with ID 3dda4eb9-a156-474c-829f-bd5a386f382c",
+      holdErrorResponse.getErrors().get(0).getMessage());
+    assertEquals(1, holdErrorResponse.getErrors().get(0).getParameters().size());
+    assertEquals("itemId",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getKey());
+    assertEquals("3dda4eb9-a156-474c-829f-bd5a386f382c",
+      holdErrorResponse.getErrors().get(0).getParameters().get(0).getValue());
   }
 
   @ParameterizedTest

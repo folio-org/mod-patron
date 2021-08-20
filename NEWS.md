@@ -1,3 +1,8 @@
+## 4.5.1 2021-06-28
+
+ * [MODPATRON-61](https://issues.folio.org/browse/MODPATRON-61): Patron Comments- Not seeing comments in response OR on FOLIO
+   request record when user creates request via opac or discovery
+
 ## 4.5.0 2021-06-18
 
  * Accounts without item data attached no longer result in errors when using "includeCharges" flag (MODPATRON-59)
