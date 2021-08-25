@@ -57,7 +57,6 @@ class LookupsUtils {
     if (StringUtils.isBlank(response.body)) {
       return null;
     }
-
     return new JsonObject(response.body);
   }
 

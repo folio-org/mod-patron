@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "4.2",
+      "version": "4.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -16,8 +16,6 @@
             "circulation.requests.collection.get",
             "accounts.collection.get",
             "inventory.items.item.get",
-            "inventory-storage.items.collection.get",
-            "inventory-storage.holdings.item.get",
             "inventory.instances.item.get",
             "feefines.item.get"
           ]
@@ -73,11 +71,7 @@
     },
     {
       "id": "inventory",
-      "version": "5.2 6.0 7.0 8.0 9.0 10.0"
-    },
-    {
-      "id": "holdings-storage",
-      "version": "1.2 2.0 3.0 4.0"
+      "version": "5.2 6.0 7.0 8.0 9.0 10.0 11.0"
     }
   ],
   "permissionSets": [
