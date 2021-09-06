@@ -31,6 +31,7 @@ import com.github.tomakehurst.wiremock.client.MappingBuilder;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import lombok.SneakyThrows;
 
 class VertxOkapiHttpClientTest {
@@ -156,7 +157,7 @@ class VertxOkapiHttpClientTest {
   }
 
   private VertxOkapiHttpClient createClient() {
-    return new VertxOkapiHttpClient(vertx);
+    return new VertxOkapiHttpClient(WebClient.create(vertx));
   }
 
   private JsonObject dummyJsonRequestBody() {

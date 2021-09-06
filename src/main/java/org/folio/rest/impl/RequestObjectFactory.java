@@ -16,6 +16,7 @@ import org.joda.time.DateTimeZone;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
@@ -77,7 +78,8 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<JsonObject> lookupRequestPolicyId(RequestTypeParameters criteria) {
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     final var queryParameters = Map.of(
       "item_type_id", criteria.getItemMaterialTypeId(),
@@ -90,7 +92,8 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     return client.get("/request-policy-storage/request-policies/" + requestPolicyId,
         Map.of(), okapiHeaders)

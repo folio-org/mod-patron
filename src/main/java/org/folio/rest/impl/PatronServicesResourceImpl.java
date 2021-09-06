@@ -39,6 +39,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 
 public class PatronServicesResourceImpl implements Patron {
 
@@ -104,7 +105,8 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id, Map<String, String> okapiHeaders) {
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(true)),
@@ -117,7 +119,8 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<JsonObject> getRequests(String id, boolean includeHolds,
     Map<String, String> okapiHeaders) {
 
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(includeHolds)),
@@ -130,7 +133,8 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<JsonObject> getLoans(String id, boolean includeLoans,
     Map<String, String> okapiHeaders) {
 
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(includeLoans)),
@@ -146,7 +150,8 @@ public class PatronServicesResourceImpl implements Patron {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     final JsonObject renewalJSON = new JsonObject()
         .put(Constants.JSON_FIELD_ITEM_ID, itemId)
@@ -175,7 +180,8 @@ public class PatronServicesResourceImpl implements Patron {
       Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     RequestObjectFactory requestFactory = new RequestObjectFactory(okapiHeaders);
 
@@ -219,7 +225,8 @@ public class PatronServicesResourceImpl implements Patron {
   public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final Hold[] holds = new Hold[1];
 
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     try {
       client.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
@@ -259,7 +266,8 @@ public class PatronServicesResourceImpl implements Patron {
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
       Context vertxContext) {
 
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     final JsonObject holdJSON = new JsonObject()
         .put(Constants.JSON_FIELD_INSTANCE_ID, instanceId)
@@ -444,7 +452,8 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<JsonObject> getInstance(
     JsonObject item, Map<String, String> okapiHeaders) {
 
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+    final var client = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
 
     try {
       String cql = "holdingsRecords.id==" +

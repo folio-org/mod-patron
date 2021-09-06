@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -17,8 +16,8 @@ import io.vertx.ext.web.client.WebClient;
 public class VertxOkapiHttpClient {
   private final WebClient client;
 
-  public VertxOkapiHttpClient(Vertx vertx) {
-    client = WebClient.create(vertx);
+  public VertxOkapiHttpClient(WebClient client) {
+    this.client = client;
   }
 
   public CompletableFuture<Response> get(String path, Map<String, String> okapiHeaders) {
