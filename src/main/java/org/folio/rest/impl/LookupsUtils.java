@@ -17,10 +17,7 @@ class LookupsUtils {
   private LookupsUtils() {}
 
   static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders) {
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
-
-    return client.get("/inventory/items/" + itemId, Map.of(), okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
+    return new ItemRepository().getItem(itemId, okapiHeaders);
   }
 
   static CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders) {

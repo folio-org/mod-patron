@@ -437,7 +437,6 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getItem(Charge charge, Map<String, String> okapiHeaders) {
-
     return LookupsUtils.getItem(charge.getItem().getItemId(), okapiHeaders);
   }
 
