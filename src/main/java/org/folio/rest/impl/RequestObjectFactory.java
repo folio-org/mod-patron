@@ -50,8 +50,10 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<RequestType> getRequestType(String patronId, String itemId) {
-    final var itemRepository = new ItemRepository();
-    final var userRepository = new UserRepository();
+    final var httpClient = new VertxOkapiHttpClient(WebClient.create(Vertx.currentContext().owner()));
+
+    final var itemRepository = new ItemRepository(httpClient);
+    final var userRepository = new UserRepository(httpClient);
 
     CompletableFuture<JsonObject> userFuture = userRepository.getUser(patronId, okapiHeaders);
     CompletableFuture<JsonObject> itemFuture = itemRepository.getItem(itemId, okapiHeaders);

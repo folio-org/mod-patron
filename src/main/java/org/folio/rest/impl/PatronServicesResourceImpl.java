@@ -42,7 +42,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 
 public class PatronServicesResourceImpl implements Patron {
-
   @Validate
   @Override
   public void getPatronAccountById(String id, boolean includeLoans,
@@ -50,7 +49,9 @@ public class PatronServicesResourceImpl implements Patron {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
-    final var userRepository = new UserRepository();
+    final var httpClient = new VertxOkapiHttpClient(WebClient.create(vertxContext.owner()));
+
+    final var userRepository = new UserRepository(httpClient);
 
     try {
       // Look up the user to ensure that the user exists and is enabled
@@ -441,7 +442,8 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> lookupItem(Charge charge, Account account, Map<String, String> okapiHeaders) {
-    final var itemRepository = new ItemRepository();
+    final var httpClient = new VertxOkapiHttpClient(WebClient.create(Vertx.currentContext().owner()));
+    final var itemRepository = new ItemRepository(httpClient);
 
     return itemRepository.getItem(charge.getItem().getItemId(), okapiHeaders)
         .thenCompose(item -> getInstance(item, okapiHeaders))

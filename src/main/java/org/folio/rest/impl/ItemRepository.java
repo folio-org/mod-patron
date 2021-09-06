@@ -6,16 +6,13 @@ import java.util.concurrent.CompletableFuture;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
 
 public class ItemRepository {
   private final VertxOkapiHttpClient client;
 
-  public ItemRepository() {
-    client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
+  public ItemRepository(VertxOkapiHttpClient client) {
+    this.client = client;
   }
 
   public CompletableFuture<JsonObject> getItem(String itemId,
