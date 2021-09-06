@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 
 import io.vertx.core.Vertx;
@@ -17,6 +18,6 @@ public class UserRepository {
 
   public CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders) {
     return client.get("/users/" + userId, Map.of(), okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 }

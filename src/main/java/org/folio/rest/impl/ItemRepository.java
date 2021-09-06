@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 
 import io.vertx.core.Vertx;
@@ -19,6 +20,6 @@ public class ItemRepository {
     Map<String, String> okapiHeaders) {
 
     return client.get("/inventory/items/" + itemId, Map.of(), okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 }

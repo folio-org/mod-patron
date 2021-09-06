@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
@@ -110,7 +111,7 @@ public class PatronServicesResourceImpl implements Patron {
       "query", String.format("(userId==%s and status.name==Open)", id));
 
     return client.get("/accounts", queryParameters, okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getRequests(String id, boolean includeHolds,
@@ -123,7 +124,7 @@ public class PatronServicesResourceImpl implements Patron {
       "query", String.format("(requesterId==%s and status==Open*)", id));
 
     return client.get("/circulation/requests", queryParameters, okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getLoans(String id, boolean includeLoans,
@@ -136,7 +137,7 @@ public class PatronServicesResourceImpl implements Patron {
       "query", String.format("(userId==%s and status.name==Open)", id));
 
     return client.get("/circulation/loans", queryParameters, okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   @Validate
@@ -153,7 +154,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     try {
       client.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
-          .thenApply(LookupsUtils::verifyAndExtractBody)
+          .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
             final Loan hold = getLoan(body, item);
@@ -196,7 +197,7 @@ public class PatronServicesResourceImpl implements Patron {
           }
 
           return client.post("/circulation/requests", holdJSON, okapiHeaders)
-            .thenApply(LookupsUtils::verifyAndExtractBody)
+            .thenApply(ResponseInterpreter::verifyAndExtractBody)
             .thenAccept(body -> {
               final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
               final Hold hold = getHold(body, item);
@@ -222,7 +223,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     try {
       client.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
-        .thenApply(LookupsUtils::verifyAndExtractBody)
+        .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenApply( body -> {
           JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
           final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID), itemJson);
@@ -238,7 +239,7 @@ public class PatronServicesResourceImpl implements Patron {
               return null;
             }
         })
-        .thenApply(LookupsUtils::verifyAndExtractBody)
+        .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenAccept(
             body -> asyncResultHandler.handle(Future.succeededFuture(
               PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0]))))
@@ -274,7 +275,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     try {
       client.post("/circulation/requests/instances", holdJSON, okapiHeaders)
-          .thenApply(LookupsUtils::verifyAndExtractBody)
+          .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID),
                 body.getJsonObject(Constants.JSON_FIELD_ITEM));
@@ -450,7 +451,7 @@ public class PatronServicesResourceImpl implements Patron {
           StringUtil.cqlEncode(item.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID));
 
       return client.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
-          .thenApply(LookupsUtils::verifyAndExtractBody)
+          .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenApply(instances -> instances.getJsonArray("instances").getJsonObject(0));
     } catch (Exception e) {
       throw new CompletionException(e);

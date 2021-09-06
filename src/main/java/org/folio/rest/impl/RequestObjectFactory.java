@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.rest.jaxrs.model.Hold;
 import org.joda.time.DateTime;
@@ -85,7 +86,7 @@ class RequestObjectFactory {
       "location_id", criteria.getItemLocationId());
 
     return client.get("/circulation/rules/request-policy", queryParameters, okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
@@ -93,7 +94,7 @@ class RequestObjectFactory {
 
     return client.get("/request-policy-storage/request-policies/" + requestPolicyId,
         Map.of(), okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private RequestTypeParameters createRequestPolicyIdCriteria(CompletableFuture<JsonObject> itemFuture,
