@@ -16,10 +16,6 @@ import io.vertx.core.json.JsonObject;
 class LookupsUtils {
   private LookupsUtils() {}
 
-  static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders) {
-    return new ItemRepository().getItem(itemId, okapiHeaders);
-  }
-
   static CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders) {
     final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
 

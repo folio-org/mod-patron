@@ -1,15 +1,18 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.Hold;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static org.folio.rest.impl.Constants.*;
+import org.folio.rest.jaxrs.model.Hold;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
+import io.vertx.core.json.JsonObject;
 
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
@@ -43,9 +46,10 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<RequestType> getRequestType(String patronId, String itemId) {
+    final var itemRepository = new ItemRepository();
 
     CompletableFuture<JsonObject> userFuture = LookupsUtils.getUser(patronId, okapiHeaders);
-    CompletableFuture<JsonObject> itemFuture = LookupsUtils.getItem(itemId, okapiHeaders);
+    CompletableFuture<JsonObject> itemFuture = itemRepository.getItem(itemId, okapiHeaders);
 
     RequestTypeParameters requestTypeParams = new RequestTypeParameters();
 
