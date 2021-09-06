@@ -23,27 +23,6 @@ class LookupsUtils {
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
-  static CompletableFuture<JsonObject> getRequestPolicyId(RequestTypeParameters criteria, Map<String, String> okapiHeaders) {
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
-
-    final var queryParameters = Map.of(
-      "item_type_id", criteria.getItemMaterialTypeId(),
-      "loan_type_id", criteria.getItemLoanTypeId(),
-      "patron_type_id", criteria.getPatronGroupId(),
-      "location_id", criteria.getItemLocationId());
-
-    return client.get("/circulation/rules/request-policy", queryParameters, okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
-  }
-
-  static CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
-
-    return client.get("/request-policy-storage/request-policies/" + requestPolicyId,
-        Map.of(), okapiHeaders)
-      .thenApply(LookupsUtils::verifyAndExtractBody);
-  }
-
   static JsonObject verifyAndExtractBody(Response response) {
     if (!response.isSuccess()) {
       throw new CompletionException(new HttpException(response.statusCode,
