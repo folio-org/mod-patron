@@ -450,6 +450,7 @@
             Passing of "illegal-access" parameter allows to know when deep reflections is used in further.
           -->
           <argLine>
+            @{argLine}
             --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
             -Dio.netty.tryReflectionSetAccessible=true
             --illegal-access=warn
@@ -461,6 +462,27 @@
             </vertx.logger-delegate-factory-class-name>
           </systemPropertyVariables>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.7</version>
+        <executions>
+          <execution>
+            <id>jacoco-initialize</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>jacoco-site</id>
+            <phase>package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
