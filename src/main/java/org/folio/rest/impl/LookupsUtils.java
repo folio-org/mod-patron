@@ -16,29 +16,37 @@ class LookupsUtils {
   private LookupsUtils() {}
 
   static CompletableFuture<JsonObject> getItem(String itemId, Map<String, String> okapiHeaders) {
-    return get("/inventory/items/" + itemId, okapiHeaders)
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
+    return client.get("/inventory/items/" + itemId, Map.of(), okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
   static CompletableFuture<JsonObject> getUser(String userId, Map<String, String> okapiHeaders) {
-    return get("/users/" + userId, okapiHeaders)
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
+    return client.get("/users/" + userId, Map.of(), okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
   static CompletableFuture<JsonObject> getRequestPolicyId(RequestTypeParameters criteria, Map<String, String> okapiHeaders) {
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     final var queryParameters = Map.of(
       "item_type_id", criteria.getItemMaterialTypeId(),
       "loan_type_id", criteria.getItemLoanTypeId(),
       "patron_type_id", criteria.getPatronGroupId(),
       "location_id", criteria.getItemLocationId());
 
-    return get("/circulation/rules/request-policy",
-        queryParameters, okapiHeaders)
+    return client.get("/circulation/rules/request-policy", queryParameters, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
   static CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
-    return get("/request-policy-storage/request-policies/" + requestPolicyId, okapiHeaders)
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
+    return client.get("/request-policy-storage/request-policies/" + requestPolicyId,
+        Map.of(), okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
@@ -69,21 +77,5 @@ class LookupsUtils {
     final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
 
     return client.put(path, body, okapiHeaders);
-  }
-
-  public static CompletableFuture<Response> get(String path,
-    Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
-
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
-
-    return client.get(path, queryParameters, okapiHeaders);
-  }
-
-  public static CompletableFuture<Response> get(String path,
-    Map<String, String> okapiHeaders) {
-
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
-
-    return client.get(path, Map.of(), okapiHeaders);
   }
 }

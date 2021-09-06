@@ -1,5 +1,9 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.impl.HoldHelpers.addCancellationFieldsToRequest;
+import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
+import static org.folio.rest.impl.HoldHelpers.getHold;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -8,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
 import org.folio.rest.annotations.Validate;
@@ -29,11 +34,10 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-
-import static org.folio.rest.impl.HoldHelpers.*;
 
 public class PatronServicesResourceImpl implements Patron {
 
@@ -97,33 +101,39 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id, Map<String, String> okapiHeaders) {
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(true)),
       "query", String.format("(userId==%s and status.name==Open)", id));
 
-    return LookupsUtils.get("/accounts", queryParameters, okapiHeaders)
+    return client.get("/accounts", queryParameters, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getRequests(String id, boolean includeHolds,
     Map<String, String> okapiHeaders) {
 
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(includeHolds)),
       "query", String.format("(requesterId==%s and status==Open*)", id));
 
-    return LookupsUtils.get("/circulation/requests", queryParameters, okapiHeaders)
+    return client.get("/circulation/requests", queryParameters, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getLoans(String id, boolean includeLoans,
     Map<String, String> okapiHeaders) {
 
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(includeLoans)),
       "query", String.format("(userId==%s and status.name==Open)", id));
 
-    return LookupsUtils.get("/circulation/loans", queryParameters, okapiHeaders)
+    return client.get("/circulation/loans", queryParameters, okapiHeaders)
       .thenApply(LookupsUtils::verifyAndExtractBody);
   }
 
@@ -201,8 +211,10 @@ public class PatronServicesResourceImpl implements Patron {
   public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final Hold[] holds = new Hold[1];
 
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     try {
-      LookupsUtils.get("/circulation/requests/" + holdId, okapiHeaders)
+      client.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
         .thenApply(LookupsUtils::verifyAndExtractBody)
         .thenApply( body -> {
           JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
@@ -424,10 +436,13 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<JsonObject> getInstance(
     JsonObject item, Map<String, String> okapiHeaders) {
 
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     try {
       String cql = "holdingsRecords.id==" +
           StringUtil.cqlEncode(item.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID));
-      return LookupsUtils.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
+
+      return client.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
           .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenApply(instances -> instances.getJsonArray("instances").getJsonObject(0));
     } catch (Exception e) {
