@@ -54,7 +54,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  public void canGetJson() {
+  void canGetJson() {
     final var getEndpoint = matchingFolioHeaders(get(urlPathEqualTo("/record")));
 
     fakeWebServer.stubFor(getEndpoint.willReturn(ok()
@@ -76,7 +76,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  public void canGetJsonUsingQueryParameters() {
+  void canGetJsonUsingQueryParameters() {
     final var getEndpoint = matchingFolioHeaders(get(urlPathEqualTo("/record")))
       .withQueryParam("first-parameter", equalTo("foo"))
       .withQueryParam("second-parameter", equalTo("bar"));
@@ -102,7 +102,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  public void canPostWithJson() {
+  void canPostWithJson() {
     final var postEndpoint = matchingFolioHeaders(post(urlPathEqualTo("/record")))
       .withHeader("Content-Type", equalTo("application/json"))
       .withRequestBody(equalToJson(dummyJsonRequestBody().encodePrettily()));
@@ -126,7 +126,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  public void canPutWithJson() {
+  void canPutWithJson() {
     final var putEndpoint = matchingFolioHeaders(put(urlPathEqualTo("/record")))
       .withHeader("Content-Type", equalTo("application/json"))
       .withRequestBody(equalToJson(dummyJsonRequestBody().encodePrettily()));
