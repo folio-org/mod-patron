@@ -70,12 +70,4 @@ class LookupsUtils {
 
     return client.post(path, body, okapiHeaders);
   }
-
-  public static CompletableFuture<Response> put(String path,
-    JsonObject body, Map<String, String> okapiHeaders) {
-
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
-
-    return client.put(path, body, okapiHeaders);
-  }
 }

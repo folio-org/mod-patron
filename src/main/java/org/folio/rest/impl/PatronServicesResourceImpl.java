@@ -225,7 +225,7 @@ public class PatronServicesResourceImpl implements Patron {
         })
         .thenCompose( anUpdatedRequest -> {
           try {
-            return LookupsUtils.put("/circulation/requests/" + holdId, anUpdatedRequest, okapiHeaders);
+            return client.put("/circulation/requests/" + holdId, anUpdatedRequest, okapiHeaders);
           } catch (Exception e) {
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
               return null;
