@@ -142,12 +142,15 @@ public class PatronServicesResourceImpl implements Patron {
   public void postPatronAccountItemRenewByIdAndItemId(String id, String itemId,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
+
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     final JsonObject renewalJSON = new JsonObject()
         .put(Constants.JSON_FIELD_ITEM_ID, itemId)
         .put(Constants.JSON_FIELD_USER_ID, id);
 
     try {
-      LookupsUtils.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
+      client.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
           .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
@@ -169,6 +172,8 @@ public class PatronServicesResourceImpl implements Patron {
       Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     RequestObjectFactory requestFactory = new RequestObjectFactory(okapiHeaders);
 
     requestFactory.createRequestByItem(id, itemId, entity)
@@ -188,7 +193,7 @@ public class PatronServicesResourceImpl implements Patron {
             return null;
           }
 
-          return LookupsUtils.post("/circulation/requests", holdJSON, okapiHeaders)
+          return client.post("/circulation/requests", holdJSON, okapiHeaders)
             .thenApply(LookupsUtils::verifyAndExtractBody)
             .thenAccept(body -> {
               final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
@@ -250,6 +255,9 @@ public class PatronServicesResourceImpl implements Patron {
       String instanceId, Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
       Context vertxContext) {
+
+    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
+
     final JsonObject holdJSON = new JsonObject()
         .put(Constants.JSON_FIELD_INSTANCE_ID, instanceId)
         .put("requesterId", id)
@@ -263,7 +271,7 @@ public class PatronServicesResourceImpl implements Patron {
     }
 
     try {
-      LookupsUtils.post("/circulation/requests/instances", holdJSON, okapiHeaders)
+      client.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(LookupsUtils::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID),

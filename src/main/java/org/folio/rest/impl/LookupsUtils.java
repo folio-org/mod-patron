@@ -1,10 +1,11 @@
 package org.folio.rest.impl;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.http.Response;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
@@ -56,18 +57,10 @@ class LookupsUtils {
         response.body));
     }
 
-    // Parsing an emppty body to JSON causes an exception
-    if (StringUtils.isBlank(response.body)) {
+    // Parsing an empty body to JSON causes an exception
+    if (isBlank(response.body)) {
       return null;
     }
     return new JsonObject(response.body);
-  }
-
-  public static CompletableFuture<Response> post(String path,
-    JsonObject body, Map<String, String> okapiHeaders) {
-
-    final var client = new VertxOkapiHttpClient(Vertx.currentContext().owner());
-
-    return client.post(path, body, okapiHeaders);
   }
 }
