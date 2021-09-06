@@ -42,14 +42,15 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 
 public class PatronServicesResourceImpl implements Patron {
+  private final VertxOkapiHttpClient httpClient = new VertxOkapiHttpClient(
+    WebClient.create(Vertx.currentContext().owner()));
+
   @Validate
   @Override
   public void getPatronAccountById(String id, boolean includeLoans,
       boolean includeCharges, boolean includeHolds,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-
-    final var httpClient = new VertxOkapiHttpClient(WebClient.create(vertxContext.owner()));
 
     final var userRepository = new UserRepository(httpClient);
 
@@ -106,42 +107,33 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id, Map<String, String> okapiHeaders) {
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(true)),
       "query", String.format("(userId==%s and status.name==Open)", id));
 
-    return client.get("/accounts", queryParameters, okapiHeaders)
+    return httpClient.get("/accounts", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getRequests(String id, boolean includeHolds,
     Map<String, String> okapiHeaders) {
 
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(includeHolds)),
       "query", String.format("(requesterId==%s and status==Open*)", id));
 
-    return client.get("/circulation/requests", queryParameters, okapiHeaders)
+    return httpClient.get("/circulation/requests", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getLoans(String id, boolean includeLoans,
     Map<String, String> okapiHeaders) {
 
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(includeLoans)),
       "query", String.format("(userId==%s and status.name==Open)", id));
 
-    return client.get("/circulation/loans", queryParameters, okapiHeaders)
+    return httpClient.get("/circulation/loans", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
@@ -151,15 +143,12 @@ public class PatronServicesResourceImpl implements Patron {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
     final JsonObject renewalJSON = new JsonObject()
         .put(Constants.JSON_FIELD_ITEM_ID, itemId)
         .put(Constants.JSON_FIELD_USER_ID, id);
 
     try {
-      client.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
+      httpClient.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
@@ -181,10 +170,7 @@ public class PatronServicesResourceImpl implements Patron {
       Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
-    RequestObjectFactory requestFactory = new RequestObjectFactory(okapiHeaders);
+    RequestObjectFactory requestFactory = new RequestObjectFactory(httpClient, okapiHeaders);
 
     requestFactory.createRequestByItem(id, itemId, entity)
       .thenCompose(holdJSON -> {
@@ -203,7 +189,7 @@ public class PatronServicesResourceImpl implements Patron {
             return null;
           }
 
-          return client.post("/circulation/requests", holdJSON, okapiHeaders)
+          return httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
             .thenApply(ResponseInterpreter::verifyAndExtractBody)
             .thenAccept(body -> {
               final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
@@ -226,11 +212,8 @@ public class PatronServicesResourceImpl implements Patron {
   public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     final Hold[] holds = new Hold[1];
 
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
     try {
-      client.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
+      httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenApply( body -> {
           JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
@@ -241,7 +224,7 @@ public class PatronServicesResourceImpl implements Patron {
         })
         .thenCompose( anUpdatedRequest -> {
           try {
-            return client.put("/circulation/requests/" + holdId, anUpdatedRequest, okapiHeaders);
+            return httpClient.put("/circulation/requests/" + holdId, anUpdatedRequest, okapiHeaders);
           } catch (Exception e) {
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
               return null;
@@ -267,9 +250,6 @@ public class PatronServicesResourceImpl implements Patron {
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
       Context vertxContext) {
 
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
     final JsonObject holdJSON = new JsonObject()
         .put(Constants.JSON_FIELD_INSTANCE_ID, instanceId)
         .put("requesterId", id)
@@ -283,7 +263,7 @@ public class PatronServicesResourceImpl implements Patron {
     }
 
     try {
-      client.post("/circulation/requests/instances", holdJSON, okapiHeaders)
+      httpClient.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID),
@@ -442,8 +422,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> lookupItem(Charge charge, Account account, Map<String, String> okapiHeaders) {
-    final var httpClient = new VertxOkapiHttpClient(WebClient.create(Vertx.currentContext().owner()));
-    final var itemRepository = new ItemRepository(httpClient);
+    final var itemRepository = new ItemRepository(this.httpClient);
 
     return itemRepository.getItem(charge.getItem().getItemId(), okapiHeaders)
         .thenCompose(item -> getInstance(item, okapiHeaders))
@@ -454,14 +433,11 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<JsonObject> getInstance(
     JsonObject item, Map<String, String> okapiHeaders) {
 
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
     try {
       String cql = "holdingsRecords.id==" +
           StringUtil.cqlEncode(item.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID));
 
-      return client.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
+      return httpClient.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenApply(instances -> instances.getJsonArray("instances").getJsonObject(0));
     } catch (Exception e) {

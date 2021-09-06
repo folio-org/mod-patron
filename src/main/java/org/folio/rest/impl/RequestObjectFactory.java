@@ -14,15 +14,15 @@ import org.folio.rest.jaxrs.model.Hold;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
 
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
+  private final VertxOkapiHttpClient httpClient;
 
-  RequestObjectFactory(Map<String, String> headers) {
-    okapiHeaders = headers;
+  RequestObjectFactory(VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
+    this.okapiHeaders = okapiHeaders;
+    this.httpClient = httpClient;
   }
 
   CompletableFuture<JsonObject> createRequestByItem(String patronId, String itemId, Hold entity) {
@@ -50,8 +50,6 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<RequestType> getRequestType(String patronId, String itemId) {
-    final var httpClient = new VertxOkapiHttpClient(WebClient.create(Vertx.currentContext().owner()));
-
     final var itemRepository = new ItemRepository(httpClient);
     final var userRepository = new UserRepository(httpClient);
 
@@ -80,24 +78,18 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<JsonObject> lookupRequestPolicyId(RequestTypeParameters criteria) {
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
     final var queryParameters = Map.of(
       "item_type_id", criteria.getItemMaterialTypeId(),
       "loan_type_id", criteria.getItemLoanTypeId(),
       "patron_type_id", criteria.getPatronGroupId(),
       "location_id", criteria.getItemLocationId());
 
-    return client.get("/circulation/rules/request-policy", queryParameters, okapiHeaders)
+    return httpClient.get("/circulation/rules/request-policy", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
-    final var client = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-
-    return client.get("/request-policy-storage/request-policies/" + requestPolicyId,
+    return httpClient.get("/request-policy-storage/request-policies/" + requestPolicyId,
         Map.of(), okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
