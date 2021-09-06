@@ -49,8 +49,9 @@ class RequestObjectFactory {
 
   private CompletableFuture<RequestType> getRequestType(String patronId, String itemId) {
     final var itemRepository = new ItemRepository();
+    final var userRepository = new UserRepository();
 
-    CompletableFuture<JsonObject> userFuture = LookupsUtils.getUser(patronId, okapiHeaders);
+    CompletableFuture<JsonObject> userFuture = userRepository.getUser(patronId, okapiHeaders);
     CompletableFuture<JsonObject> itemFuture = itemRepository.getItem(itemId, okapiHeaders);
 
     RequestTypeParameters requestTypeParams = new RequestTypeParameters();

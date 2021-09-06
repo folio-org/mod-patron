@@ -48,9 +48,11 @@ public class PatronServicesResourceImpl implements Patron {
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
+    final var userRepository = new UserRepository();
+
     try {
       // Look up the user to ensure that the user exists and is enabled
-        LookupsUtils.getUser(id, okapiHeaders)
+      userRepository.getUser(id, okapiHeaders)
         .thenAccept(this::verifyUserEnabled)
         .thenCompose(v -> {
           try {
