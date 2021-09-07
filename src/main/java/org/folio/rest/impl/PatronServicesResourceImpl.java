@@ -42,8 +42,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 
 public class PatronServicesResourceImpl implements Patron {
-  private final VertxOkapiHttpClient httpClient = new VertxOkapiHttpClient(
-    WebClient.create(Vertx.currentContext().owner()));
+  private final VertxOkapiHttpClient httpClient;
+
+  public PatronServicesResourceImpl() {
+    httpClient = new VertxOkapiHttpClient(
+      WebClient.create(Vertx.currentContext().owner()));
+  }
 
   @Validate
   @Override
