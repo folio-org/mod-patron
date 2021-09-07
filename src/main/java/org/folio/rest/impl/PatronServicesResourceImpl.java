@@ -42,12 +42,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 
 public class PatronServicesResourceImpl implements Patron {
-  private final VertxOkapiHttpClient httpClient;
-
-  public PatronServicesResourceImpl() {
-    httpClient = new VertxOkapiHttpClient(
-      WebClient.create(Vertx.currentContext().owner()));
-  }
+  private static final VertxOkapiHttpClient httpClient = new VertxOkapiHttpClient(
+    WebClient.create(Vertx.vertx()));
 
   @Validate
   @Override
@@ -426,7 +422,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> lookupItem(Charge charge, Account account, Map<String, String> okapiHeaders) {
-    final var itemRepository = new ItemRepository(this.httpClient);
+    final var itemRepository = new ItemRepository(httpClient);
 
     return itemRepository.getItem(charge.getItem().getItemId(), okapiHeaders)
         .thenCompose(item -> getInstance(item, okapiHeaders))
