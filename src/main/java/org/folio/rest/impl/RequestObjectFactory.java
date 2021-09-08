@@ -1,21 +1,28 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.Hold;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static org.folio.rest.impl.Constants.*;
+import org.folio.integration.http.ResponseInterpreter;
+import org.folio.integration.http.VertxOkapiHttpClient;
+import org.folio.rest.jaxrs.model.Hold;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
+import io.vertx.core.json.JsonObject;
 
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
+  private final VertxOkapiHttpClient httpClient;
 
-  RequestObjectFactory(Map<String, String> headers) {
-    okapiHeaders = headers;
+  RequestObjectFactory(VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
+    this.okapiHeaders = okapiHeaders;
+    this.httpClient = httpClient;
   }
 
   CompletableFuture<JsonObject> createRequestByItem(String patronId, String itemId, Hold entity) {
@@ -43,9 +50,11 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<RequestType> getRequestType(String patronId, String itemId) {
+    final var itemRepository = new ItemRepository(httpClient);
+    final var userRepository = new UserRepository(httpClient);
 
-    CompletableFuture<JsonObject> userFuture = LookupsUtils.getUser(patronId, okapiHeaders);
-    CompletableFuture<JsonObject> itemFuture = LookupsUtils.getItem(itemId, okapiHeaders);
+    CompletableFuture<JsonObject> userFuture = userRepository.getUser(patronId, okapiHeaders);
+    CompletableFuture<JsonObject> itemFuture = itemRepository.getItem(itemId, okapiHeaders);
 
     RequestTypeParameters requestTypeParams = new RequestTypeParameters();
 
@@ -53,7 +62,7 @@ class RequestObjectFactory {
       .thenApply(x -> createRequestPolicyIdCriteria(itemFuture, userFuture, requestTypeParams))
       .thenCompose(this::lookupRequestPolicyId)
       .thenCompose(policyIdResponse ->
-          LookupsUtils.getRequestPolicy(policyIdResponse.getString("requestPolicyId"), okapiHeaders))
+          getRequestPolicy(policyIdResponse.getString("requestPolicyId"), okapiHeaders))
       .thenApply(RequestPolicy::from)
       .thenApply(requestPolicy -> getRequestType(requestPolicy, requestTypeParams.getItemStatus()));
   }
@@ -69,7 +78,20 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<JsonObject> lookupRequestPolicyId(RequestTypeParameters criteria) {
-    return LookupsUtils.getRequestPolicyId(criteria, okapiHeaders);
+    final var queryParameters = Map.of(
+      "item_type_id", criteria.getItemMaterialTypeId(),
+      "loan_type_id", criteria.getItemLoanTypeId(),
+      "patron_type_id", criteria.getPatronGroupId(),
+      "location_id", criteria.getItemLocationId());
+
+    return httpClient.get("/circulation/rules/request-policy", queryParameters, okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
+  }
+
+  private CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
+    return httpClient.get("/request-policy-storage/request-policies/" + requestPolicyId,
+        Map.of(), okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private RequestTypeParameters createRequestPolicyIdCriteria(CompletableFuture<JsonObject> itemFuture,
