@@ -396,17 +396,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.1</version>
-        <configuration>
-          <filters>
-            <filter>
-              <artifact>*:*</artifact>
-              <excludes>
-                <exclude>**/Log4j2Plugins.dat</exclude>
-              </excludes>
-            </filter>
-          </filters>
-        </configuration>
+	<version>3.2.4</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -427,6 +417,7 @@
                 <filter>
                   <artifact>*:*</artifact>
                   <excludes>
+                    <exclude>**/Log4j2Plugins.dat</exclude>
                     <exclude>**/log4j2.properties</exclude>
                     <exclude>**/log4j.properties</exclude>
                   </excludes>
