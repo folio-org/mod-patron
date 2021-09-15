@@ -1,4 +1,4 @@
-## 4.5.1 IN-PROGRESS
+## 4.5.2 2021-09-15
 
 * Fixes logging output (MODPATRON-70)
 
