@@ -1,3 +1,7 @@
+## 4.5.1 IN-PROGRESS
+
+* Fixes logging output (MODPATRON-70)
+
 ## 4.5.1 2021-06-28
 
  * [MODPATRON-61](https://issues.folio.org/browse/MODPATRON-61): Patron Comments- Not seeing comments in response OR on FOLIO
