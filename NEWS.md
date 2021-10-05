@@ -1,3 +1,11 @@
+## 5.0.0 IN-PROGRESS
+
+* `embed_postgres` command line option is no longer supported (MODPATRON-53)
+* Upgrades to RAML Module Builder 33.0.2 (MODPATRON-53, MODPATRON-66)
+* Provides `patron 4.3`
+* Requires `inventory` `5.2 6.0 7.0 8.0 9.0 or 10.0`
+* Requires `feesfines 14.0, 15.0, 16.0 or 17.0`
+
 ## 4.5.1 2021-06-28
 
  * [MODPATRON-61](https://issues.folio.org/browse/MODPATRON-61): Patron Comments- Not seeing comments in response OR on FOLIO
