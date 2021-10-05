@@ -1,4 +1,4 @@
-## 5.0.0 IN-PROGRESS
+## 5.0.0 2021-10-05
 
 * `embed_postgres` command line option is no longer supported (MODPATRON-53)
 * Upgrades to RAML Module Builder 33.0.2 (MODPATRON-53, MODPATRON-66)
