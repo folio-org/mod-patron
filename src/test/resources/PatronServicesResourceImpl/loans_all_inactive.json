@@ -1,0 +1,21 @@
+{
+  "loans": [
+    {
+      "id": "8d171a88-baca-4f1a-b1c4-d7253854764f",
+      "userId": "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4",
+      "itemId": "5a9dfe71-0158-479d-a7ed-2789eac277b2",
+      "loanDate": "2018-06-01T11:12:00.000Z",
+      "dueDate": "2525-01-01T11:12:00.000Z",
+      "action": "checkedout",
+      "item": {
+        "instanceId": "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+        "title": "A Book for Inactive Users",
+        "contributors" : [
+          {"name": "Some Guy"},
+          {"name": "Another Guy"}
+        ]
+      }
+    }
+  ],
+  "totalRecords": 1
+}

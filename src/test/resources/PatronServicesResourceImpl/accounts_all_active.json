@@ -1,5 +1,6 @@
 {
-  "accounts": [{ 
+  "accounts": [
+    { 
     "amount": 100.0,
     "remaining": 100.0,
     "status": {
