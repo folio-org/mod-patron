@@ -165,11 +165,17 @@ public class PatronResourceImplTest {
           .putHeader("content-type", "text/plain")
           .end("Not Found");
       } else if (req.path().equals("/circulation/loans")) {
-        if (loansParametersMatch(req, Integer.MAX_VALUE)) {
+        if (isInactiveUser(req)) {
+          req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/loans_all_inactive.json"));
+        }
+        else if (loansParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/loans_all.json"));
+            .end(readMockFile(mockDataFolder + "/loans_all_active.json"));
         } else if (loansParametersMatch(req, 1)) {
           req.response()
             .setStatusCode(200)
@@ -223,19 +229,24 @@ public class PatronResourceImplTest {
             });
           }
         } else {
-            if (requestsParametersMatch(req, Integer.MAX_VALUE)) {
-              req.response()
-                .setStatusCode(200)
-                .putHeader("content-type", "application/json")
-                .end(readMockFile(mockDataFolder + "/holds_all.json"));
-            } else if (requestsParametersMatch(req, 1)) {
-              req.response()
-                .setStatusCode(200)
-                .putHeader("content-type", "application/json")
-                .end(readMockFile(mockDataFolder + "/holds_totals.json"));
-            } else {
-              req.response().setStatusCode(500).end("Unexpected call: " + req.path());
-            }
+          if (isInactiveUser(req)) {
+            req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/holds_all_inactive.json"));
+          } else if (requestsParametersMatch(req, Integer.MAX_VALUE)) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/holds_all_active.json"));
+          } else if (requestsParametersMatch(req, 1)) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/holds_totals.json"));
+          } else {
+            req.response().setStatusCode(500).end("Unexpected call: " + req.path());
+          }
         }
       } else if (req.path().equals("/circulation/requests/instances")) {
         if (req.method() == HttpMethod.POST) {
@@ -327,11 +338,16 @@ public class PatronResourceImplTest {
             .end("internal server error, contact administrator");
         }
       } else if (req.path().equals("/accounts")) {
-        if (accountParametersMatch(req)) {
+        if (isInactiveUser(req)) {
+          req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/accounts_all_inactive.json"));
+        } else if (accountParametersMatch(req)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/accounts_all.json"));
+            .end(readMockFile(mockDataFolder + "/accounts_all_active.json"));
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
@@ -545,6 +561,11 @@ public class PatronResourceImplTest {
     return queryString.contains("limit=" + limit)
       && queryString.contains("query=(requesterId==" + goodUserId + " and status==Open*)");
   }
+  
+  private Boolean isInactiveUser(HttpServerRequest request) {
+    final var queryString = UrlDecoder.decode(request.query());
+    return queryString.contains(inactiveUserId);
+  }
 
   private boolean loansParametersMatch(HttpServerRequest request, int limit) {
     final var queryString = UrlDecoder.decode(request.query());
@@ -697,10 +718,10 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testGetPatronAccountById400UserNotActive() {
-    logger.info("Testing for 400 due to patron account not active");
+  public final void testGetPatronAccountByIdUserNotActive() {
+    logger.info("Testing successful patron services account retrieval by id for inactive patron");
 
-    given()
+    final Response r = given()
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
@@ -709,8 +730,24 @@ public class PatronResourceImplTest {
       .get(accountPath)
     .then()
       .log().all()
-      .contentType(ContentType.TEXT)
-      .statusCode(400);
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+  
+    assertEquals(1, json.getInteger("totalLoans"));
+    assertEquals(0, json.getJsonArray("loans").size());
+  
+    assertEquals(0, json.getInteger("totalHolds"));
+    assertEquals(0, json.getJsonArray("holds").size());
+  
+    final JsonObject money = json.getJsonObject("totalCharges");
+    assertEquals(100.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(1, json.getInteger("totalChargesCount"));
+    assertEquals(0, json.getJsonArray("charges").size());
 
     // Test done
     logger.info("Test done");
