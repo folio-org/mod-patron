@@ -1,4 +1,4 @@
-## 5.0.1 IN-PROGRESS
+## 5.0.1 2021-11-04
 
 * Inactive patrons can now view their account details (MODPATRON-69)
 
