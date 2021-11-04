@@ -1,3 +1,7 @@
+## 5.0.1 IN-PROGRESS
+
+* Inactive patrons can now view their account details (MODPATRON-69)
+
 ## 5.0.0 2021-10-05
 
 * `embed_postgres` command line option is no longer supported (MODPATRON-53)

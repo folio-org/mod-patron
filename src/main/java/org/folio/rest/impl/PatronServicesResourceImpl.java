@@ -55,7 +55,6 @@ public class PatronServicesResourceImpl implements Patron {
     try {
       // Look up the user to ensure that the user exists and is enabled
       userRepository.getUser(id, okapiHeaders)
-        .thenAccept(this::verifyUserEnabled)
         .thenCompose(v -> {
           try {
             final Account account = new Account();
@@ -287,14 +286,6 @@ public class PatronServicesResourceImpl implements Patron {
           });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
-    }
-  }
-
-  private void verifyUserEnabled(JsonObject body) {
-    final boolean active = body.getBoolean("active");
-
-    if (!active) {
-      throw new CompletionException(new ModuleGeneratedHttpException(400, "User is not active"));
     }
   }
 
