@@ -17,6 +17,7 @@
             "accounts.collection.get",
             "inventory.items.item.get",
             "inventory.instances.item.get",
+            "inventory.instances.collection.get",
             "feefines.item.get"
           ]
         },
