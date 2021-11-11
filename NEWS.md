@@ -1,3 +1,7 @@
+## 5.0.2 2021-11-11
+
+* Adding permission to base endpoint to resolve a bug (MODPATRON-77) 
+
 ## 5.0.1 2021-11-04
 
 * Inactive patrons can now view their account details (MODPATRON-69)
