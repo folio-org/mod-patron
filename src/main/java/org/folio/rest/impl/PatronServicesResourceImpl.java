@@ -197,7 +197,7 @@ public class PatronServicesResourceImpl implements Patron {
           return httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
             .thenApply(ResponseInterpreter::verifyAndExtractBody)
             .thenAccept(body -> {
-              final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
+              final Item item = getItem(body);
               final Hold hold = getHold(body, item);
               asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
             })
@@ -223,8 +223,7 @@ public class PatronServicesResourceImpl implements Patron {
       httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenApply( body -> {
-          JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
-          final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID), itemJson);
+          final Item item = getItem(body);
           final Hold hold = getHold(body, item);
           holds[0] = constructNewHoldWithCancellationFields(hold, entity);
           return addCancellationFieldsToRequest(body, entity);
@@ -275,8 +274,7 @@ public class PatronServicesResourceImpl implements Patron {
       httpClient.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
-            final Item item = getItem(body.getString(Constants.JSON_FIELD_ITEM_ID),
-                body.getJsonObject(Constants.JSON_FIELD_ITEM));
+            final Item item = getItem(body);
             final Hold hold = getHold(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
           })
@@ -330,6 +328,16 @@ public class PatronServicesResourceImpl implements Patron {
         .withInstanceId(itemJson.getString(Constants.JSON_FIELD_INSTANCE_ID))
         .withItemId(itemId)
         .withTitle(itemJson.getString(Constants.JSON_FIELD_TITLE));
+  }
+
+  private Item getItem(JsonObject body) {
+    JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
+    JsonObject instanceJson = body.getJsonObject(Constants.JSON_FIELD_INSTANCE);
+    itemJson.put(Constants.JSON_FIELD_INSTANCE_ID, body.getString(Constants.JSON_FIELD_INSTANCE_ID));
+    itemJson.put(Constants.JSON_FIELD_TITLE, instanceJson.getString(Constants.JSON_FIELD_TITLE));
+    itemJson.put(Constants.JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(Constants.JSON_FIELD_CONTRIBUTOR_NAMES));
+
+    return getItem(body.getString(Constants.JSON_FIELD_ITEM_ID), itemJson);
   }
 
   private Loan getLoan(JsonObject loan, Item item) {

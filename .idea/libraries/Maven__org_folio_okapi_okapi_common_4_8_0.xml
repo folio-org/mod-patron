@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.folio.okapi:okapi-common:4.8.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/folio/okapi/okapi-common/4.8.0/okapi-common-4.8.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/folio/okapi/okapi-common/4.8.0/okapi-common-4.8.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/folio/okapi/okapi-common/4.8.0/okapi-common-4.8.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
