@@ -8,8 +8,10 @@ class Constants {
   static final String JSON_FIELD_REQUEST_DATE = "requestDate";
   static final String JSON_FIELD_NAME = "name";
   static final String JSON_FIELD_ITEM = "item";
+  static final String JSON_FIELD_INSTANCE = "instance";
   static final String JSON_FIELD_TOTAL_RECORDS = "totalRecords";
   static final String JSON_FIELD_CONTRIBUTORS = "contributors";
+  static final String JSON_FIELD_CONTRIBUTOR_NAMES = "contributorNames";
   static final String JSON_FIELD_TITLE = "title";
   static final String JSON_FIELD_HOLDINGS_RECORD_ID = "holdingsRecordId";
   static final String JSON_FIELD_INSTANCE_ID = "instanceId";

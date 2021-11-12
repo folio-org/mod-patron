@@ -1,14 +1,14 @@
 {
-    "requestId": "dd238b5b-01fc-4205-83b8-ce27a650d827",
+    "requestId": "d0f032db-9579-443e-a2ac-6add937f4aa2",
     "item": {
         "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
         "itemId": "32e5757d-6566-466e-b69d-994eb33d2b62",
         "title": "Something's Got a Hold on Me",
-        "author": "Etta James; Leroy Kirkland; Pearl Woods"
+        "author": "Antoniou, Grigoris; Van Harmelen, Frank"
     },
     "queuePosition": 1,
     "expirationDate": "3000-01-30T08:16:30Z",
     "status": "Open - Not yet filled",
-    "pickupLocationId": "963396d7-c96f-4bb1-a24c-42e868a8823d",
+    "pickupLocationId": "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
     "patronComments": "I need this book. Item level comment."
 }
