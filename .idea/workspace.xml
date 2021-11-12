@@ -4,26 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47deb265-4df1-4f25-8064-86dd7ae6e8e4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/ramls/call-number-components.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ramls/override-blocks.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ramls/uuid.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/folio/rest/impl/Constants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/folio/rest/impl/Constants.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/folio/rest/impl/PatronServicesResourceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/folio/rest/impl/PatronServicesResourceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/org/folio/rest/impl/HoldHelpersTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/folio/rest/impl/HoldHelpersTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/hold_cancel.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/hold_cancel.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/hold_cancel_request.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/hold_cancel_request.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/hold_cancel_without_cancel_date.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/hold_cancel_without_cancel_date.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/holds_create.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/holds_create.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/instance_holds_create.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/instance_holds_create.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/page_create.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/page_create.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/request_testPostPatronAccountByIdItemByItemIdHold.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/request_testPostPatronAccountByIdItemByItemIdHold.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/response_testPostPatronAccountByIdItemByItemIdHold.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/response_testPostPatronAccountByIdItemByItemIdHold.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/response_testPostPatronAccountByIdItemByItemIdPage.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/PatronServicesResourceImpl/response_testPostPatronAccountByIdItemByItemIdPage.json" afterDir="false" />
-    </list>
+    <list default="true" id="47deb265-4df1-4f25-8064-86dd7ae6e8e4" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
