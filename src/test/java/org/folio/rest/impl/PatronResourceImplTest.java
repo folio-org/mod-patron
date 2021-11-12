@@ -1333,8 +1333,6 @@ public class PatronResourceImplTest {
           actualHold.getInteger("requestPosition"));
       assertEquals(expectedHold.getString("patronComments"),
           actualHold.getString("patronComments"));
-      assertEquals(expectedHold.getString("requestLevel"),
-        actualHold.getString("requestLevel"));
       return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"));
     }
     return false;
