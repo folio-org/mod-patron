@@ -194,6 +194,8 @@ public class PatronServicesResourceImpl implements Patron {
             return null;
           }
 
+          //TODO Change request representation to the up-to-date version from mod-circulation before sending post request
+
           return httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
             .thenApply(ResponseInterpreter::verifyAndExtractBody)
             .thenAccept(body -> {
@@ -223,6 +225,7 @@ public class PatronServicesResourceImpl implements Patron {
       httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenApply( body -> {
+          //TODO Change request representation to the up-to-date version from mod-circulation before sending put request
           final Item item = getItem(body);
           final Hold hold = getHold(body, item);
           holds[0] = constructNewHoldWithCancellationFields(hold, entity);
