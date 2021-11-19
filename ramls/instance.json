@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Patron Instance Schema",
+  "type": "object",
+  "description": "Instance schema for patron portal integration",
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "The title of the item"
+    },
+    "identifiers": {
+      "type": "array",
+      "description": "An extensible set of resource identifiers",
+      "readonly": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Resource identifier value",
+            "readonly": true
+          },
+          "identifierTypeId": {
+            "type": "string",
+            "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
+            "$ref": "raml-util/schemas/uuid.schema",
+            "readonly": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "contributorNames": {
+      "description": "A list of contributor names",
+      "type": "array",
+      "readonly": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "The contributor name",
+            "type": "string",
+            "readonly": true
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

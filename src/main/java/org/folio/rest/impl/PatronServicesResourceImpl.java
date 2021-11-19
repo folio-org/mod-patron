@@ -194,13 +194,10 @@ public class PatronServicesResourceImpl implements Patron {
             return null;
           }
 
-          //TODO Change request representation to the up-to-date version from mod-circulation before sending post request
-
           return httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
             .thenApply(ResponseInterpreter::verifyAndExtractBody)
             .thenAccept(body -> {
-              final Item item = getItem(body);
-              final Hold hold = getHold(body, item);
+              final Hold hold = getHold(body);
               asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
             })
             .exceptionally(throwable -> {
@@ -225,9 +222,7 @@ public class PatronServicesResourceImpl implements Patron {
       httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenApply( body -> {
-          //TODO Change request representation to the up-to-date version from mod-circulation before sending put request
-          final Item item = getItem(body);
-          final Hold hold = getHold(body, item);
+          final Hold hold = getHold(body);
           holds[0] = constructNewHoldWithCancellationFields(hold, entity);
           return addCancellationFieldsToRequest(body, entity);
         })
@@ -277,8 +272,7 @@ public class PatronServicesResourceImpl implements Patron {
       httpClient.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
-            final Item item = getItem(body);
-            final Hold hold = getHold(body, item);
+            final Hold hold = getHold(body);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
@@ -330,6 +324,7 @@ public class PatronServicesResourceImpl implements Patron {
         .withAuthor(sb.length() == 0 ? null : sb.toString())
         .withInstanceId(itemJson.getString(Constants.JSON_FIELD_INSTANCE_ID))
         .withItemId(itemId)
+        .withBarcode(itemJson.getString(Constants.JSON_FIELD_BARCODE))
         .withTitle(itemJson.getString(Constants.JSON_FIELD_TITLE));
   }
 
@@ -380,7 +375,7 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : holdsJson) {
         if (o instanceof JsonObject) {
           JsonObject holdJson = (JsonObject) o;
-          final Item item = getItem(holdJson.getString(Constants.JSON_FIELD_ITEM_ID), holdJson.getJsonObject(Constants.JSON_FIELD_ITEM));
+          final Item item = getItem(holdJson);
           final Hold hold = getHold(holdJson, item);
           holds.add(hold);
         }

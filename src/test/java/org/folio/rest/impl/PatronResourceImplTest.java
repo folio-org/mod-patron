@@ -896,7 +896,7 @@ public class PatronResourceImplTest {
     final JsonObject json = new JsonObject(body);
     final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + responseFile));
 
-    verifyRequests(expectedJson, json);
+    verifyTlrModifiedHold(expectedJson, json);
 
     // Test done
     logger.info("Test done");
@@ -969,7 +969,7 @@ public class PatronResourceImplTest {
 
     final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
 
-    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
+    verifyTlrModifiedHold(expectedHold, new JsonObject(holdCancelResponse));
 
     // Test done
     logger.info("Test done");
@@ -1005,7 +1005,8 @@ public class PatronResourceImplTest {
 
     final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
 
-    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
+//    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
+    verifyTlrModifiedHold(expectedHold, new JsonObject(holdCancelResponse));
 
     // Test done
     logger.info("Test done");
@@ -1069,7 +1070,8 @@ public class PatronResourceImplTest {
 
     final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"));
 
-    verifyHold(expectedHold, new JsonObject(hold));
+//    verifyHold(expectedHold, new JsonObject(hold));
+    verifyTlrModifiedHold(expectedHold, new JsonObject(hold));
 
     // Test done
     logger.info("Test done");
@@ -1338,6 +1340,21 @@ public class PatronResourceImplTest {
     return false;
   }
 
+  private boolean verifyTlrModifiedHold(JsonObject expectedHold, JsonObject actualHold) {
+    if (expectedHold.getString("requestId").equals(actualHold.getString("requestId"))) {
+      assertEquals(expectedHold.getString("pickupLocationId"), actualHold.getString("pickupLocationId"));
+      assertEquals(expectedHold.getString("status"), actualHold.getString("status"));
+      assertEquals(expectedHold.getString("expirationDate") == null ? null : new DateTime(expectedHold.getString("expirationDate"), DateTimeZone.UTC),
+        actualHold.getString("expirationDate") == null ? null : new DateTime(actualHold.getString("expirationDate"), DateTimeZone.UTC));
+      assertEquals(expectedHold.getInteger("requestPosition"),
+        actualHold.getInteger("requestPosition"));
+      assertEquals(expectedHold.getString("patronComments"),
+        actualHold.getString("patronComments"));
+      return verifyTlrModifiedItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"));
+    }
+    return false;
+  }
+
   private boolean verifyLoan(JsonObject expectedLoan, JsonObject actualLoan) {
     if (expectedLoan.getString("id").equals(actualLoan.getString("id"))) {
       assertEquals(expectedLoan.getString("loanDate"), actualLoan.getString("loanDate"));
@@ -1356,6 +1373,14 @@ public class PatronResourceImplTest {
       assertEquals(expectedItem.getString("title"), actualItem.getString("title"));
       assertEquals(expectedItem.getString("author"), actualItem.getString("author"));
 
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean verifyTlrModifiedItem(JsonObject expectedItem, JsonObject actualItem) {
+    if (expectedItem.getString("barcode").equals(actualItem.getString("barcode"))) {
       return true;
     }
 

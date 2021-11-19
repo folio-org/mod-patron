@@ -1,4 +1,14 @@
 {
+  "requestLevel": "Item",
+  "requestType" : "Hold",
+  "fulfilmentPreference": "Hold Shelf",
+  "item": {
+    "barcode": "90000"
+  },
+  "itemId": "100d10bf-2f06-4aa0-be15-0b95b2d9f9e3",
+  "requester": {
+    "barcode": "456"
+  },
   "requestDate": "2021-09-06T15:37:55.000+00:00",
   "pickupLocationId": "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
   "expirationDate": "3000-01-30T08:16:30Z",

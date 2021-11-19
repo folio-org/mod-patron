@@ -12,7 +12,10 @@ class Constants {
   static final String JSON_FIELD_TOTAL_RECORDS = "totalRecords";
   static final String JSON_FIELD_CONTRIBUTORS = "contributors";
   static final String JSON_FIELD_CONTRIBUTOR_NAMES = "contributorNames";
+  static final String JSON_FIELD_IDENTIFIERS = "identifiers";
+  static final String JSON_FIELD_REQUESTER = "requester";
   static final String JSON_FIELD_TITLE = "title";
+  static final String JSON_FIELD_BARCODE = "barcode";
   static final String JSON_FIELD_HOLDINGS_RECORD_ID = "holdingsRecordId";
   static final String JSON_FIELD_INSTANCE_ID = "instanceId";
   static final String JSON_FIELD_USER_ID = "userId";

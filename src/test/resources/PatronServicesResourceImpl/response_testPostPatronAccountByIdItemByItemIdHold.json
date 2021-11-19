@@ -1,10 +1,35 @@
 {
     "requestId": "d0f032db-9579-443e-a2ac-6add937f4aa2",
     "item": {
-        "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
-        "itemId": "32e5757d-6566-466e-b69d-994eb33d2b73",
-        "title": "A semantic web primer",
-        "author": "Antoniou, Grigoris; Van Harmelen, Frank"
+        "barcode": "90000"
+    },
+    "instance": {
+        "title": "Something's Got a Hold on Me",
+        "identifiers": [
+            {
+                "value": "0262012103",
+                "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+            },
+            {
+                "value": "9780262012102",
+                "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+            },
+            {
+                "value": "2003065165",
+                "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb"
+            }
+        ],
+        "contributorNames": [
+            {
+                "name": "Antoniou, Grigoris"
+            },
+            {
+                "name": "Van Harmelen, Frank"
+            }
+        ]
+    },
+    "requester": {
+        "barcode": "456"
     },
     "queuePosition": 1,
     "expirationDate": "3000-01-30T08:16:30Z",
