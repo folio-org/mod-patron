@@ -30,11 +30,10 @@ class RequestObjectFactory {
       .thenApply(requestType -> {
         if (requestType != RequestType.NONE) {
           final JsonObject holdJSON = new JsonObject()
-            .put("requestLevel", entity.getRequestLevel())
+            .put("requestLevel", "Item")
+            .put("requestType", "Hold")
             .put(Constants.JSON_FIELD_ITEM_ID, itemId)
-            .put(Constants.JSON_FIELD_ITEM, entity.getItem())
             .put("requesterId", patronId)
-            .put("requester", entity.getRequester())
             .put("requestType", requestType.getValue())
             .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
             .put("fulfilmentPreference", Constants.JSON_VALUE_HOLD_SHELF)

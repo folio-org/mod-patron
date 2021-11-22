@@ -26,10 +26,9 @@
     "isbn": {
       "type": "string",
       "description": "The ISBN of the item"
-    },
-    "barcode": {
-      "type": "string",
-      "description": "The barcode of the item"
     }
-  }
+  },
+  "required": [
+    "instanceId"
+  ]
 }

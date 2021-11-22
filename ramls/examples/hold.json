@@ -1,17 +1,15 @@
 {
-  "Id": "dd238b5b-01fc-4205-83b8-ce27a650d827",
-  "requestLevel": "Item",
-  "requestType" : "Hold",
-  "fulfilmentPreference": "Hold Shelf",
+  "requestId": "dd238b5b-01fc-4205-83b8-ce27a650d827",
   "item": {
-    "barcode": "90000"
+    "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
+    "itemId": "32e5757d-6566-466e-b69d-994eb33d2b62",
+    "title": "Something's Got a Hold on Me",
+    "author": "Etta James; Leroy Kirkland; Pearl Woods"
   },
-  "itemId": "100d10bf-2f06-4aa0-be15-0b95b2d9f9e3",
-  "requester": {
-    "barcode": "11111"
-  },
-  "requesterId": "3000-01-30T08:16:30Z",
+  "queuePosition": 1,
   "requestDate": "2018-06-02T08:16:30Z",
+  "expirationDate": "3000-01-30T08:16:30Z",
   "pickupLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
-  "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421"
+  "status": "Open - Not yet filled",
+  "patronComments": "Can you deliver this to the History building for Professor Grant?"
 }

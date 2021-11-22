@@ -1,7 +1,7 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.impl.HoldHelpers.addCancellationFieldsToRequest;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
+import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
 
 import java.util.ArrayList;
@@ -197,7 +197,8 @@ public class PatronServicesResourceImpl implements Patron {
           return httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
             .thenApply(ResponseInterpreter::verifyAndExtractBody)
             .thenAccept(body -> {
-              final Hold hold = getHold(body);
+              final Item item = getItem(body);
+              final Hold hold = getHold(body, item);
               asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
             })
             .exceptionally(throwable -> {
@@ -222,13 +223,15 @@ public class PatronServicesResourceImpl implements Patron {
       httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenApply( body -> {
-          final Hold hold = getHold(body);
+          final Item item = getItem(body);
+          final Hold hold = getHold(body, item);
           holds[0] = constructNewHoldWithCancellationFields(hold, entity);
-          return addCancellationFieldsToRequest(body, entity);
+          return body;
         })
         .thenCompose( anUpdatedRequest -> {
           try {
-            return httpClient.put("/circulation/requests/" + holdId, anUpdatedRequest, okapiHeaders);
+            JsonObject cancelRequest = createCancelRequest(anUpdatedRequest, entity);
+            return httpClient.put("/circulation/requests/" + holdId, cancelRequest, okapiHeaders);
           } catch (Exception e) {
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
               return null;
@@ -272,7 +275,8 @@ public class PatronServicesResourceImpl implements Patron {
       httpClient.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
-            final Hold hold = getHold(body);
+            final Item item = getItem(body);
+            final Hold hold = getHold(body, item);
             asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
@@ -324,7 +328,6 @@ public class PatronServicesResourceImpl implements Patron {
         .withAuthor(sb.length() == 0 ? null : sb.toString())
         .withInstanceId(itemJson.getString(Constants.JSON_FIELD_INSTANCE_ID))
         .withItemId(itemId)
-        .withBarcode(itemJson.getString(Constants.JSON_FIELD_BARCODE))
         .withTitle(itemJson.getString(Constants.JSON_FIELD_TITLE));
   }
 
