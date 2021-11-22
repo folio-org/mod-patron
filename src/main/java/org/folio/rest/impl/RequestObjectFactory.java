@@ -30,6 +30,8 @@ class RequestObjectFactory {
       .thenApply(requestType -> {
         if (requestType != RequestType.NONE) {
           final JsonObject holdJSON = new JsonObject()
+            .put("requestLevel", "Item")
+            .put("requestType", "Hold")
             .put(Constants.JSON_FIELD_ITEM_ID, itemId)
             .put("requesterId", patronId)
             .put("requestType", requestType.getValue())

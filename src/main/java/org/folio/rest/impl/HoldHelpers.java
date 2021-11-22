@@ -54,4 +54,26 @@ class HoldHelpers {
     }
     return hold;
   }
+
+  static JsonObject createCancelRequest(JsonObject body, Hold entity) {
+    JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
+    itemJson.remove(Constants.JSON_FIELD_TITLE);
+    itemJson.remove(Constants.JSON_FIELD_INSTANCE_ID);
+    itemJson.remove(Constants.JSON_FIELD_CONTRIBUTORS);
+
+    JsonObject cancelRequest = new JsonObject()
+      .put("id", body.getString(Constants.JSON_FIELD_ID))
+      .put("requestLevel", body.getString(Constants.JSON_FIELD_REQUEST_LEVEL))
+      .put("requestType", body.getString(Constants.JSON_FIELD_REQUEST_TYPE))
+      .put("requestDate", body.getString(Constants.JSON_FIELD_REQUEST_DATE))
+      .put("requesterId", body.getString(Constants.JSON_FIELD_REQUESTER_ID))
+      .put("requester", body.getJsonObject(Constants.JSON_FIELD_REQUESTER))
+      .put("instanceId", body.getString(Constants.JSON_FIELD_INSTANCE_ID))
+      .put("itemId", body.getString(Constants.JSON_FIELD_ITEM_ID))
+      .put("item", itemJson)
+      .put("fulfilmentPreference", body.getString(Constants.JSON_FIELD_FULFILMENT_PREFERENCE))
+      .put("requestType", body.getString(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID));
+
+    return addCancellationFieldsToRequest(cancelRequest, entity);
+  }
 }
