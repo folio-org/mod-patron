@@ -26,6 +26,8 @@ class RequestObjectFactory {
   }
 
   CompletableFuture<JsonObject> createRequestByItem(String patronId, String itemId, Hold entity) {
+    CompletableFuture<JsonObject> item = new ItemRepository(httpClient).getItem(itemId, okapiHeaders);
+
     return getRequestType(patronId, itemId)
       .thenApply(requestType -> {
         if (requestType != RequestType.NONE) {
@@ -33,6 +35,7 @@ class RequestObjectFactory {
             .put("requestLevel", "Item")
             .put("requestType", "Hold")
             .put(Constants.JSON_FIELD_ITEM_ID, itemId)
+            .put("holdingsRecordId", item.join().getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
             .put("requesterId", patronId)
             .put("requestType", requestType.getValue())
             .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
