@@ -19,23 +19,24 @@ import io.vertx.core.json.JsonObject;
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
   private final VertxOkapiHttpClient httpClient;
+  private final ItemRepository itemRepository;
 
   RequestObjectFactory(VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
     this.okapiHeaders = okapiHeaders;
     this.httpClient = httpClient;
+    this.itemRepository = new ItemRepository(httpClient);
   }
 
   CompletableFuture<JsonObject> createRequestByItem(String patronId, String itemId, Hold entity) {
-    CompletableFuture<JsonObject> item = new ItemRepository(httpClient).getItem(itemId, okapiHeaders);
 
     return getRequestType(patronId, itemId)
-      .thenApply(requestType -> {
+      .thenCombine(itemRepository.getItem(itemId, okapiHeaders), (requestType, item) -> {
         if (requestType != RequestType.NONE) {
           final JsonObject holdJSON = new JsonObject()
             .put("requestLevel", "Item")
             .put("requestType", "Hold")
             .put(Constants.JSON_FIELD_ITEM_ID, itemId)
-            .put("holdingsRecordId", item.join().getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
+            .put("holdingsRecordId", item.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
             .put("requesterId", patronId)
             .put("requestType", requestType.getValue())
             .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
@@ -55,7 +56,6 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<RequestType> getRequestType(String patronId, String itemId) {
-    final var itemRepository = new ItemRepository(httpClient);
     final var userRepository = new UserRepository(httpClient);
 
     CompletableFuture<JsonObject> userFuture = userRepository.getUser(patronId, okapiHeaders);
