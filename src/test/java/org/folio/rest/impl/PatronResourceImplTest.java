@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.UrlDecoder;
 import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.tools.utils.ModuleName;
 import org.hamcrest.Matchers;
@@ -210,30 +211,28 @@ public class PatronResourceImplTest {
               String content = new String(body.getBytes());
               JsonObject jsonContent = new JsonObject(content);
 
-              if (jsonContent != null) {
-                if (jsonContent.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID) == null) {
-                  req.response()
-                    .setStatusCode(422)
-                    .putHeader("content-type", "application/json")
-                    .end(readMockFile(mockDataFolder + "/items/item_hold_missing_holdings_record_id.json"));
-                }
-
-                String itemId = jsonContent.getString("itemId");
-                RequestType requestType = RequestType.from(jsonContent.getString("requestType"));
-
-                var responsePayload = StringUtils.EMPTY;
-
-                if (itemId.equals(checkedoutItemId) && requestType == RequestType.HOLD) {
-                  responsePayload = readMockFile(mockDataFolder + "/holds_create.json");
-                } else if (itemId.equals(availableItemId) && requestType == RequestType.PAGE) {
-                  responsePayload = readMockFile(mockDataFolder + "/page_create.json");
-                }
-
+              if (jsonContent.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID) == null) {
                 req.response()
-                    .setStatusCode(201)
-                    .putHeader("content-type", "application/json")
-                    .end(responsePayload);
+                  .setStatusCode(422)
+                  .putHeader("content-type", "application/json")
+                  .end(readMockFile(mockDataFolder + "/items/item_hold_missing_holdings_record_id.json"));
               }
+
+              String itemId = jsonContent.getString("itemId");
+              RequestType requestType = RequestType.from(jsonContent.getString("requestType"));
+
+              var responsePayload = StringUtils.EMPTY;
+
+              if (itemId.equals(checkedoutItemId) && requestType == RequestType.HOLD) {
+                responsePayload = readMockFile(mockDataFolder + "/holds_create.json");
+              } else if (itemId.equals(availableItemId) && requestType == RequestType.PAGE) {
+                responsePayload = readMockFile(mockDataFolder + "/page_create.json");
+              }
+
+              req.response()
+                .setStatusCode(201)
+                .putHeader("content-type", "application/json")
+                .end(responsePayload);
             });
           }
         } else {
@@ -369,22 +368,22 @@ public class PatronResourceImplTest {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/chargitems/chargeitem_book1.json"));
+          .end(readMockFile(mockDataFolder + "/chargeitems/chargeitem_book1.json"));
       } else if (req.path().equals("/chargeitem/" + chargeItemBook2Id)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/chargitems/chargeitem_book2.json"));
+          .end(readMockFile(mockDataFolder + "/chargeitems/chargeitem_book2.json"));
       } else if (req.path().equals("/chargeitem/" + chargeItemBook3Id)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/chargitems/chargeitem_book3.json"));
+          .end(readMockFile(mockDataFolder + "/chargeitems/chargeitem_book3.json"));
       } else if (req.path().equals("/chargeitem/" + chargeItemCameraId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/chargitems/chargeitem_camera.json"));
+          .end(readMockFile(mockDataFolder + "/chargeitems/chargeitem_camera.json"));
       } else if (req.path().equals("/inventory/instances")) {
         if (req.query() == null || ! req.query().matches("query=holdingsRecords\\.id%3D%3D%22.*%22")) {
           req.response().setStatusCode(500).end("Unexpected /inventory/instances query: " + req.query());
@@ -433,12 +432,12 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/items/item_checkedout.json"));
-      }  else if (req.path().equals("/inventory/items/" + intransitItemId)) {
+      } else if (req.path().equals("/inventory/items/" + intransitItemId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/items/item_intransit.json"));
-      }  else if (req.path().equals("/inventory/items/" + missingHoldingsRecordId)) {
+      } else if (req.path().equals("/inventory/items/" + missingHoldingsRecordId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
@@ -944,15 +943,16 @@ public class PatronResourceImplTest {
     final String body = r.getBody().asString();
     final Errors errors = Json.decodeValue(body, Errors.class);
 
-    final String expectedMessage = "holdingsRecordId is missed";
+    final String expectedMessage = "Cannot create a request with item ID but no holdings record ID";
     assertNotNull(errors);
     assertNotNull(errors.getErrors());
     assertEquals(1, errors.getErrors().size());
-    assertEquals(expectedMessage, errors.getErrors().get(0).getMessage());
+    Error error = errors.getErrors().get(0);
+    assertEquals(expectedMessage, error.getMessage());
 
-    assertNotNull(errors.getErrors().get(0).getParameters());
-    assertEquals(1, errors.getErrors().get(0).getParameters().size());
-    assertEquals("holdingsRecordId", errors.getErrors().get(0).getParameters().get(0).getKey());
+    assertNotNull(error.getParameters());
+    assertEquals(1, error.getParameters().size());
+    assertEquals("holdingsRecordId", error.getParameters().get(0).getKey());
 
     // Test done
     logger.info("Test done");
