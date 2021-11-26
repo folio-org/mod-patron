@@ -63,12 +63,12 @@ class RequestObjectFactory {
 
   private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
     return itemRepository.getItem(requestContext.getItemId(), okapiHeaders)
-      .thenApply(requestContext::setItem);
+      .thenApply(requestContext::withItem);
   }
 
   private CompletableFuture<RequestContext> fetchUser(RequestContext requestContext) {
     return userRepository.getUser(requestContext.getPatronId(), okapiHeaders)
-      .thenApply(requestContext::setUser);
+      .thenApply(requestContext::withUser);
   }
 
   private CompletableFuture<RequestContext> getRequestType(RequestContext requestContext) {
@@ -80,7 +80,7 @@ class RequestObjectFactory {
           getRequestPolicy(policyIdResponse.getString("requestPolicyId"), okapiHeaders))
       .thenApply(RequestPolicy::from)
       .thenApply(requestPolicy -> getRequestType(requestPolicy, requestTypeParams.getItemStatus()))
-      .thenApply(requestContext::setRequestType);
+      .thenApply(requestContext::withRequestType);
   }
 
   private RequestTypeParameters createRequestPolicyIdCriteria(RequestContext requestContext,
