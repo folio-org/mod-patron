@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -45,6 +47,7 @@ public class PatronServicesResourceImpl implements Patron {
   @Override
   public void getPatronAccountById(String id, boolean includeLoans,
       boolean includeCharges, boolean includeHolds,
+      String sortBy,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
@@ -62,15 +65,15 @@ public class PatronServicesResourceImpl implements Patron {
             account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrencyCode("USD"));
             account.setTotalChargesCount(0);
 
-            final CompletableFuture<Account> cf1 = getLoans(id, includeLoans, okapiHeaders,
+            final CompletableFuture<Account> cf1 = getLoans(id, includeLoans, sortBy, okapiHeaders,
               httpClient)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, okapiHeaders,
+            final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, sortBy, okapiHeaders,
               httpClient)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
-            final CompletableFuture<Account> cf3 = getAccounts(id, okapiHeaders, httpClient)
+            final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges))
                 .thenCompose(charges -> {
                   if (includeCharges) {
@@ -107,32 +110,33 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id,
-    Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+    String sortBy, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(true)),
-      "query", String.format("(userId==%s and status.name==Open)", id));
+      "query", buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/accounts", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getRequests(String id,
-    boolean includeHolds, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+    boolean includeHolds, String sortBy,
+    Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
 
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(includeHolds)),
-      "query", String.format("(requesterId==%s and status==Open*)", id));
+      "query", buildQueryWithRequesterId(id, sortBy));
 
     return httpClient.get("/circulation/requests", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getLoans(String id,
-    boolean includeLoans, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
-
+    boolean includeLoans, String sortBy,
+    Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
     final var queryParameters = Map.of(
       "limit", String.valueOf(getLimit(includeLoans)),
-      "query", String.format("(userId==%s and status.name==Open)", id));
+      "query", buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/circulation/loans", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
@@ -663,4 +667,19 @@ public class PatronServicesResourceImpl implements Patron {
 
     return result;
   }
+
+  private String buildQueryWithUserId(String userId, String sortBy) {
+    if(StringUtils.isNoneBlank(sortBy)) {
+      return String.format("(userId==%s and status.name==Open and sortBy=%s)", userId, sortBy);
+    }
+    return String.format("(userId==%s and status.name==Open)", userId);
+  }
+
+  private String buildQueryWithRequesterId(String requesterId, String sortBy) {
+    if(StringUtils.isNoneBlank(sortBy)) {
+      return String.format("(requesterId==%s and status==Open* and sortBy=%s)", requesterId, sortBy);
+    }
+    return String.format("(requesterId==%s and status==Open*)", requesterId);
+  }
+
 }
