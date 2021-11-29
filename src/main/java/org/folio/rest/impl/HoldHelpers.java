@@ -69,6 +69,7 @@ class HoldHelpers {
       .put("requesterId", body.getString(Constants.JSON_FIELD_REQUESTER_ID))
       .put("requester", body.getJsonObject(Constants.JSON_FIELD_REQUESTER))
       .put("instanceId", body.getString(Constants.JSON_FIELD_INSTANCE_ID))
+      .put("holdingsRecordId", body.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
       .put("itemId", body.getString(Constants.JSON_FIELD_ITEM_ID))
       .put("item", itemJson)
       .put("fulfilmentPreference", body.getString(Constants.JSON_FIELD_FULFILMENT_PREFERENCE))
