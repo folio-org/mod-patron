@@ -670,14 +670,14 @@ public class PatronServicesResourceImpl implements Patron {
 
   private String buildQueryWithUserId(String userId, String sortBy) {
     if(StringUtils.isNoneBlank(sortBy)) {
-      return String.format("(userId==%s and status.name==Open and sortBy=%s)", userId, sortBy);
+      return String.format("(userId==%s and status.name==Open) sortBy %s", userId, sortBy);
     }
     return String.format("(userId==%s and status.name==Open)", userId);
   }
 
   private String buildQueryWithRequesterId(String requesterId, String sortBy) {
     if(StringUtils.isNoneBlank(sortBy)) {
-      return String.format("(requesterId==%s and status==Open* and sortBy=%s)", requesterId, sortBy);
+      return String.format("(requesterId==%s and status==Open*) sortBy %s", requesterId, sortBy);
     }
     return String.format("(requesterId==%s and status==Open*)", requesterId);
   }
