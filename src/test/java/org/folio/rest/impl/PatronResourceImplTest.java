@@ -577,7 +577,7 @@ public class PatronResourceImplTest {
 
     return queryString.contains("limit=" + Integer.MAX_VALUE)
       && queryString
-      .contains(String.format("query=(userId==%s and status.name==Open and sortBy=%s)", goodUserId, sortByParam));
+      .contains(String.format("query=(userId==%s and status.name==Open) sortBy %s", goodUserId, sortByParam));
   }
 
   private boolean requestsParametersMatch(HttpServerRequest request, int limit) {
@@ -593,7 +593,7 @@ public class PatronResourceImplTest {
 
     return queryString.contains("limit=" + limit)
       && queryString
-      .contains(String.format("query=(requesterId==%s and status==Open* and sortBy=%s)", goodUserId, sortByParam));
+      .contains(String.format("query=(requesterId==%s and status==Open*) sortBy %s", goodUserId, sortByParam));
   }
 
   private Boolean isInactiveUser(HttpServerRequest request) {
@@ -612,7 +612,7 @@ public class PatronResourceImplTest {
     final var queryString = UrlDecoder.decode(request.query());
 
     return queryString.contains("limit=" + limit) && queryString
-      .contains(String.format("query=(userId==%s and status.name==Open and sortBy=%s)", goodUserId, sortByParam));
+      .contains(String.format("query=(userId==%s and status.name==Open) sortBy %s", goodUserId, sortByParam));
   }
 
   private boolean rulesParametersMatch(HttpServerRequest request, String materialTypeId) {
