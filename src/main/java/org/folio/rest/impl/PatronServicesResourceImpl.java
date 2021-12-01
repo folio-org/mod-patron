@@ -4,6 +4,7 @@ import static org.folio.rest.impl.HoldHelpers.addCancellationFieldsToRequest;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.getHold;
 
+import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -48,6 +49,8 @@ public class PatronServicesResourceImpl implements Patron {
   public void getPatronAccountById(String id, boolean includeLoans,
       boolean includeCharges, boolean includeHolds,
       String sortBy,
+      int offset,
+      int limit,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
@@ -65,15 +68,16 @@ public class PatronServicesResourceImpl implements Patron {
             account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrencyCode("USD"));
             account.setTotalChargesCount(0);
 
-            final CompletableFuture<Account> cf1 = getLoans(id, includeLoans, sortBy, okapiHeaders,
+            final CompletableFuture<Account> cf1 = getLoans(id, sortBy, limit, offset, includeLoans, okapiHeaders,
               httpClient)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, sortBy, okapiHeaders,
+            final CompletableFuture<Account> cf2 = getRequests(id, sortBy, limit, offset, includeHolds, okapiHeaders,
               httpClient)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
-            final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, okapiHeaders, httpClient)
+            final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, includeCharges,
+              okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges))
                 .thenCompose(charges -> {
                   if (includeCharges) {
@@ -110,33 +114,36 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id,
-    String sortBy, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
-    final var queryParameters = Map.of(
-      "limit", String.valueOf(getLimit(true)),
-      "query", buildQueryWithUserId(id, sortBy));
+    String sortBy, int limit, int offset, boolean includeCharges,
+    Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeCharges));
+    queryParameters.put("query", buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/accounts", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getRequests(String id,
-    boolean includeHolds, String sortBy,
-    Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+    String sortBy, int limit, int offset,
+    boolean includeHolds, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
 
-    final var queryParameters = Map.of(
-      "limit", String.valueOf(getLimit(includeHolds)),
-      "query", buildQueryWithRequesterId(id, sortBy));
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds));
+    queryParameters.put("query", buildQueryWithRequesterId(id, sortBy));
 
     return httpClient.get("/circulation/requests", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getLoans(String id,
-    boolean includeLoans, String sortBy,
-    Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
-    final var queryParameters = Map.of(
-      "limit", String.valueOf(getLimit(includeLoans)),
-      "query", buildQueryWithUserId(id, sortBy));
+    String sortBy, int limit, int offset,
+    boolean includeLoans, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeLoans));
+    queryParameters.put("query", buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/circulation/loans", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
@@ -469,16 +476,18 @@ public class PatronServicesResourceImpl implements Patron {
     return account;
   }
 
-  private int getLimit(boolean includeItem) {
-    final int limit;
-
-    if (includeItem) {
-      limit = Integer.MAX_VALUE;
-    } else {
-      limit = 1; // until RMB-96 is implemented, then 0
+  private Map<String, String> getLimitAndOffsetParams(int limit, int offset, boolean includeItem) {
+    if (!includeItem) {
+      return Map.of(
+        "limit", "0");
     }
-
-    return limit;
+    if (limit > 0) {
+      return Map.of(
+        "limit", String.valueOf(limit),
+        "offset", String.valueOf(offset));
+    }
+    return Map.of(
+      "limit", String.valueOf(Integer.MAX_VALUE));
   }
 
   private Future<javax.ws.rs.core.Response> handleError(Throwable throwable) {
