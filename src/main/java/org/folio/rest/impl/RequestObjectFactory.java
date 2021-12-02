@@ -22,18 +22,21 @@ class RequestObjectFactory {
   private final VertxOkapiHttpClient httpClient;
   private final ItemRepository itemRepository;
   private final UserRepository userRepository;
+  private final HoldingsRecordRepository holdingsRecordRepository;
 
   RequestObjectFactory(VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
     this.okapiHeaders = okapiHeaders;
     this.httpClient = httpClient;
     this.itemRepository = new ItemRepository(httpClient);
     this.userRepository = new UserRepository(httpClient);
+    this.holdingsRecordRepository = new HoldingsRecordRepository(httpClient);
   }
 
   CompletableFuture<JsonObject> createRequestByItem(String patronId, String itemId, Hold entity) {
 
     return completedFuture(new RequestContext(patronId, itemId, entity))
       .thenCompose(this::fetchItem)
+      .thenCompose(this::fetchInstanceId)
       .thenCompose(this::fetchUser)
       .thenCompose(this::fetchRequestType)
       .thenApply(context -> {
@@ -41,6 +44,7 @@ class RequestObjectFactory {
           final JsonObject holdJSON = new JsonObject()
             .put("requestLevel", "Item")
             .put("requestType", "Hold")
+            .put("instanceId", context.getInstanceId())
             .put(Constants.JSON_FIELD_ITEM_ID, itemId)
             .put("holdingsRecordId", context.getItem().getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
             .put("requesterId", patronId)
@@ -64,6 +68,12 @@ class RequestObjectFactory {
   private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
     return itemRepository.getItem(requestContext.getItemId(), okapiHeaders)
       .thenApply(requestContext::setItem);
+  }
+
+  private CompletableFuture<RequestContext> fetchInstanceId(RequestContext requestContext) {
+    return holdingsRecordRepository.getHoldingsRecord(requestContext.getItem()
+        .getString("holdingsRecordId"), okapiHeaders)
+      .thenApply(requestContext::setInstanceId);
   }
 
   private CompletableFuture<RequestContext> fetchUser(RequestContext requestContext) {

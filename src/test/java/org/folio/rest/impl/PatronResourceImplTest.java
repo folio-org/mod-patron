@@ -119,6 +119,7 @@ public class PatronResourceImplTest {
   private final String intransitItemId = "32e5757d-6566-466e-b69d-994eb33d2c98";
   private static final String availableItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
   private static final String checkedoutItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
+  private static final String holdingsRecordId = "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19";
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
@@ -350,6 +351,11 @@ public class PatronResourceImplTest {
               .end("internal server error, contact administrator");
             break;
         }
+      } else if(req.path().equals("/holdings-storage/holdings/" + holdingsRecordId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/holdingsRecord.json"));
       } else if (req.path().equals("/accounts")) {
         if (isInactiveUser(req)) {
           req.response()
