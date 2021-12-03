@@ -5,17 +5,25 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
+import org.folio.patron.rest.exceptions.ValidationException;
+import org.folio.rest.jaxrs.model.Error;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Hold;
+import org.folio.rest.jaxrs.model.Parameter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
@@ -46,7 +54,8 @@ class RequestObjectFactory {
             .put("requestType", "Hold")
             .put("instanceId", context.getInstanceId())
             .put(Constants.JSON_FIELD_ITEM_ID, itemId)
-            .put("holdingsRecordId", context.getItem().getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
+            .put(Constants.JSON_FIELD_HOLDINGS_RECORD_ID,
+              context.getItem().getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
             .put("requesterId", patronId)
             .put("requestType", context.getRequestType().getValue())
             .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
@@ -62,6 +71,17 @@ class RequestObjectFactory {
         } else {
           return null;
         }
+      })
+      .exceptionally(throwable -> {
+        if (throwable instanceof CompletionException){
+          Throwable cause = throwable.getCause();
+          if (cause instanceof ValidationException) {
+            throw new ValidationException((((ValidationException) cause).getErrors()));
+          }
+          throw new RuntimeException(cause);
+        } else {
+          throw new RuntimeException(throwable);
+        }
       });
   }
 
@@ -70,9 +90,9 @@ class RequestObjectFactory {
       .thenApply(requestContext::setItem);
   }
 
-  private CompletableFuture<RequestContext> fetchInstanceId(RequestContext requestContext) {
-    return holdingsRecordRepository.getHoldingsRecord(requestContext.getItem()
-        .getString("holdingsRecordId"), okapiHeaders)
+  private CompletableFuture<RequestContext> fetchInstanceId(RequestContext requestContext)
+    throws ValidationException {
+    return holdingsRecordRepository.getHoldingsRecord(requestContext.getItem(), okapiHeaders)
       .thenApply(requestContext::setInstanceId);
   }
 

@@ -71,6 +71,7 @@ public class PatronResourceImplTest {
   private final String renewPath = "/renew";
   private final String cancelPath = "/cancel";
   private final String okapiBadDataHeader = "x-okapi-bad-data";
+  private final String holdingsStorage = "/holdings-storage/holdings/";
 
   private final String goodUserId = "1ec54964-70f0-44cc-bd19-2a892ea0d336";
   private final String inactiveUserId = "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4";
@@ -351,7 +352,8 @@ public class PatronResourceImplTest {
               .end("internal server error, contact administrator");
             break;
         }
-      } else if(req.path().equals("/holdings-storage/holdings/" + holdingsRecordId)) {
+      } else if(req.path().equals(holdingsStorage + holdingsRecordId) ||
+        req.path().equals(holdingsStorage + intransitItemId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
@@ -949,7 +951,7 @@ public class PatronResourceImplTest {
     final String body = r.getBody().asString();
     final Errors errors = Json.decodeValue(body, Errors.class);
 
-    final String expectedMessage = "Cannot create a request with item ID but no holdings record ID";
+    final String expectedMessage = "HoldingsRecordId for this item is null";
     assertNotNull(errors);
     assertNotNull(errors.getErrors());
     assertEquals(1, errors.getErrors().size());
@@ -958,7 +960,7 @@ public class PatronResourceImplTest {
 
     assertNotNull(error.getParameters());
     assertEquals(1, error.getParameters().size());
-    assertEquals("holdingsRecordId", error.getParameters().get(0).getKey());
+    assertEquals("itemId", error.getParameters().get(0).getKey());
 
     // Test done
     logger.info("Test done");

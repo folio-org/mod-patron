@@ -17,6 +17,7 @@ import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
+import org.folio.patron.rest.exceptions.ValidationException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Charge;
@@ -209,6 +210,19 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
           return null;
         }
+      }).exceptionally(throwable -> {
+        if (throwable instanceof CompletionException){
+          Throwable cause = throwable.getCause();
+          if (cause instanceof ValidationException) {
+            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(((ValidationException) cause).getErrors())));
+            return null;
+          }
+          asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(cause.getMessage())));
+        } else {
+          asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(
+            throwable.getCause().getMessage())));
+        }
+        return null;
       });
   }
 
@@ -261,7 +275,8 @@ public class PatronServicesResourceImpl implements Patron {
 
     final JsonObject holdJSON = new JsonObject()
         .put(Constants.JSON_FIELD_INSTANCE_ID, instanceId)
-        .put("requesterId", id)
+        .put(Constants.JSON_FIELD_REQUESTER_ID, id)
+        .put(Constants.JSON_FIELD_REQUEST_LEVEL, "Item")
         .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
         .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
         .put(Constants.JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
