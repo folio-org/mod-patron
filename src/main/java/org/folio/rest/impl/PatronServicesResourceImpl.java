@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -191,7 +192,7 @@ public class PatronServicesResourceImpl implements Patron {
                                          ))
                           ));
 
-            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors)));
+            asyncResultHandler.handle(Future.succeededFuture(respond422WithApplicationJson(errors)));
             return null;
           }
 
@@ -200,32 +201,34 @@ public class PatronServicesResourceImpl implements Patron {
             .thenAccept(body -> {
               final Item item = getItem(body);
               final Hold hold = getHold(body, item);
-              asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
+              asyncResultHandler.handle(Future.succeededFuture(respond201WithApplicationJson(hold)));
             })
             .exceptionally(throwable -> {
               asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
               return null;
             });
         } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
+          asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(e.getMessage())));
           return null;
         }
       }).exceptionally(throwable -> {
         if (throwable instanceof CompletionException){
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
-            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(((ValidationException) cause).getErrors())));
+            asyncResultHandler.handle(Future.succeededFuture(
+              respond422WithApplicationJson(((ValidationException) cause).getErrors())));
             return null;
           }
-          asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(cause.getMessage())));
+          asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(
+              cause.getMessage())));
         } else {
-          asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(
+          asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(
             throwable.getCause().getMessage())));
         }
         return null;
       });
   }
-
+//TODO refactor to 500
   @Validate
   @Override
   public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
@@ -553,26 +556,26 @@ public class PatronServicesResourceImpl implements Patron {
         // module. This API only takes a UUID, so a client side 400 is not
         // possible here, only server side, which the client won't be able to
         // do anything about.
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));
+        result = Future.succeededFuture(respond500WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain(message));
+        result = Future.succeededFuture(respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond403WithTextPlain(message));
+        result = Future.succeededFuture(respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain(message));
+        result = Future.succeededFuture(respond404WithTextPlain(message));
         break;
       case 422:
         final Errors errors = Json.decodeValue(message, Errors.class);
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors));
+        result = Future.succeededFuture(respond422WithApplicationJson(errors));
         break;
       default:
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));
+        result = Future.succeededFuture(respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(throwable.getMessage()));
+      result = Future.succeededFuture(respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
