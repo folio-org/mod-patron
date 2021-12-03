@@ -15,15 +15,11 @@ import java.util.concurrent.CompletionException;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.ValidationException;
-import org.folio.rest.jaxrs.model.Error;
-import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Hold;
-import org.folio.rest.jaxrs.model.Parameter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import io.vertx.core.json.JsonObject;
-import lombok.SneakyThrows;
 
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
@@ -76,7 +72,7 @@ class RequestObjectFactory {
         if (throwable instanceof CompletionException){
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
-            throw new ValidationException((((ValidationException) cause).getErrors()));
+            throw new ValidationException(((ValidationException) cause));
           }
           throw new RuntimeException(cause);
         } else {

@@ -1,19 +1,18 @@
 package org.folio.patron.rest.exceptions;
 
-import org.folio.rest.jaxrs.model.Errors;
 
 public class ValidationException extends RuntimeException {
-  private final Errors errors;
+  private final String exMessage;
 
-  public ValidationException(Errors errors) {
-    this.errors = errors;
+  public ValidationException(String exMessage) {
+    this.exMessage = exMessage;
   }
 
   public ValidationException(ValidationException exception){
-    this.errors = exception.getErrors();
+    this.exMessage = exception.getMessage();
   }
 
-  public Errors getErrors() {
-    return errors;
+  public String getExMessage() {
+    return exMessage;
   }
 }

@@ -216,7 +216,7 @@ public class PatronServicesResourceImpl implements Patron {
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
             asyncResultHandler.handle(Future.succeededFuture(
-              respond422WithApplicationJson(((ValidationException) cause).getErrors())));
+              respond500WithTextPlain(((ValidationException) cause).getExMessage())));
             return null;
           }
           asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(
@@ -228,7 +228,6 @@ public class PatronServicesResourceImpl implements Patron {
         return null;
       });
   }
-//TODO refactor to 500
   @Validate
   @Override
   public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
