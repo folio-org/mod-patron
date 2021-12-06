@@ -723,23 +723,23 @@ public class PatronResourceImplTest {
     logger.info("Testing for successful patron services account retrieval by id");
 
     final Response response = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .pathParam("accountId", goodUserId)
-      .queryParam("limit", "2")
-      .queryParam("offset", "1")
-      .queryParam("includeLoans", "true")
-      .queryParam("includeHolds", "true")
-      .queryParam("includeCharges", "true")
+        .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("limit", "2")
+        .queryParam("offset", "1")
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
       .when()
-      .get(accountPath)
+        .get(accountPath)
       .then()
-      .log().all()
-      .contentType(ContentType.JSON)
-      .statusCode(200)
-      .extract().response();
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+        .extract().response();
 
     final String body = response.getBody().asString();
     final JsonObject json = new JsonObject(body);
@@ -764,30 +764,29 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testGetPatronAccountByIdWithAllRecordsWhenLimitNegative() {
+  public final void testGetPatronAccountByIdReturnsAllRecordsWhenLimitNegative() {
     logger.info("Testing for successful patron services account retrieval by id");
 
     final Response response = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .pathParam("accountId", goodUserId)
-      .queryParam("limit", "-1")
-      .queryParam("includeLoans", "true")
-      .queryParam("includeHolds", "true")
-      .queryParam("includeCharges", "true")
+        .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("limit", "-1")
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
       .when()
-      .get(accountPath)
+        .get(accountPath)
       .then()
-      .log().all()
-      .contentType(ContentType.JSON)
-      .statusCode(200)
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
       .extract().response();
 
     final String body = response.getBody().asString();
     final JsonObject json = new JsonObject(body);
-    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testGetPatronAccountById.json"));
 
     assertEquals(3, json.getInteger("totalLoans"));
     assertEquals(3, json.getJsonArray("loans").size());
@@ -851,17 +850,17 @@ public class PatronResourceImplTest {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
 
     final Response r = given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .pathParam("accountId", goodUserId)
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
       .when()
-      .get(accountPath)
+        .get(accountPath)
       .then()
-      .log().all()
-      .contentType(ContentType.JSON)
-      .statusCode(200)
-      .extract().response();
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+        .extract().response();
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
