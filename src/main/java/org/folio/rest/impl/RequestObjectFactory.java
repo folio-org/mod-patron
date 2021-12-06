@@ -5,12 +5,11 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.logging.Level;
 
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -20,7 +19,9 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import io.vertx.core.json.JsonObject;
+import lombok.extern.java.Log;
 
+@Log
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
   private final VertxOkapiHttpClient httpClient;
@@ -72,13 +73,20 @@ class RequestObjectFactory {
         if (throwable instanceof CompletionException){
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
+            logError(throwable);
             throw new ValidationException(((ValidationException) cause));
           }
+          logError(throwable);
           throw new RuntimeException(throwable.getMessage(), throwable);
         } else {
+          logError(throwable);
           throw new RuntimeException(throwable);
         }
       });
+  }
+
+  private void logError(Throwable throwable){
+    log.log(Level.SEVERE, throwable.getCause().getMessage(), throwable);
   }
 
   private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
