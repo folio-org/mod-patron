@@ -221,7 +221,7 @@ public class PatronServicesResourceImpl implements Patron {
             return null;
           }
           asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(
-            cause.getStackTrace())));
+            throwable.getStackTrace())));
         } else {
           asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(
             throwable.getCause().getMessage())));
