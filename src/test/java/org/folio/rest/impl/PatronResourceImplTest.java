@@ -952,16 +952,7 @@ public class PatronResourceImplTest {
 
     final String expectedMessage = "HoldingsRecordId for this item is null";
     assertEquals(expectedMessage, body);
-    /*assertNotNull(errors);
-    assertNotNull(errors.getErrors());
-    assertEquals(1, errors.getErrors().size());
-    Error error = errors.getErrors().get(0);
-    assertEquals(expectedMessage, error.getMessage());
 
-    assertNotNull(error.getParameters());
-    assertEquals(1, error.getParameters().size());
-    assertEquals("itemId", error.getParameters().get(0).getKey());
-*/
     // Test done
     logger.info("Test done");
   }

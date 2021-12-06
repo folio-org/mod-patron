@@ -6,6 +6,7 @@ import static org.folio.rest.impl.HoldHelpers.getHold;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -220,7 +221,7 @@ public class PatronServicesResourceImpl implements Patron {
             return null;
           }
           asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(
-              cause.getMessage())));
+            cause.getStackTrace())));
         } else {
           asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(
             throwable.getCause().getMessage())));
