@@ -9,7 +9,7 @@ public class ValidationException extends RuntimeException {
   }
 
   public ValidationException(ValidationException exception){
-    this.exMessage = exception.getMessage();
+    this.exMessage = exception.getExMessage();
   }
 
   public String getExMessage() {
