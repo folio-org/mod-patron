@@ -9,8 +9,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.logging.Level;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.ValidationException;
@@ -19,10 +21,9 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import io.vertx.core.json.JsonObject;
-import lombok.extern.java.Log;
 
-@Log
 class RequestObjectFactory {
+  private final Logger log = LogManager.getLogger(RequestObjectFactory.class);
   private final Map<String, String> okapiHeaders;
   private final VertxOkapiHttpClient httpClient;
   private final ItemRepository itemRepository;
@@ -86,7 +87,7 @@ class RequestObjectFactory {
   }
 
   private void logError(Throwable throwable){
-    log.log(Level.SEVERE, throwable.getCause().getMessage(), throwable);
+    log.log(Level.ERROR, throwable.getMessage(), throwable);
   }
 
   private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
