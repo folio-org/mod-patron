@@ -74,7 +74,7 @@ class RequestObjectFactory {
           if (cause instanceof ValidationException) {
             throw new ValidationException(((ValidationException) cause));
           }
-          throw new RuntimeException(cause);
+          throw new RuntimeException(throwable);
         } else {
           throw new RuntimeException(throwable);
         }
