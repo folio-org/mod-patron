@@ -763,6 +763,48 @@ public class PatronResourceImplTest {
     logger.info("Test done");
   }
 
+  @Test
+  public final void testGetPatronAccountByIdWithAllRecordsWhenLimitNegative() {
+    logger.info("Testing for successful patron services account retrieval by id");
+
+    final Response response = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("limit", "-1")
+      .queryParam("includeLoans", "true")
+      .queryParam("includeHolds", "true")
+      .queryParam("includeCharges", "true")
+      .when()
+      .get(accountPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+
+    final String body = response.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testGetPatronAccountById.json"));
+
+    assertEquals(3, json.getInteger("totalLoans"));
+    assertEquals(3, json.getJsonArray("loans").size());
+
+    assertEquals(3, json.getInteger("totalHolds"));
+    assertEquals(3, json.getJsonArray("holds").size());
+
+    JsonObject money = json.getJsonObject("totalCharges");
+    assertEquals(255.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(5, json.getInteger("totalChargesCount"));
+    assertEquals(5, json.getJsonArray("charges").size());
+
+    // Test done
+    logger.info("Test done");
+  }
+
 
   @Test
   public final void testGetPatronAccountByIdNoLists() {
@@ -773,6 +815,10 @@ public class PatronResourceImplTest {
         .header(urlHeader)
         .header(contentTypeHeader)
         .pathParam("accountId", goodUserId)
+        .queryParam("limit", "0")
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
       .when()
         .get(accountPath)
       .then()
@@ -780,6 +826,42 @@ public class PatronResourceImplTest {
         .contentType(ContentType.JSON)
         .statusCode(200)
         .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+
+    assertEquals(3, json.getInteger("totalLoans"));
+    assertEquals(0, json.getJsonArray("loans").size());
+
+    assertEquals(3, json.getInteger("totalHolds"));
+    assertEquals(0, json.getJsonArray("holds").size());
+
+    final JsonObject money = json.getJsonObject("totalCharges");
+    assertEquals(0.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(3, json.getInteger("totalChargesCount"));
+    assertEquals(0, json.getJsonArray("charges").size());
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testGetPatronAccountByIdNoListsWhenLimitZero() {
+    logger.info("Testing for successful patron services account retrieval by id without item lists");
+
+    final Response r = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .when()
+      .get(accountPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);

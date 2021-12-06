@@ -477,7 +477,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Map<String, String> getLimitAndOffsetParams(int limit, int offset, boolean includeItem) {
-    if (!includeItem) {
+    if (!includeItem || limit == 0) {
       return Map.of(
         "limit", "0");
     }
