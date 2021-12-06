@@ -587,7 +587,6 @@ public class PatronResourceImplTest {
       && queryString.contains(String.format("query=(requesterId==%s and status==Open*)", goodUserId));
   }
 
-
   private boolean requestsParametersWithSortByMatchMatch(HttpServerRequest request, int limit) {
     final var queryString = UrlDecoder.decode(request.query());
 
