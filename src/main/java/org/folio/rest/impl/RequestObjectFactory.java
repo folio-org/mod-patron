@@ -5,6 +5,7 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -75,14 +76,11 @@ class RequestObjectFactory {
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
             logError(throwable);
-            throw new ValidationException(((ValidationException) cause));
+            throw new ValidationException((((ValidationException) cause).getErrors()));
           }
-          logError(throwable);
-          throw new RuntimeException(throwable.getMessage(), throwable);
-        } else {
-          logError(throwable);
-          throw new RuntimeException(throwable);
         }
+        logError(throwable);
+        throw new RuntimeException(throwable);
       });
   }
 
@@ -97,7 +95,6 @@ class RequestObjectFactory {
 
   private CompletableFuture<RequestContext> fetchInstanceId(RequestContext requestContext)
     throws ValidationException {
-    log.info("item -> " + requestContext.getItem().toString());
     return holdingsRecordRepository.getHoldingsRecord(requestContext.getItem(), okapiHeaders)
       .thenApply(requestContext::setInstanceId);
   }
@@ -123,6 +120,7 @@ class RequestObjectFactory {
     requestTypeParams.setItemMaterialTypeId(getJsonObjectProperty(itemJson, "materialType", JSON_FIELD_ID));
     requestTypeParams.setItemLoanTypeId(getJsonObjectProperty(itemJson, "permanentLoanType", JSON_FIELD_ID));
     requestTypeParams.setItemLocationId(getJsonObjectProperty(itemJson, "effectiveLocation", JSON_FIELD_ID));
+    // TODO Should we notify the api caller if the user does not have patron group(e.g. diku_admin)??
     requestTypeParams.setPatronGroupId(requestContext.getUser().getString(JSON_FIELD_PATRON_GROUP));
     requestTypeParams.setItemStatus(ItemStatus.from(getJsonObjectProperty(itemJson, "status", JSON_FIELD_NAME)));
 
@@ -138,6 +136,7 @@ class RequestObjectFactory {
 
   private CompletableFuture<RequestContext> lookupRequestPolicyId(RequestContext requestContext) {
     RequestTypeParameters criteria = requestContext.getRequestTypeParams();
+
     final var queryParameters = Map.of(
       "item_type_id", criteria.getItemMaterialTypeId(),
       "loan_type_id", criteria.getItemLoanTypeId(),
