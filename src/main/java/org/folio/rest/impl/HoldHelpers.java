@@ -73,7 +73,9 @@ class HoldHelpers {
       .put("itemId", body.getString(Constants.JSON_FIELD_ITEM_ID))
       .put("item", itemJson)
       .put("fulfilmentPreference", body.getString(Constants.JSON_FIELD_FULFILMENT_PREFERENCE))
-      .put("requestType", body.getString(Constants.JSON_FIELD_REQUEST_TYPE));
+      .put("requestType", body.getString(Constants.JSON_FIELD_REQUEST_TYPE))
+      .put("pickupServicePointId", body.getString(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID))
+      .put("patronComments", body.getString(Constants.JSON_FIELD_PATRON_COMMENTS));
 
     return addCancellationFieldsToRequest(cancelRequest, entity);
   }
