@@ -95,6 +95,7 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
+    log.log(Level.ERROR, "hello");
     return itemRepository.getItem(requestContext.getItemId(), okapiHeaders)
       .thenApply(requestContext::setItem);
   }
