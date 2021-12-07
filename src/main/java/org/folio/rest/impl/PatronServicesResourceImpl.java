@@ -216,7 +216,8 @@ public class PatronServicesResourceImpl implements Patron {
           }
         }
       }
-      ).thenCompose(holdJSON -> {
+      )
+      .thenCompose(holdJSON -> {
         try {
           if (holdJSON == null) {
             final Errors errors = new Errors()
