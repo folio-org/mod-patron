@@ -100,7 +100,6 @@ class RequestObjectFactory {
     requestTypeParams.setItemMaterialTypeId(getJsonObjectProperty(itemJson, "materialType", JSON_FIELD_ID));
     requestTypeParams.setItemLoanTypeId(getJsonObjectProperty(itemJson, "permanentLoanType", JSON_FIELD_ID));
     requestTypeParams.setItemLocationId(getJsonObjectProperty(itemJson, "effectiveLocation", JSON_FIELD_ID));
-    // TODO Should we notify the api caller if the user does not have patron group(e.g. diku_admin)??
     requestTypeParams.setPatronGroupId(requestContext.getUser().getString(JSON_FIELD_PATRON_GROUP));
     requestTypeParams.setItemStatus(ItemStatus.from(getJsonObjectProperty(itemJson, "status", JSON_FIELD_NAME)));
 

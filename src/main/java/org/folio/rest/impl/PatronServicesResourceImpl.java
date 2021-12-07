@@ -230,22 +230,7 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(e.getMessage())));
           return null;
         }
-      })/*.exceptionally(throwable -> {
-        if (throwable instanceof CompletionException){
-          Throwable cause = throwable.getCause();
-          if (cause instanceof ValidationException) {
-            asyncResultHandler.handle(Future.succeededFuture(respond422WithApplicationJson(
-              ((ValidationException) cause).getErrors())));
-            return null;
-          }
-          asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(cause
-            .getMessage())));
-        } else {
-          asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(
-            throwable.getCause().getMessage())));
-        }
-        return null;
-      })*/;
+      });
   }
   @Validate
   @Override

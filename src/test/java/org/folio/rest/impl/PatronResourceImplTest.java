@@ -960,7 +960,6 @@ public class PatronResourceImplTest {
     assertNotNull(error.getParameters());
     assertEquals(1, error.getParameters().size());
     assertEquals("itemId", error.getParameters().get(0).getKey());
-    assertEquals(expectedMessage, body);
 
     // Test done
     logger.info("Test done");
