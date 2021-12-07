@@ -48,7 +48,6 @@ import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
 public class PatronResourceImplTest {
-
   private final Logger logger = LogManager.getLogger();
 
   private String moduleName;
@@ -178,7 +177,7 @@ public class PatronResourceImplTest {
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/loans_all_active.json"));
-        } else if (loansParametersMatch(req, 1)) {
+        } else if (loansParametersMatch(req, 0)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -188,6 +187,11 @@ public class PatronResourceImplTest {
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/loans_all_active_and_sorted.json"));
+        } else if (loansParametersMatch(req, 2) && offsetMatch(req, 1)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/loans_one_record.json"));
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
@@ -246,7 +250,7 @@ public class PatronResourceImplTest {
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/holds_all_active.json"));
-          } else if (requestsParametersMatch(req, 1)) {
+          } else if (requestsParametersMatch(req, 0)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
@@ -256,6 +260,11 @@ public class PatronResourceImplTest {
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/holds_all_active_and_sorted.json"));
+          } else if (requestsParametersMatch(req, 2) && offsetMatch(req, 1)) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/holds_one_record.json"));
           } else {
             req.response().setStatusCode(500).end("Unexpected call: " + req.path());
           }
@@ -355,7 +364,7 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/accounts_all_inactive.json"));
-        } else if (accountParametersMatch(req)) {
+        } else if (accountParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -365,6 +374,16 @@ public class PatronResourceImplTest {
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/accounts_all_active_and_sorted.json"));
+        } else if (accountParametersMatch(req, 0)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/accounts_total.json"));
+        } else if (accountParametersMatch(req, 2) && offsetMatch(req, 1)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/accounts_one_record.json"));
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
@@ -565,11 +584,11 @@ public class PatronResourceImplTest {
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
   }
 
-  private boolean accountParametersMatch(HttpServerRequest request) {
+  private boolean accountParametersMatch(HttpServerRequest request, int limit) {
     final var queryString = UrlDecoder.decode(request.query());
 
-    return queryString.contains("limit=" + Integer.MAX_VALUE)
-      && queryString.contains(String.format("query=(userId==%s and status.name==Open)", goodUserId));
+    return queryString.contains("limit=" + limit)
+      && queryString.contains("query=(userId==" + goodUserId + " and status.name==Open)");
   }
 
   private boolean accountParametersWithSortByMatch(HttpServerRequest request) {
@@ -621,6 +640,12 @@ public class PatronResourceImplTest {
       && queryString.contains("loan_type_id=" + loanTypeId1)
       && queryString.contains("patron_type_id=" + patronGroupId1)
       && queryString.contains("location_id=" + effectiveLocation1);
+  }
+
+  private boolean offsetMatch(HttpServerRequest request, int offset) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("offset=" + offset);
   }
 
   @AfterEach
@@ -694,7 +719,134 @@ public class PatronResourceImplTest {
   }
 
   @Test
+  public final void testGetPatronAccountByIdWithLimitAndOffset() {
+    logger.info("Testing for successful patron services account retrieval by id");
+
+    final Response response = given()
+        .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("limit", "2")
+        .queryParam("offset", "1")
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
+      .when()
+        .get(accountPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+        .extract().response();
+
+    final String body = response.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testGetPatronAccountByIdByLimitAndOffset.json"));
+
+    assertEquals(1, json.getInteger("totalLoans"));
+    assertEquals(1, json.getJsonArray("loans").size());
+
+    assertEquals(1, json.getInteger("totalHolds"));
+    assertEquals(1, json.getJsonArray("holds").size());
+
+    JsonObject money = json.getJsonObject("totalCharges");
+    assertEquals(50.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(1, json.getInteger("totalChargesCount"));
+    assertEquals(1, json.getJsonArray("charges").size());
+
+    assertEquals(expectedJson, json);
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testGetPatronAccountByIdReturnsAllRecordsWhenLimitNegative() {
+    logger.info("Testing for successful patron services account retrieval by id");
+
+    final Response response = given()
+        .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("limit", "-1")
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
+      .when()
+        .get(accountPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+      .extract().response();
+
+    final String body = response.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+
+    assertEquals(3, json.getInteger("totalLoans"));
+    assertEquals(3, json.getJsonArray("loans").size());
+
+    assertEquals(3, json.getInteger("totalHolds"));
+    assertEquals(3, json.getJsonArray("holds").size());
+
+    JsonObject money = json.getJsonObject("totalCharges");
+    assertEquals(255.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(5, json.getInteger("totalChargesCount"));
+    assertEquals(5, json.getJsonArray("charges").size());
+
+    // Test done
+    logger.info("Test done");
+  }
+
+
+  @Test
   public final void testGetPatronAccountByIdNoLists() {
+    logger.info("Testing for successful patron services account retrieval by id without item lists");
+
+    final Response r = given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("limit", "0")
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
+      .when()
+        .get(accountPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+        .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+
+    assertEquals(3, json.getInteger("totalLoans"));
+    assertEquals(0, json.getJsonArray("loans").size());
+
+    assertEquals(3, json.getInteger("totalHolds"));
+    assertEquals(0, json.getJsonArray("holds").size());
+
+    final JsonObject money = json.getJsonObject("totalCharges");
+    assertEquals(0.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(3, json.getInteger("totalChargesCount"));
+    assertEquals(0, json.getJsonArray("charges").size());
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testGetPatronAccountByIdNoListsWhenLimitZero() {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
 
     final Response r = given()
@@ -720,9 +872,9 @@ public class PatronResourceImplTest {
     assertEquals(0, json.getJsonArray("holds").size());
 
     final JsonObject money = json.getJsonObject("totalCharges");
-    assertEquals(255.0, money.getDouble("amount"));
+    assertEquals(0.0, money.getDouble("amount"));
     assertEquals("USD", money.getString("isoCurrencyCode"));
-    assertEquals(5, json.getInteger("totalChargesCount"));
+    assertEquals(3, json.getInteger("totalChargesCount"));
     assertEquals(0, json.getJsonArray("charges").size());
 
     // Test done
