@@ -61,6 +61,12 @@ traits:
             required: false
             type: boolean
             default: false
+          sortBy:
+            description: |
+              Part of CQL query, indicates the order of records within the lists of holds, charges, loans
+            example: item.title/sort.ascending
+            required: false
+            type: string
         responses:
           200:
             description: Returns the user account info
