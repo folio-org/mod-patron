@@ -1,15 +1,20 @@
 package org.folio.rest.impl;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
+import static org.folio.rest.impl.Constants.JSON_VALUE_HOLD_SHELF;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.ValidationException;
@@ -47,18 +52,18 @@ class RequestObjectFactory {
             .put("requestLevel", "Item")
             .put("requestType", "Hold")
             .put("instanceId", context.getInstanceId())
-            .put(Constants.JSON_FIELD_ITEM_ID, itemId)
-            .put(Constants.JSON_FIELD_HOLDINGS_RECORD_ID,
-              context.getItem().getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
+            .put(JSON_FIELD_ITEM_ID, itemId)
+            .put(JSON_FIELD_HOLDINGS_RECORD_ID,
+              context.getItem().getString(JSON_FIELD_HOLDINGS_RECORD_ID))
             .put("requesterId", patronId)
             .put("requestType", context.getRequestType().getValue())
-            .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-            .put("fulfilmentPreference", Constants.JSON_VALUE_HOLD_SHELF)
-            .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-            .put(Constants.JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
+            .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+            .put("fulfilmentPreference", JSON_VALUE_HOLD_SHELF)
+            .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+            .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
           if (entity.getExpirationDate() != null) {
-            holdJSON.put(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE,
+            holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
               new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
           }
           return holdJSON;

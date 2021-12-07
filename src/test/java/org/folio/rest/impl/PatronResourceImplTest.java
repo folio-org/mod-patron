@@ -354,6 +354,7 @@ public class PatronResourceImplTest {
         }
       } else if (req.path().equals(holdingsStorage + holdingsRecordId) ||
         req.path().equals(holdingsStorage + intransitItemId)) {
+
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")

@@ -1,5 +1,27 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_ADDITIONAL_INFO;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_REASON_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_USER_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILMENT_PREFERENCE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_POSITION;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_TYPE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
+
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.jaxrs.model.Item;
@@ -35,20 +57,21 @@ class HoldHelpers {
   static Hold getHold(JsonObject holdJson, Item item) {
     Hold hold = new Hold()
       .withItem(item)
-      .withExpirationDate(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE) == null
+      .withExpirationDate(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE) == null
         ? null
-        : new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
+        : new DateTime(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE), DateTimeZone.UTC).toDate())
       .withRequestId(holdJson.getString("id"))
-      .withPickupLocationId(holdJson.getString(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID))
-      .withRequestDate(new DateTime(holdJson.getString(Constants.JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
-      .withQueuePosition(holdJson.getInteger(Constants.JSON_FIELD_POSITION))
+      .withPickupLocationId(holdJson.getString(JSON_FIELD_PICKUP_SERVICE_POINT_ID))
+      .withRequestDate(new DateTime(holdJson.getString(JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
+      .withQueuePosition(holdJson.getInteger(JSON_FIELD_POSITION))
       .withStatus(Hold.Status.fromValue(holdJson.getString("status")))
-      .withCancellationAdditionalInformation(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_ADDITIONAL_INFO))
-      .withCancellationReasonId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_REASON_ID))
-      .withCanceledByUserId(holdJson.getString(Constants.JSON_FIELD_CANCELLATION_USER_ID))
-      .withPatronComments(holdJson.getString(Constants.JSON_FIELD_PATRON_COMMENTS));
+      .withCancellationAdditionalInformation(holdJson.getString(
+        JSON_FIELD_CANCELLATION_ADDITIONAL_INFO))
+      .withCancellationReasonId(holdJson.getString(JSON_FIELD_CANCELLATION_REASON_ID))
+      .withCanceledByUserId(holdJson.getString(JSON_FIELD_CANCELLATION_USER_ID))
+      .withPatronComments(holdJson.getString(JSON_FIELD_PATRON_COMMENTS));
 
-    String canceledationDate = holdJson.getString(Constants.JSON_FIELD_CANCELLATION_DATE);
+    String canceledationDate = holdJson.getString(JSON_FIELD_CANCELLATION_DATE);
     if (canceledationDate != null && !canceledationDate.isEmpty()) {
       hold.withCanceledDate(new DateTime(canceledationDate, DateTimeZone.UTC).toDate());
     }
@@ -56,26 +79,26 @@ class HoldHelpers {
   }
 
   static JsonObject createCancelRequest(JsonObject body, Hold entity) {
-    JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
-    itemJson.remove(Constants.JSON_FIELD_TITLE);
-    itemJson.remove(Constants.JSON_FIELD_INSTANCE_ID);
-    itemJson.remove(Constants.JSON_FIELD_CONTRIBUTORS);
+    JsonObject itemJson = body.getJsonObject(JSON_FIELD_ITEM);
+    itemJson.remove(JSON_FIELD_TITLE);
+    itemJson.remove(JSON_FIELD_INSTANCE_ID);
+    itemJson.remove(JSON_FIELD_CONTRIBUTORS);
 
     JsonObject cancelRequest = new JsonObject()
-      .put("id", body.getString(Constants.JSON_FIELD_ID))
-      .put("requestLevel", body.getString(Constants.JSON_FIELD_REQUEST_LEVEL))
-      .put("requestType", body.getString(Constants.JSON_FIELD_REQUEST_TYPE))
-      .put("requestDate", body.getString(Constants.JSON_FIELD_REQUEST_DATE))
-      .put("requesterId", body.getString(Constants.JSON_FIELD_REQUESTER_ID))
-      .put("requester", body.getJsonObject(Constants.JSON_FIELD_REQUESTER))
-      .put("instanceId", body.getString(Constants.JSON_FIELD_INSTANCE_ID))
-      .put("holdingsRecordId", body.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
-      .put("itemId", body.getString(Constants.JSON_FIELD_ITEM_ID))
+      .put("id", body.getString(JSON_FIELD_ID))
+      .put("requestLevel", body.getString(JSON_FIELD_REQUEST_LEVEL))
+      .put("requestType", body.getString(JSON_FIELD_REQUEST_TYPE))
+      .put("requestDate", body.getString(JSON_FIELD_REQUEST_DATE))
+      .put("requesterId", body.getString(JSON_FIELD_REQUESTER_ID))
+      .put("requester", body.getJsonObject(JSON_FIELD_REQUESTER))
+      .put("instanceId", body.getString(JSON_FIELD_INSTANCE_ID))
+      .put("holdingsRecordId", body.getString(JSON_FIELD_HOLDINGS_RECORD_ID))
+      .put("itemId", body.getString(JSON_FIELD_ITEM_ID))
       .put("item", itemJson)
-      .put("fulfilmentPreference", body.getString(Constants.JSON_FIELD_FULFILMENT_PREFERENCE))
-      .put("requestType", body.getString(Constants.JSON_FIELD_REQUEST_TYPE))
-      .put("pickupServicePointId", body.getString(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID))
-      .put("patronComments", body.getString(Constants.JSON_FIELD_PATRON_COMMENTS));
+      .put("fulfilmentPreference", body.getString(JSON_FIELD_FULFILMENT_PREFERENCE))
+      .put("requestType", body.getString(JSON_FIELD_REQUEST_TYPE))
+      .put("pickupServicePointId", body.getString(JSON_FIELD_PICKUP_SERVICE_POINT_ID))
+      .put("patronComments", body.getString(JSON_FIELD_PATRON_COMMENTS));
 
     return addCancellationFieldsToRequest(cancelRequest, entity);
   }

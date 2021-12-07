@@ -1,6 +1,23 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
+import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_TOTAL_RECORDS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
@@ -155,14 +172,14 @@ public class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject renewalJSON = new JsonObject()
-        .put(Constants.JSON_FIELD_ITEM_ID, itemId)
-        .put(Constants.JSON_FIELD_USER_ID, id);
+        .put(JSON_FIELD_ITEM_ID, itemId)
+        .put(JSON_FIELD_USER_ID, id);
 
     try {
       httpClient.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
-            final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
+            final Item item = getItem(itemId, body.getJsonObject(JSON_FIELD_ITEM));
             final Loan hold = getLoan(body, item);
             asyncResultHandler.handle(succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
           })
@@ -199,8 +216,7 @@ public class PatronServicesResourceImpl implements Patron {
           }
         }
       }
-      )
-      .thenCompose(holdJSON -> {
+      ).thenCompose(holdJSON -> {
         try {
           if (holdJSON == null) {
             final Errors errors = new Errors()
@@ -281,15 +297,15 @@ public class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject holdJSON = new JsonObject()
-        .put(Constants.JSON_FIELD_INSTANCE_ID, instanceId)
-        .put(Constants.JSON_FIELD_REQUESTER_ID, id)
-        .put(Constants.JSON_FIELD_REQUEST_LEVEL, "Item")
-        .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-        .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-        .put(Constants.JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
+        .put(JSON_FIELD_INSTANCE_ID, instanceId)
+        .put(JSON_FIELD_REQUESTER_ID, id)
+        .put(JSON_FIELD_REQUEST_LEVEL, "Item")
+        .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+        .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+        .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
     if (entity.getExpirationDate() != null) {
-      holdJSON.put(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE,
+      holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
           new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
     }
 
@@ -311,7 +327,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Account addLoans(Account account, JsonObject body, boolean includeLoans) {
-    final int totalLoans = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalLoans = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Loan> loans = new ArrayList<>();
 
     account.setTotalLoans(totalLoans);
@@ -322,8 +338,8 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : loansArray) {
         if (o instanceof JsonObject) {
           JsonObject loanObject = (JsonObject) o;
-          final Item item = getItem(loanObject.getString(Constants.JSON_FIELD_ITEM_ID),
-                                    loanObject.getJsonObject(Constants.JSON_FIELD_ITEM));
+          final Item item = getItem(loanObject.getString(JSON_FIELD_ITEM_ID),
+                                    loanObject.getJsonObject(JSON_FIELD_ITEM));
           final Loan loan = getLoan(loanObject, item);
           loans.add(loan);
         }
@@ -334,7 +350,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Item getItem(String itemId, JsonObject itemJson) {
-    final JsonArray contributors = itemJson.getJsonArray(Constants.JSON_FIELD_CONTRIBUTORS, new JsonArray());
+    final JsonArray contributors = itemJson.getJsonArray(JSON_FIELD_CONTRIBUTORS, new JsonArray());
     final StringBuilder sb = new StringBuilder();
 
     for (Object o : contributors) {
@@ -342,25 +358,25 @@ public class PatronServicesResourceImpl implements Patron {
         if (sb.length() != 0) {
           sb.append("; ");
         }
-        sb.append(((JsonObject) o).getString(Constants.JSON_FIELD_NAME));
+        sb.append(((JsonObject) o).getString(JSON_FIELD_NAME));
       }
     }
 
     return new Item()
         .withAuthor(sb.length() == 0 ? null : sb.toString())
-        .withInstanceId(itemJson.getString(Constants.JSON_FIELD_INSTANCE_ID))
+        .withInstanceId(itemJson.getString(JSON_FIELD_INSTANCE_ID))
         .withItemId(itemId)
-        .withTitle(itemJson.getString(Constants.JSON_FIELD_TITLE));
+        .withTitle(itemJson.getString(JSON_FIELD_TITLE));
   }
 
   private Item getItem(JsonObject body) {
-    JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
-    JsonObject instanceJson = body.getJsonObject(Constants.JSON_FIELD_INSTANCE);
-    itemJson.put(Constants.JSON_FIELD_INSTANCE_ID, body.getString(Constants.JSON_FIELD_INSTANCE_ID));
-    itemJson.put(Constants.JSON_FIELD_TITLE, instanceJson.getString(Constants.JSON_FIELD_TITLE));
-    itemJson.put(Constants.JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(Constants.JSON_FIELD_CONTRIBUTOR_NAMES));
+    JsonObject itemJson = body.getJsonObject(JSON_FIELD_ITEM);
+    JsonObject instanceJson = body.getJsonObject(JSON_FIELD_INSTANCE);
+    itemJson.put(JSON_FIELD_INSTANCE_ID, body.getString(JSON_FIELD_INSTANCE_ID));
+    itemJson.put(JSON_FIELD_TITLE, instanceJson.getString(JSON_FIELD_TITLE));
+    itemJson.put(JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(JSON_FIELD_CONTRIBUTOR_NAMES));
 
-    return getItem(body.getString(Constants.JSON_FIELD_ITEM_ID), itemJson);
+    return getItem(body.getString(JSON_FIELD_ITEM_ID), itemJson);
   }
 
   private Loan getLoan(JsonObject loan, Item item) {
@@ -389,7 +405,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Account addHolds(Account account, JsonObject body, boolean includeHolds) {
-    final int totalHolds = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalHolds = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Hold> holds = new ArrayList<>();
 
     account.setTotalHolds(totalHolds);
@@ -411,7 +427,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
-    final int totalCharges = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalCharges = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
     account.setTotalChargesCount(totalCharges);
     account.setCharges(charges);
@@ -424,8 +440,8 @@ public class PatronServicesResourceImpl implements Patron {
         if (o instanceof JsonObject) {
           final JsonObject accountJson = (JsonObject) o;
           Charge charge = getCharge(accountJson);
-          if (accountJson.getString(Constants.JSON_FIELD_ITEM_ID) != null) {
-            final Item item = new Item().withItemId(accountJson.getString(Constants.JSON_FIELD_ITEM_ID));
+          if (accountJson.getString(JSON_FIELD_ITEM_ID) != null) {
+            final Item item = new Item().withItemId(accountJson.getString(JSON_FIELD_ITEM_ID));
             charge.setItem(item);
           }
           amount += charge.getChargeAmount().getAmount().doubleValue();
@@ -448,8 +464,8 @@ public class PatronServicesResourceImpl implements Patron {
         .withAccrualDate(new DateTime(chargeJson.getJsonObject("metadata").getString("createdDate"), DateTimeZone.UTC).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
         .withState(chargeJson.getJsonObject("paymentStatus",
-            new JsonObject().put(Constants.JSON_FIELD_NAME,  "Unknown"))
-                  .getString(Constants.JSON_FIELD_NAME))
+            new JsonObject().put(JSON_FIELD_NAME,  "Unknown"))
+                  .getString(JSON_FIELD_NAME))
         .withReason(chargeJson.getString("feeFineType"));
   }
 
@@ -470,7 +486,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     try {
       String cql = "holdingsRecords.id==" +
-          StringUtil.cqlEncode(item.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID));
+          StringUtil.cqlEncode(item.getString(JSON_FIELD_HOLDINGS_RECORD_ID));
 
       return httpClient.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
@@ -483,9 +499,9 @@ public class PatronServicesResourceImpl implements Patron {
   private Item getItem(Charge charge, JsonObject instance) {
     final String itemId = charge.getItem().getItemId();
     final JsonObject composite = new JsonObject()
-        .put(Constants.JSON_FIELD_CONTRIBUTORS, instance.getJsonArray(Constants.JSON_FIELD_CONTRIBUTORS))
-        .put(Constants.JSON_FIELD_INSTANCE_ID, instance.getString("id"))
-        .put(Constants.JSON_FIELD_TITLE, instance.getString(Constants.JSON_FIELD_TITLE));
+        .put(JSON_FIELD_CONTRIBUTORS, instance.getJsonArray(JSON_FIELD_CONTRIBUTORS))
+        .put(JSON_FIELD_INSTANCE_ID, instance.getString("id"))
+        .put(JSON_FIELD_TITLE, instance.getString(JSON_FIELD_TITLE));
 
     return getItem(itemId, composite);
   }
