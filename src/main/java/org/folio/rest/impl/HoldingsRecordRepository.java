@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static java.util.concurrent.CompletableFuture.failedFuture;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +28,7 @@ public class HoldingsRecordRepository {
 
     String holdingsRecordId = item.getString("holdingsRecordId");
     if (holdingsRecordId == null) {
-      return CompletableFuture.failedFuture(new ValidationException(new Errors()
+      return failedFuture(new ValidationException(new Errors()
         .withErrors(
           List.of(new Error().withMessage("HoldingsRecordId for this item is null")
             .withParameters(Collections.singletonList(

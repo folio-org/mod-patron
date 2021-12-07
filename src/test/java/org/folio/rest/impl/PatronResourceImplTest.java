@@ -352,7 +352,7 @@ public class PatronResourceImplTest {
               .end("internal server error, contact administrator");
             break;
         }
-      } else if(req.path().equals(holdingsStorage + holdingsRecordId) ||
+      } else if (req.path().equals(holdingsStorage + holdingsRecordId) ||
         req.path().equals(holdingsStorage + intransitItemId)) {
         req.response()
           .setStatusCode(200)

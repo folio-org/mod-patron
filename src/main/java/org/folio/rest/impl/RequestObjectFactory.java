@@ -75,6 +75,7 @@ class RequestObjectFactory {
 
   private CompletableFuture<RequestContext> fetchInstanceId(RequestContext requestContext)
     throws ValidationException {
+
     return holdingsRecordRepository.getHoldingsRecord(requestContext.getItem(), okapiHeaders)
       .thenApply(requestContext::setInstanceId);
   }
