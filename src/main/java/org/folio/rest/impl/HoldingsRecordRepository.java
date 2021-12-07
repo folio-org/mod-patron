@@ -25,14 +25,14 @@ public class HoldingsRecordRepository {
     Map<String, String> okapiHeaders) throws ValidationException {
 
     String holdingsRecordId = item.getString("holdingsRecordId");
-    if (holdingsRecordId == null){
-      throw new ValidationException(new Errors()
+    if (holdingsRecordId == null) {
+      return CompletableFuture.failedFuture(new ValidationException(new Errors()
         .withErrors(
           List.of(new Error().withMessage("HoldingsRecordId for this item is null")
             .withParameters(Collections.singletonList(
               new Parameter().withKey(Constants.JSON_FIELD_ITEM_ID)
                 .withValue(item.getString("id"))
-            )))));
+            ))))));
     }
 
     return client.get("/holdings-storage/holdings/" + holdingsRecordId, Map.of(), okapiHeaders)

@@ -9,10 +9,6 @@ public class ValidationException extends RuntimeException {
     this.errors = errors;
   }
 
-  public ValidationException(ValidationException exception){
-    this.errors = exception.getErrors();
-  }
-
   public Errors getErrors() {
     return errors;
   }

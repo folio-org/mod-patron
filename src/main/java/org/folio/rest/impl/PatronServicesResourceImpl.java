@@ -14,6 +14,9 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -44,6 +47,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+  private final Logger log = LogManager.getLogger(PatronServicesResourceImpl.class);
+
   @Validate
   @Override
   public void getPatronAccountById(String id, boolean includeLoans,
@@ -181,6 +186,19 @@ public class PatronServicesResourceImpl implements Patron {
     RequestObjectFactory requestFactory = new RequestObjectFactory(httpClient, okapiHeaders);
 
     requestFactory.createRequestByItem(id, itemId, entity)
+      .whenComplete((holdJSON, throwable) -> {
+        if (throwable != null) {
+          log.log(Level.ERROR, throwable.getMessage(), throwable);
+          Throwable cause = throwable.getCause();
+          if (cause instanceof ValidationException) {
+            asyncResultHandler.handle(Future.succeededFuture(respond422WithApplicationJson(
+              ((ValidationException) cause).getErrors())));
+          }
+          asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(cause
+            .getMessage())));
+          }
+        }
+      )
       .thenCompose(holdJSON -> {
         try {
           if (holdJSON == null) {
@@ -212,7 +230,7 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(Future.succeededFuture(respond500WithTextPlain(e.getMessage())));
           return null;
         }
-      }).exceptionally(throwable -> {
+      })/*.exceptionally(throwable -> {
         if (throwable instanceof CompletionException){
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
@@ -227,7 +245,7 @@ public class PatronServicesResourceImpl implements Patron {
             throwable.getCause().getMessage())));
         }
         return null;
-      });
+      })*/;
   }
   @Validate
   @Override
