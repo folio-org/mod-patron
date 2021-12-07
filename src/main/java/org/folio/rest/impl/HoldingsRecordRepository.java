@@ -1,6 +1,8 @@
 package org.folio.rest.impl;
 
 import static java.util.concurrent.CompletableFuture.failedFuture;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,12 +31,11 @@ public class HoldingsRecordRepository {
     String holdingsRecordId = item.getString("holdingsRecordId");
     if (holdingsRecordId == null) {
       return failedFuture(new ValidationException(new Errors()
-        .withErrors(
-          List.of(new Error().withMessage("HoldingsRecordId for this item is null")
-            .withParameters(Collections.singletonList(
-              new Parameter().withKey(Constants.JSON_FIELD_ITEM_ID)
-                .withValue(item.getString("id"))
-            ))))));
+        .withErrors(List.of(new Error()
+          .withMessage("HoldingsRecordId for this item is null")
+          .withParameters(Collections.singletonList(new Parameter()
+              .withKey(JSON_FIELD_ITEM_ID)
+              .withValue(item.getString(JSON_FIELD_ID))))))));
     }
 
     return client.get("/holdings-storage/holdings/" + holdingsRecordId, Map.of(), okapiHeaders)

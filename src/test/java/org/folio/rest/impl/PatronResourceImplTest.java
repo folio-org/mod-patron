@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.utils.Utils.readMockFile;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -213,7 +214,7 @@ public class PatronResourceImplTest {
               String content = new String(body.getBytes());
               JsonObject jsonContent = new JsonObject(content);
 
-              if (jsonContent.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID) == null) {
+              if (jsonContent.getString(JSON_FIELD_HOLDINGS_RECORD_ID) == null) {
                 req.response()
                   .setStatusCode(422)
                   .putHeader("content-type", "application/json")
