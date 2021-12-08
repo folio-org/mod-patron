@@ -351,14 +351,17 @@ public class PatronServicesResourceImpl implements Patron {
 
   private Item getItem(String itemId, JsonObject itemJson) {
     final JsonArray contributors = itemJson.getJsonArray(JSON_FIELD_CONTRIBUTORS, new JsonArray());
+
     final StringBuilder sb = new StringBuilder();
 
-    for (Object o : contributors) {
-      if (o instanceof JsonObject) {
-        if (sb.length() != 0) {
-          sb.append("; ");
+    if (contributors != null) {
+      for (Object o : contributors) {
+        if (o instanceof JsonObject) {
+          if (sb.length() != 0) {
+            sb.append("; ");
+          }
+          sb.append(((JsonObject) o).getString(JSON_FIELD_NAME));
         }
-        sb.append(((JsonObject) o).getString(JSON_FIELD_NAME));
       }
     }
 
