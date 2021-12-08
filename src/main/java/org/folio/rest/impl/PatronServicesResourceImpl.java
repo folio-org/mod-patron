@@ -123,10 +123,12 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
         })
         .exceptionally(throwable -> {
+          logError(throwable);
           asyncResultHandler.handle(handleError(throwable));
           return null;
         });
     } catch (Exception e) {
+      logError(e);
       asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
@@ -184,10 +186,12 @@ public class PatronServicesResourceImpl implements Patron {
             asyncResultHandler.handle(succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
+            logError(throwable);
             asyncResultHandler.handle(handleRenewPOSTError(throwable));
             return null;
           });
     } catch (Exception e) {
+      logError(e);
       asyncResultHandler.handle(succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
@@ -205,7 +209,7 @@ public class PatronServicesResourceImpl implements Patron {
     requestFactory.createRequestByItem(id, itemId, entity)
       .whenComplete((holdJSON, throwable) -> {
         if (throwable != null) {
-          log.log(Level.ERROR, throwable.getMessage(), throwable);
+          logError(throwable);
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
             asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(
@@ -240,15 +244,18 @@ public class PatronServicesResourceImpl implements Patron {
               asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
             })
             .exceptionally(throwable -> {
+              logError(throwable);
               asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
               return null;
             });
         } catch (Exception e) {
+          logError(e);
           asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(e.getMessage())));
           return null;
         }
       });
   }
+
   @Validate
   @Override
   public void postPatronAccountHoldCancelByIdAndHoldId(String id, String holdId, Hold entity, Map<String, String> okapiHeaders, Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
@@ -270,6 +277,7 @@ public class PatronServicesResourceImpl implements Patron {
             JsonObject cancelRequest = createCancelRequest(anUpdatedRequest, entity);
             return httpClient.put("/circulation/requests/" + holdId, cancelRequest, okapiHeaders);
           } catch (Exception e) {
+              logError(e);
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
               return null;
             }
@@ -279,10 +287,12 @@ public class PatronServicesResourceImpl implements Patron {
             body -> asyncResultHandler.handle(succeededFuture(
               PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0]))))
         .exceptionally(throwable -> {
+            logError(throwable);
             asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
             return null;
         });
     } catch (Exception e) {
+      logError(e);
       asyncResultHandler.handle(handleHoldCancelPOSTError(e));
     }
   }
@@ -318,12 +328,18 @@ public class PatronServicesResourceImpl implements Patron {
             asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
+            logError(throwable);
             asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
             return null;
           });
     } catch (Exception e) {
+      logError(e);
       asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
     }
+  }
+
+  private void logError(Throwable throwable) {
+    log.log(Level.ERROR, throwable.getMessage(), throwable);
   }
 
   private Account addLoans(Account account, JsonObject body, boolean includeLoans) {
