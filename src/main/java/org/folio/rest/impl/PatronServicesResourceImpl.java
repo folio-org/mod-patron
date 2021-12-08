@@ -1,8 +1,27 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
+import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_TOTAL_RECORDS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,11 +31,15 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
+import org.folio.patron.rest.exceptions.ValidationException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.Charge;
@@ -41,6 +64,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+  private final Logger log = LogManager.getLogger(PatronServicesResourceImpl.class);
+
   @Validate
   @Override
   public void getPatronAccountById(String id, boolean includeLoans,
@@ -95,14 +120,16 @@ public class PatronServicesResourceImpl implements Patron {
           }
         })
         .thenAccept(account -> {
-          asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
+          asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
         })
         .exceptionally(throwable -> {
+          logError(throwable);
           asyncResultHandler.handle(handleError(throwable));
           return null;
         });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
+      logError(e);
+      asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -147,23 +174,25 @@ public class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject renewalJSON = new JsonObject()
-        .put(Constants.JSON_FIELD_ITEM_ID, itemId)
-        .put(Constants.JSON_FIELD_USER_ID, id);
+        .put(JSON_FIELD_ITEM_ID, itemId)
+        .put(JSON_FIELD_USER_ID, id);
 
     try {
       httpClient.post("/circulation/renew-by-id", renewalJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
-            final Item item = getItem(itemId, body.getJsonObject(Constants.JSON_FIELD_ITEM));
+            final Item item = getItem(itemId, body.getJsonObject(JSON_FIELD_ITEM));
             final Loan hold = getLoan(body, item);
-            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
+            asyncResultHandler.handle(succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
+            logError(throwable);
             asyncResultHandler.handle(handleRenewPOSTError(throwable));
             return null;
           });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
+      logError(e);
+      asyncResultHandler.handle(succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -178,36 +207,48 @@ public class PatronServicesResourceImpl implements Patron {
     RequestObjectFactory requestFactory = new RequestObjectFactory(httpClient, okapiHeaders);
 
     requestFactory.createRequestByItem(id, itemId, entity)
-      .thenCompose(holdJSON -> {
-        try {
-          if (holdJSON == null) {
-            final Errors errors = new Errors()
-                          .withErrors(Collections.singletonList(
-                              new Error().withMessage("Cannot find a valid request type for this item")
-                                         .withParameters(Collections.singletonList(
-                                            new Parameter().withKey("itemId")
-                                                           .withValue(itemId)
-                                         ))
-                          ));
-
-            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors)));
-            return null;
+      .whenComplete((holdJSON, throwable) -> {
+        if (throwable != null) {
+          logError(throwable);
+          Throwable cause = throwable.getCause();
+          if (cause instanceof ValidationException) {
+            asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(
+              ((ValidationException) cause).getErrors())));
+          } else {
+            asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(cause
+              .getMessage())));
           }
+        } else {
+          try {
+            if (holdJSON == null) {
+              final Errors errors = new Errors()
+                .withErrors(Collections.singletonList(
+                  new Error().withMessage("Cannot find a valid request type for this item")
+                    .withParameters(Collections.singletonList(
+                      new Parameter().withKey("itemId")
+                        .withValue(itemId)
+                    ))
+                ));
 
-          return httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
-            .thenApply(ResponseInterpreter::verifyAndExtractBody)
-            .thenAccept(body -> {
-              final Item item = getItem(body);
-              final Hold hold = getHold(body, item);
-              asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
-            })
-            .exceptionally(throwable -> {
-              asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
-              return null;
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
-          return null;
+              asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(errors)));
+            }
+
+            httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
+              .thenApply(ResponseInterpreter::verifyAndExtractBody)
+              .thenAccept(body -> {
+                final Item item = getItem(body);
+                final Hold hold = getHold(body, item);
+                asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
+              })
+              .exceptionally(e -> {
+                logError(e);
+                asyncResultHandler.handle(handleItemHoldPOSTError(e));
+                return null;
+              });
+          } catch (Exception e) {
+            logError(e);
+            asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(e.getMessage())));
+          }
         }
       });
   }
@@ -233,19 +274,22 @@ public class PatronServicesResourceImpl implements Patron {
             JsonObject cancelRequest = createCancelRequest(anUpdatedRequest, entity);
             return httpClient.put("/circulation/requests/" + holdId, cancelRequest, okapiHeaders);
           } catch (Exception e) {
+              logError(e);
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
               return null;
             }
         })
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenAccept(
-            body -> asyncResultHandler.handle(Future.succeededFuture(
+            body -> asyncResultHandler.handle(succeededFuture(
               PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0]))))
         .exceptionally(throwable -> {
+            logError(throwable);
             asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
             return null;
         });
     } catch (Exception e) {
+      logError(e);
       asyncResultHandler.handle(handleHoldCancelPOSTError(e));
     }
   }
@@ -260,14 +304,15 @@ public class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject holdJSON = new JsonObject()
-        .put(Constants.JSON_FIELD_INSTANCE_ID, instanceId)
-        .put("requesterId", id)
-        .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-        .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-        .put(Constants.JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
+        .put(JSON_FIELD_INSTANCE_ID, instanceId)
+        .put(JSON_FIELD_REQUESTER_ID, id)
+        .put(JSON_FIELD_REQUEST_LEVEL, "Item")
+        .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+        .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+        .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
     if (entity.getExpirationDate() != null) {
-      holdJSON.put(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE,
+      holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
           new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
     }
 
@@ -277,19 +322,25 @@ public class PatronServicesResourceImpl implements Patron {
           .thenAccept(body -> {
             final Item item = getItem(body);
             final Hold hold = getHold(body, item);
-            asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
+            asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
+            logError(throwable);
             asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
             return null;
           });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
+      logError(e);
+      asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
 
+  private void logError(Throwable throwable) {
+    log.log(Level.ERROR, throwable.getMessage(), throwable);
+  }
+
   private Account addLoans(Account account, JsonObject body, boolean includeLoans) {
-    final int totalLoans = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalLoans = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Loan> loans = new ArrayList<>();
 
     account.setTotalLoans(totalLoans);
@@ -300,8 +351,8 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : loansArray) {
         if (o instanceof JsonObject) {
           JsonObject loanObject = (JsonObject) o;
-          final Item item = getItem(loanObject.getString(Constants.JSON_FIELD_ITEM_ID),
-                                    loanObject.getJsonObject(Constants.JSON_FIELD_ITEM));
+          final Item item = getItem(loanObject.getString(JSON_FIELD_ITEM_ID),
+                                    loanObject.getJsonObject(JSON_FIELD_ITEM));
           final Loan loan = getLoan(loanObject, item);
           loans.add(loan);
         }
@@ -312,33 +363,36 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Item getItem(String itemId, JsonObject itemJson) {
-    final JsonArray contributors = itemJson.getJsonArray(Constants.JSON_FIELD_CONTRIBUTORS, new JsonArray());
+    final JsonArray contributors = itemJson.getJsonArray(JSON_FIELD_CONTRIBUTORS, new JsonArray());
+
     final StringBuilder sb = new StringBuilder();
 
-    for (Object o : contributors) {
-      if (o instanceof JsonObject) {
-        if (sb.length() != 0) {
-          sb.append("; ");
+    if (contributors != null) {
+      for (Object o : contributors) {
+        if (o instanceof JsonObject) {
+          if (sb.length() != 0) {
+            sb.append("; ");
+          }
+          sb.append(((JsonObject) o).getString(JSON_FIELD_NAME));
         }
-        sb.append(((JsonObject) o).getString(Constants.JSON_FIELD_NAME));
       }
     }
 
     return new Item()
         .withAuthor(sb.length() == 0 ? null : sb.toString())
-        .withInstanceId(itemJson.getString(Constants.JSON_FIELD_INSTANCE_ID))
+        .withInstanceId(itemJson.getString(JSON_FIELD_INSTANCE_ID))
         .withItemId(itemId)
-        .withTitle(itemJson.getString(Constants.JSON_FIELD_TITLE));
+        .withTitle(itemJson.getString(JSON_FIELD_TITLE));
   }
 
   private Item getItem(JsonObject body) {
-    JsonObject itemJson = body.getJsonObject(Constants.JSON_FIELD_ITEM);
-    JsonObject instanceJson = body.getJsonObject(Constants.JSON_FIELD_INSTANCE);
-    itemJson.put(Constants.JSON_FIELD_INSTANCE_ID, body.getString(Constants.JSON_FIELD_INSTANCE_ID));
-    itemJson.put(Constants.JSON_FIELD_TITLE, instanceJson.getString(Constants.JSON_FIELD_TITLE));
-    itemJson.put(Constants.JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(Constants.JSON_FIELD_CONTRIBUTOR_NAMES));
+    JsonObject itemJson = body.getJsonObject(JSON_FIELD_ITEM);
+    JsonObject instanceJson = body.getJsonObject(JSON_FIELD_INSTANCE);
+    itemJson.put(JSON_FIELD_INSTANCE_ID, body.getString(JSON_FIELD_INSTANCE_ID));
+    itemJson.put(JSON_FIELD_TITLE, instanceJson.getString(JSON_FIELD_TITLE));
+    itemJson.put(JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(JSON_FIELD_CONTRIBUTOR_NAMES));
 
-    return getItem(body.getString(Constants.JSON_FIELD_ITEM_ID), itemJson);
+    return getItem(body.getString(JSON_FIELD_ITEM_ID), itemJson);
   }
 
   private Loan getLoan(JsonObject loan, Item item) {
@@ -367,7 +421,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Account addHolds(Account account, JsonObject body, boolean includeHolds) {
-    final int totalHolds = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalHolds = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Hold> holds = new ArrayList<>();
 
     account.setTotalHolds(totalHolds);
@@ -389,7 +443,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
-    final int totalCharges = body.getInteger(Constants.JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+    final int totalCharges = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
     account.setTotalChargesCount(totalCharges);
     account.setCharges(charges);
@@ -402,8 +456,8 @@ public class PatronServicesResourceImpl implements Patron {
         if (o instanceof JsonObject) {
           final JsonObject accountJson = (JsonObject) o;
           Charge charge = getCharge(accountJson);
-          if (accountJson.getString(Constants.JSON_FIELD_ITEM_ID) != null) {
-            final Item item = new Item().withItemId(accountJson.getString(Constants.JSON_FIELD_ITEM_ID));
+          if (accountJson.getString(JSON_FIELD_ITEM_ID) != null) {
+            final Item item = new Item().withItemId(accountJson.getString(JSON_FIELD_ITEM_ID));
             charge.setItem(item);
           }
           amount += charge.getChargeAmount().getAmount().doubleValue();
@@ -426,8 +480,8 @@ public class PatronServicesResourceImpl implements Patron {
         .withAccrualDate(new DateTime(chargeJson.getJsonObject("metadata").getString("createdDate"), DateTimeZone.UTC).toDate())
         .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
         .withState(chargeJson.getJsonObject("paymentStatus",
-            new JsonObject().put(Constants.JSON_FIELD_NAME,  "Unknown"))
-                  .getString(Constants.JSON_FIELD_NAME))
+            new JsonObject().put(JSON_FIELD_NAME,  "Unknown"))
+                  .getString(JSON_FIELD_NAME))
         .withReason(chargeJson.getString("feeFineType"));
   }
 
@@ -448,7 +502,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     try {
       String cql = "holdingsRecords.id==" +
-          StringUtil.cqlEncode(item.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID));
+          StringUtil.cqlEncode(item.getString(JSON_FIELD_HOLDINGS_RECORD_ID));
 
       return httpClient.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
@@ -461,9 +515,9 @@ public class PatronServicesResourceImpl implements Patron {
   private Item getItem(Charge charge, JsonObject instance) {
     final String itemId = charge.getItem().getItemId();
     final JsonObject composite = new JsonObject()
-        .put(Constants.JSON_FIELD_CONTRIBUTORS, instance.getJsonArray(Constants.JSON_FIELD_CONTRIBUTORS))
-        .put(Constants.JSON_FIELD_INSTANCE_ID, instance.getString("id"))
-        .put(Constants.JSON_FIELD_TITLE, instance.getString(Constants.JSON_FIELD_TITLE));
+        .put(JSON_FIELD_CONTRIBUTORS, instance.getJsonArray(JSON_FIELD_CONTRIBUTORS))
+        .put(JSON_FIELD_INSTANCE_ID, instance.getString("id"))
+        .put(JSON_FIELD_TITLE, instance.getString(JSON_FIELD_TITLE));
 
     return getItem(itemId, composite);
   }
@@ -501,25 +555,25 @@ public class PatronServicesResourceImpl implements Patron {
         // do anything about. If the error is module generated, we can do
         // something about it or at least tell the user something.
         if (t instanceof ModuleGeneratedHttpException) {
-          result = Future.succeededFuture(GetPatronAccountByIdResponse.respond400WithTextPlain(message));
+          result = succeededFuture(GetPatronAccountByIdResponse.respond400WithTextPlain(message));
         } else {
-          result = Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
+          result = succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
         }
         break;
       case 401:
-        result = Future.succeededFuture(GetPatronAccountByIdResponse.respond401WithTextPlain(message));
+        result = succeededFuture(GetPatronAccountByIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(GetPatronAccountByIdResponse.respond403WithTextPlain(message));
+        result = succeededFuture(GetPatronAccountByIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(GetPatronAccountByIdResponse.respond404WithTextPlain(message));
+        result = succeededFuture(GetPatronAccountByIdResponse.respond404WithTextPlain(message));
         break;
       default:
-        result = Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(throwable.getMessage()));
+      result = succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
@@ -538,26 +592,26 @@ public class PatronServicesResourceImpl implements Patron {
         // module. This API only takes a UUID, so a client side 400 is not
         // possible here, only server side, which the client won't be able to
         // do anything about.
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(respond500WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain(message));
+        result = succeededFuture(respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond403WithTextPlain(message));
+        result = succeededFuture(respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain(message));
+        result = succeededFuture(respond404WithTextPlain(message));
         break;
       case 422:
         final Errors errors = Json.decodeValue(message, Errors.class);
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson(errors));
+        result = succeededFuture(respond422WithApplicationJson(errors));
         break;
       default:
-        result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain(throwable.getMessage()));
+      result = succeededFuture(respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
@@ -576,26 +630,26 @@ public class PatronServicesResourceImpl implements Patron {
         // module. This API only takes a UUID, so a client side 400 is not
         // possible here, only server side, which the client won't be able to
         // do anything about.
-        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond401WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond403WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond404WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond404WithTextPlain(message));
         break;
       case 422:
         final Errors errors = Json.decodeValue(message, Errors.class);
-        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(errors));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
-        result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(throwable.getMessage()));
+      result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
@@ -614,26 +668,26 @@ public class PatronServicesResourceImpl implements Patron {
         // module. This API takes UUIDs, so a client side 400 is not
         // possible here, only server side, which the client won't be able to
         // do anything about.
-        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond401WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond403WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond404WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond404WithTextPlain(message));
         break;
       case 422:
         final Errors errors = Json.decodeValue(message, Errors.class);
-        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond422WithApplicationJson(errors));
+        result = succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
-        result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(throwable.getMessage()));
+      result = succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
@@ -648,26 +702,26 @@ public class PatronServicesResourceImpl implements Patron {
       final String message = ((HttpException) t).getMessage();
       switch (code) {
       case 400:
-        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond400WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond400WithTextPlain(message));
         break;
       case 401:
-        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond401WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond401WithTextPlain(message));
         break;
       case 403:
-        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond403WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond403WithTextPlain(message));
         break;
       case 404:
-        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond404WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond404WithTextPlain(message));
         break;
       case 422:
         final Errors errors = Json.decodeValue(message, Errors.class);
-        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond422WithApplicationJson(errors));
+        result = succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond422WithApplicationJson(errors));
         break;
       default:
-        result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond500WithTextPlain(message));
       }
     } else {
-      result = Future.succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond500WithTextPlain(throwable.getMessage()));
+      result = succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;

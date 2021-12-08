@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.utils.Utils.readMockFile;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -71,6 +72,7 @@ public class PatronResourceImplTest {
   private final String renewPath = "/renew";
   private final String cancelPath = "/cancel";
   private final String okapiBadDataHeader = "x-okapi-bad-data";
+  private final String holdingsStorage = "/holdings-storage/holdings/";
 
   private final String goodUserId = "1ec54964-70f0-44cc-bd19-2a892ea0d336";
   private final String inactiveUserId = "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4";
@@ -119,6 +121,7 @@ public class PatronResourceImplTest {
   private final String intransitItemId = "32e5757d-6566-466e-b69d-994eb33d2c98";
   private static final String availableItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
   private static final String checkedoutItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
+  private static final String holdingsRecordId = "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19";
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
@@ -211,7 +214,7 @@ public class PatronResourceImplTest {
               String content = new String(body.getBytes());
               JsonObject jsonContent = new JsonObject(content);
 
-              if (jsonContent.getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID) == null) {
+              if (jsonContent.getString(JSON_FIELD_HOLDINGS_RECORD_ID) == null) {
                 req.response()
                   .setStatusCode(422)
                   .putHeader("content-type", "application/json")
@@ -350,6 +353,13 @@ public class PatronResourceImplTest {
               .end("internal server error, contact administrator");
             break;
         }
+      } else if (req.path().equals(holdingsStorage + holdingsRecordId) ||
+        req.path().equals(holdingsStorage + intransitItemId)) {
+
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/holdingsRecord.json"));
       } else if (req.path().equals("/accounts")) {
         if (isInactiveUser(req)) {
           req.response()
@@ -942,8 +952,7 @@ public class PatronResourceImplTest {
 
     final String body = r.getBody().asString();
     final Errors errors = Json.decodeValue(body, Errors.class);
-
-    final String expectedMessage = "Cannot create a request with item ID but no holdings record ID";
+    final String expectedMessage = "HoldingsRecordId for this item is null";
     assertNotNull(errors);
     assertNotNull(errors.getErrors());
     assertEquals(1, errors.getErrors().size());
@@ -952,7 +961,7 @@ public class PatronResourceImplTest {
 
     assertNotNull(error.getParameters());
     assertEquals(1, error.getParameters().size());
-    assertEquals("holdingsRecordId", error.getParameters().get(0).getKey());
+    assertEquals("itemId", error.getParameters().get(0).getKey());
 
     // Test done
     logger.info("Test done");

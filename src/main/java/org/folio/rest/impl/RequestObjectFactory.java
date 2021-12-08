@@ -1,9 +1,16 @@
 package org.folio.rest.impl;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
+import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
+import static org.folio.rest.impl.Constants.JSON_VALUE_HOLD_SHELF;
 
 import java.util.Map;
 import java.util.Optional;
@@ -11,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
+import org.folio.patron.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Hold;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -22,18 +30,21 @@ class RequestObjectFactory {
   private final VertxOkapiHttpClient httpClient;
   private final ItemRepository itemRepository;
   private final UserRepository userRepository;
+  private final HoldingsRecordRepository holdingsRecordRepository;
 
   RequestObjectFactory(VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
     this.okapiHeaders = okapiHeaders;
     this.httpClient = httpClient;
     this.itemRepository = new ItemRepository(httpClient);
     this.userRepository = new UserRepository(httpClient);
+    this.holdingsRecordRepository = new HoldingsRecordRepository(httpClient);
   }
 
   CompletableFuture<JsonObject> createRequestByItem(String patronId, String itemId, Hold entity) {
 
     return completedFuture(new RequestContext(patronId, itemId, entity))
       .thenCompose(this::fetchItem)
+      .thenCompose(this::fetchInstanceId)
       .thenCompose(this::fetchUser)
       .thenCompose(this::fetchRequestType)
       .thenApply(context -> {
@@ -41,17 +52,19 @@ class RequestObjectFactory {
           final JsonObject holdJSON = new JsonObject()
             .put("requestLevel", "Item")
             .put("requestType", "Hold")
-            .put(Constants.JSON_FIELD_ITEM_ID, itemId)
-            .put("holdingsRecordId", context.getItem().getString(Constants.JSON_FIELD_HOLDINGS_RECORD_ID))
+            .put("instanceId", context.getInstanceId())
+            .put(JSON_FIELD_ITEM_ID, itemId)
+            .put(JSON_FIELD_HOLDINGS_RECORD_ID,
+              context.getItem().getString(JSON_FIELD_HOLDINGS_RECORD_ID))
             .put("requesterId", patronId)
             .put("requestType", context.getRequestType().getValue())
-            .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-            .put("fulfilmentPreference", Constants.JSON_VALUE_HOLD_SHELF)
-            .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-            .put(Constants.JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
+            .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+            .put("fulfilmentPreference", JSON_VALUE_HOLD_SHELF)
+            .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+            .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
           if (entity.getExpirationDate() != null) {
-            holdJSON.put(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE,
+            holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
               new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
           }
           return holdJSON;
@@ -64,6 +77,13 @@ class RequestObjectFactory {
   private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
     return itemRepository.getItem(requestContext.getItemId(), okapiHeaders)
       .thenApply(requestContext::setItem);
+  }
+
+  private CompletableFuture<RequestContext> fetchInstanceId(RequestContext requestContext)
+    throws ValidationException {
+
+    return holdingsRecordRepository.getHoldingsRecord(requestContext.getItem(), okapiHeaders)
+      .thenApply(requestContext::setInstanceId);
   }
 
   private CompletableFuture<RequestContext> fetchUser(RequestContext requestContext) {
@@ -102,6 +122,7 @@ class RequestObjectFactory {
 
   private CompletableFuture<RequestContext> lookupRequestPolicyId(RequestContext requestContext) {
     RequestTypeParameters criteria = requestContext.getRequestTypeParams();
+
     final var queryParameters = Map.of(
       "item_type_id", criteria.getItemMaterialTypeId(),
       "loan_type_id", criteria.getItemLoanTypeId(),

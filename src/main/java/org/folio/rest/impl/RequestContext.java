@@ -6,6 +6,7 @@ import org.folio.rest.jaxrs.model.Hold;
 public class RequestContext {
   private final String patronId;
   private final String itemId;
+  private String instanceId;
   private final Hold hold;
   private JsonObject user;
   private JsonObject item;
@@ -50,8 +51,19 @@ public class RequestContext {
     return this;
   }
 
+  public RequestContext setInstanceId(JsonObject holdingsRecord) {
+    if (holdingsRecord != null) {
+      this.instanceId = holdingsRecord.getString("instanceId");
+    }
+    return this;
+  }
+
   public RequestType getRequestType() {
     return requestType;
+  }
+
+  public String getInstanceId() {
+    return instanceId;
   }
 
   public RequestContext setRequestType(RequestType requestType) {
