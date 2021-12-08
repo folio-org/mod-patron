@@ -218,40 +218,37 @@ public class PatronServicesResourceImpl implements Patron {
             asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(cause
               .getMessage())));
           }
-        }
-      }
-      ).thenCompose(holdJSON -> {
-        try {
-          if (holdJSON == null) {
-            final Errors errors = new Errors()
-                          .withErrors(Collections.singletonList(
-                              new Error().withMessage("Cannot find a valid request type for this item")
-                                         .withParameters(Collections.singletonList(
-                                            new Parameter().withKey("itemId")
-                                                           .withValue(itemId)
-                                         ))
-                          ));
+        } else {
+          try {
+            if (holdJSON == null) {
+              final Errors errors = new Errors()
+                .withErrors(Collections.singletonList(
+                  new Error().withMessage("Cannot find a valid request type for this item")
+                    .withParameters(Collections.singletonList(
+                      new Parameter().withKey("itemId")
+                        .withValue(itemId)
+                    ))
+                ));
 
-            asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(errors)));
-            return null;
+              asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(errors)));
+            }
+
+            httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
+              .thenApply(ResponseInterpreter::verifyAndExtractBody)
+              .thenAccept(body -> {
+                final Item item = getItem(body);
+                final Hold hold = getHold(body, item);
+                asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
+              })
+              .exceptionally(e -> {
+                logError(e);
+                asyncResultHandler.handle(handleItemHoldPOSTError(e));
+                return null;
+              });
+          } catch (Exception e) {
+            logError(e);
+            asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(e.getMessage())));
           }
-
-          return httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
-            .thenApply(ResponseInterpreter::verifyAndExtractBody)
-            .thenAccept(body -> {
-              final Item item = getItem(body);
-              final Hold hold = getHold(body, item);
-              asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
-            })
-            .exceptionally(throwable -> {
-              logError(throwable);
-              asyncResultHandler.handle(handleItemHoldPOSTError(throwable));
-              return null;
-            });
-        } catch (Exception e) {
-          logError(e);
-          asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(e.getMessage())));
-          return null;
         }
       });
   }
