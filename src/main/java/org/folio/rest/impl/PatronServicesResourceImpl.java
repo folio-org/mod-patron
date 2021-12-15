@@ -76,8 +76,7 @@ public class PatronServicesResourceImpl implements Patron {
               httpClient)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
-            final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, includeCharges,
-              okapiHeaders, httpClient)
+            final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges))
                 .thenCompose(charges -> {
                   if (includeCharges) {
@@ -114,11 +113,11 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id,
-    String sortBy, int limit, int offset, boolean includeCharges,
+    String sortBy, int limit, int offset,
     Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
 
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
-    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeCharges));
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, true));
     queryParameters.put("query", buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/accounts", queryParameters, okapiHeaders)
