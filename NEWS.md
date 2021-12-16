@@ -1,3 +1,7 @@
+## 4.5.3 IN-PROGRESS
+
+* Upgrade to RMB 32.2.4 and Log4J to 2.16.0. (CVE-2021-44228) (MODPATRON-96)
+
 ## 4.5.2 2021-09-15
 
 * Fixes logging output (MODPATRON-70)
