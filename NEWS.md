@@ -1,3 +1,7 @@
+## 5.0.3 IN-PROGRESS
+
+* Upgrade to RMB 33.0.4 and Log4J to 2.16.0. (CVE-2021-44228) (MODPATRON-94)
+
 ## 5.0.2 2021-11-11
 
 * Adding permission to base endpoint to resolve a bug (MODPATRON-77) 
