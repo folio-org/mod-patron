@@ -872,9 +872,9 @@ public class PatronResourceImplTest {
     assertEquals(0, json.getJsonArray("holds").size());
 
     final JsonObject money = json.getJsonObject("totalCharges");
-    assertEquals(0.0, money.getDouble("amount"));
+    assertEquals(255.0, money.getDouble("amount"));
     assertEquals("USD", money.getString("isoCurrencyCode"));
-    assertEquals(3, json.getInteger("totalChargesCount"));
+    assertEquals(5, json.getInteger("totalChargesCount"));
     assertEquals(0, json.getJsonArray("charges").size());
 
     // Test done
