@@ -1,6 +1,7 @@
 ## 5.1.0 IN-PROGRESS
 
 * Inactive patrons can now view their account details (MODPATRON-69)
+* Upgrade to RMB 33.0.4 and Log4J to 2.16.0. (CVE-2021-44228) (MODPATRON-94)
 
 ## 5.0.0 2021-10-05
 
