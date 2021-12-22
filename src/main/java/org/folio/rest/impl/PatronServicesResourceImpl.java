@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
