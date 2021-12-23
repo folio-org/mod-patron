@@ -171,8 +171,7 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/loans_all_inactive.json"));
-        }
-        else if (loansParametersMatch(req, Integer.MAX_VALUE)) {
+        } else if (loansParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -762,48 +761,6 @@ public class PatronResourceImplTest {
     // Test done
     logger.info("Test done");
   }
-
-  @Test
-  public final void testGetPatronAccountByIdReturnsAllRecordsWhenLimitNegative() {
-    logger.info("Testing for successful patron services account retrieval by id");
-
-    final Response response = given()
-        .log().all()
-        .header(tenantHeader)
-        .header(urlHeader)
-        .header(contentTypeHeader)
-        .pathParam("accountId", goodUserId)
-        .queryParam("limit", "-1")
-        .queryParam("includeLoans", "true")
-        .queryParam("includeHolds", "true")
-        .queryParam("includeCharges", "true")
-      .when()
-        .get(accountPath)
-      .then()
-        .log().all()
-        .contentType(ContentType.JSON)
-        .statusCode(200)
-      .extract().response();
-
-    final String body = response.getBody().asString();
-    final JsonObject json = new JsonObject(body);
-
-    assertEquals(3, json.getInteger("totalLoans"));
-    assertEquals(3, json.getJsonArray("loans").size());
-
-    assertEquals(3, json.getInteger("totalHolds"));
-    assertEquals(3, json.getJsonArray("holds").size());
-
-    JsonObject money = json.getJsonObject("totalCharges");
-    assertEquals(255.0, money.getDouble("amount"));
-    assertEquals("USD", money.getString("isoCurrencyCode"));
-    assertEquals(5, json.getInteger("totalChargesCount"));
-    assertEquals(5, json.getJsonArray("charges").size());
-
-    // Test done
-    logger.info("Test done");
-  }
-
 
   @Test
   public final void testGetPatronAccountByIdNoLists() {
