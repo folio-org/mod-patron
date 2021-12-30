@@ -121,6 +121,7 @@ public class PatronResourceImplTest {
   private final String intransitItemId = "32e5757d-6566-466e-b69d-994eb33d2c98";
   private static final String availableItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
   private static final String checkedoutItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
+  private static final String sortByParam = "item.title/sort.ascending";
   private static final String holdingsRecordId = "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19";
 
   static {
@@ -158,12 +159,12 @@ public class PatronResourceImplTest {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/users/user_active.json"));
+          .end(readMockFile(mockDataFolder + "/user_active.json"));
       } else if (req.path().equals(String.format("/users/%s", inactiveUserId))) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/users/user_not_active.json"));
+          .end(readMockFile(mockDataFolder + "/user_not_active.json"));
       } else if (req.path().equals(String.format("/users/%s", badUserId))) {
         req.response()
           .setStatusCode(404)
@@ -174,18 +175,27 @@ public class PatronResourceImplTest {
           req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/loans/loans_all_inactive.json"));
-        }
-        else if (loansParametersMatch(req, Integer.MAX_VALUE)) {
+          .end(readMockFile(mockDataFolder + "/loans_all_inactive.json"));
+        } else if (loansParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/loans/loans_all_active.json"));
-        } else if (loansParametersMatch(req, 1)) {
+            .end(readMockFile(mockDataFolder + "/loans_all_active.json"));
+        } else if (loansParametersMatch(req, 0)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/loans/loans_totals.json"));
+            .end(readMockFile(mockDataFolder + "/loans_totals.json"));
+        } else if (loansParametersWithSortByMatch(req, Integer.MAX_VALUE)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/loans_all_active_and_sorted.json"));
+        } else if (loansParametersMatch(req, 2) && offsetMatch(req, 1)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/loans_one_record.json"));
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
@@ -196,7 +206,7 @@ public class PatronResourceImplTest {
             req.response()
                 .setStatusCode(422)
                 .putHeader("content-type", "application/json")
-                .end(readMockFile(mockDataFolder + "/items/item_hold_bad_item_id.json"));
+                .end(readMockFile(mockDataFolder + "/item_hold_bad_item_id.json"));
           } else if (badDataValue != null) {
             if (badDataValue.equals("java.lang.NullPointerException")) {
               req.response()
@@ -249,11 +259,21 @@ public class PatronResourceImplTest {
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/holds_all_active.json"));
-          } else if (requestsParametersMatch(req, 1)) {
+          } else if (requestsParametersMatch(req, 0)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/holds_totals.json"));
+          } else if (requestsParametersWithSortByMatchMatch(req, Integer.MAX_VALUE)) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/holds_all_active_and_sorted.json"));
+          } else if (requestsParametersMatch(req, 2) && offsetMatch(req, 1)) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/holds_one_record.json"));
           } else {
             req.response().setStatusCode(500).end("Unexpected call: " + req.path());
           }
@@ -265,7 +285,7 @@ public class PatronResourceImplTest {
             req.response()
                 .setStatusCode(422)
                 .putHeader("content-type", "application/json")
-                .end(readMockFile(mockDataFolder + "/instances/instance_hold_bad_instance_id.json"));
+                .end(readMockFile(mockDataFolder + "/instance_hold_bad_instance_id.json"));
           } else if (badDataValue != null) {
             if (badDataValue.equals("java.lang.NullPointerException")) {
               req.response()
@@ -282,7 +302,7 @@ public class PatronResourceImplTest {
             req.response()
               .setStatusCode(201)
               .putHeader("content-type", "application/json")
-              .end(readMockFile(mockDataFolder + "/instances/instance_holds_create.json"));
+              .end(readMockFile(mockDataFolder + "/instance_holds_create.json"));
           }
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
@@ -322,36 +342,30 @@ public class PatronResourceImplTest {
         }
       } else if (req.path().equals("/circulation/requests/"  + badCancelHoldId)) {
         final String badDataValue = req.getHeader("x-okapi-bad-data");
-        switch (badDataValue) {
-          case "404":
-            req.response()
-              .setStatusCode(404)
-              .putHeader("content-type", "text/plain")
-              .end("hold not found");
-            break;
-          case "403":
-            req.response()
-              .setStatusCode(403)
-              .putHeader("content-type", "text/plain")
-              .end("access denied");
-            break;
-          case "401":
-            req.response()
-              .setStatusCode(401)
-              .putHeader("content-type", "text/plain")
-              .end("unable to cancel hold -- unauthorized");
-            break;
-          case "400":
-            req.response()
-              .setStatusCode(400)
-              .putHeader("content-type", "text/plain")
-              .end("unable to process request -- constraint violation");
-            break;
-          default:
-            req.response()
-              .setStatusCode(500)
-              .end("internal server error, contact administrator");
-            break;
+        if (badDataValue.equals("404")) {
+          req.response()
+            .setStatusCode(404)
+            .putHeader("content-type", "text/plain")
+            .end("hold not found");
+        } else if (badDataValue.equals("403")) {
+          req.response()
+            .setStatusCode(403)
+            .putHeader("content-type", "text/plain")
+            .end("access denied");
+        } else if (badDataValue.equals("401")) {
+          req.response()
+            .setStatusCode(401)
+            .putHeader("content-type", "text/plain")
+            .end("unable to cancel hold -- unauthorized");
+        } else if (badDataValue.equals("400")) {
+          req.response()
+            .setStatusCode(400)
+            .putHeader("content-type", "text/plain")
+            .end("unable to process request -- constraint violation");
+        } else {
+          req.response()
+            .setStatusCode(500)
+            .end("internal server error, contact administrator");
         }
       } else if (req.path().equals(holdingsStorage + holdingsRecordId) ||
         req.path().equals(holdingsStorage + intransitItemId)) {
@@ -365,12 +379,27 @@ public class PatronResourceImplTest {
           req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/accounts/accounts_all_inactive.json"));
-        } else if (accountParametersMatch(req)) {
+          .end(readMockFile(mockDataFolder + "/accounts_all_inactive.json"));
+        } else if (accountParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/accounts/accounts_all_active.json"));
+            .end(readMockFile(mockDataFolder + "/accounts_all_active.json"));
+        } else if (accountParametersWithSortByMatch(req)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/accounts_all_active_and_sorted.json"));
+        } else if (accountParametersMatch(req, 0)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/accounts_total.json"));
+        } else if (accountParametersMatch(req, 2) && offsetMatch(req, 1)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/accounts_one_record.json"));
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
@@ -378,22 +407,22 @@ public class PatronResourceImplTest {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/chargeitems/chargeitem_book1.json"));
+          .end(readMockFile(mockDataFolder + "/chargeitem_book1.json"));
       } else if (req.path().equals("/chargeitem/" + chargeItemBook2Id)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/chargeitems/chargeitem_book2.json"));
+          .end(readMockFile(mockDataFolder + "/chargeitem_book2.json"));
       } else if (req.path().equals("/chargeitem/" + chargeItemBook3Id)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/chargeitems/chargeitem_book3.json"));
+          .end(readMockFile(mockDataFolder + "/chargeitem_book3.json"));
       } else if (req.path().equals("/chargeitem/" + chargeItemCameraId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/chargeitems/chargeitem_camera.json"));
+          .end(readMockFile(mockDataFolder + "/chargeitem_camera.json"));
       } else if (req.path().equals("/inventory/instances")) {
         if (req.query() == null || ! req.query().matches("query=holdingsRecords\\.id%3D%3D%22.*%22")) {
           req.response().setStatusCode(500).end("Unexpected /inventory/instances query: " + req.query());
@@ -402,10 +431,10 @@ public class PatronResourceImplTest {
         String file;
         String id = req.query().substring(33, req.query().length() - 3);
         switch (id) {
-        case holdingsBook1Id:  file = "/instances/instance_book1.json";  break;
-        case holdingsBook2Id:  file = "/instances/instance_book2.json";  break;
-        case holdingsBook3Id:  file = "/instances/instance_book3.json";  break;
-        case holdingsCameraId: file = "/instances/instance_camera.json"; break;
+        case holdingsBook1Id:  file = "/instance_book1.json";  break;
+        case holdingsBook2Id:  file = "/instance_book2.json";  break;
+        case holdingsBook3Id:  file = "/instance_book3.json";  break;
+        case holdingsCameraId: file = "/instance_camera.json"; break;
         default:
           req.response().setStatusCode(500).end(
               "Unexpected holdings id " + id + " in /inventory/instances query: " + req.query());
@@ -421,32 +450,32 @@ public class PatronResourceImplTest {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/items/item_book1.json"));
+          .end(readMockFile(mockDataFolder + "/item_book1.json"));
       } else if (req.path().equals("/inventory/items/" + itemBook2Id)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/items/item_book2.json"));
+          .end(readMockFile(mockDataFolder + "/item_book2.json"));
       } else if (req.path().equals("/inventory/items/" + itemBook3Id)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/items/item_book3.json"));
+          .end(readMockFile(mockDataFolder + "/item_book3.json"));
       } else if (req.path().equals("/inventory/items/" + goodItemId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/items/item_book4.json"));
+          .end(readMockFile(mockDataFolder + "/item_book4.json"));
       } else if (req.path().equals("/inventory/items/" + checkedoutItemId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/items/item_checkedout.json"));
-      } else if (req.path().equals("/inventory/items/" + intransitItemId)) {
+          .end(readMockFile(mockDataFolder + "/item_checkedout.json"));
+      }  else if (req.path().equals("/inventory/items/" + intransitItemId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/items/item_intransit.json"));
+          .end(readMockFile(mockDataFolder + "/item_intransit.json"));
       } else if (req.path().equals("/inventory/items/" + missingHoldingsRecordId)) {
         req.response()
           .setStatusCode(200)
@@ -456,28 +485,28 @@ public class PatronResourceImplTest {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/items/item_camera.json"));
+          .end(readMockFile(mockDataFolder + "/item_camera.json"));
       } else if (req.path().equals("/inventory/items/")) {
         if (req.query().equals(String.format("query=barcode%%3D%%3D%s", book1Barcode))) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/items/item_book1.json"));
+            .end(readMockFile(mockDataFolder + "/item_book1.json"));
         } else if (req.query().equals(String.format("query=barcode%%3D%%3D%s", book2Barcode))) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/items/item_book2.json"));
+            .end(readMockFile(mockDataFolder + "/item_book2.json"));
         } else if (req.query().equals(String.format("query=barcode%%3D%%3D%s", book3Barcode))) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/items/item_book3.json"));
+            .end(readMockFile(mockDataFolder + "/item_book3.json"));
         } else if (req.query().equals(String.format("query=barcode%%3D%%3D%s", cameraBarcode))) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/items/item_camera.json"));
+            .end(readMockFile(mockDataFolder + "/item_camera.json"));
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
@@ -485,33 +514,33 @@ public class PatronResourceImplTest {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/feefines/feefine_no_item.json"));
+          .end(readMockFile(mockDataFolder + "/feefine_no_item.json"));
       } else if (req.path().equals("/feefines/" + feeFineOverdueId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/feefines/feefine_overdue.json"));
+          .end(readMockFile(mockDataFolder + "/feefine_overdue.json"));
       } else if (req.path().equals("/feefines/" + feeFineDamageBookId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/feefines/feefine_damage_book.json"));
+          .end(readMockFile(mockDataFolder + "/feefine_damage_book.json"));
       } else if (req.path().equals("/feefines/" + feeFineDamageEquipmentId)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/feefines/feefine_damage_equipment.json"));
+          .end(readMockFile(mockDataFolder + "/feefine_damage_equipment.json"));
       } else if (req.path().equals("/circulation/renew-by-id")) {
         if (req.getHeader("x-okapi-bad-user-id") != null) {
           req.response()
             .setStatusCode(422)
             .putHeader("content-type", "application/json")
-            .sendFile(mockDataFolder + "/renews/renew_bad_user_id.json");
+            .sendFile(mockDataFolder + "/renew_bad_user_id.json");
         } else if (req.getHeader("x-okapi-bad-item-id") != null) {
           req.response()
             .setStatusCode(422)
             .putHeader("content-type", "application/json")
-            .sendFile(mockDataFolder + "/renews/renew_bad_item_id.json");
+            .sendFile(mockDataFolder + "/renew_bad_item_id.json");
         } else if (req.getHeader("x-okapi-bad-data") != null) {
           final String badDataValue = req.getHeader("x-okapi-bad-data");
           if (badDataValue.equals("java.lang.NullPointerException")) {
@@ -534,7 +563,7 @@ public class PatronResourceImplTest {
           req.response()
             .setStatusCode(201)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/renews/renew_create.json"));
+            .end(readMockFile(mockDataFolder + "/renew_create.json"));
         }
       } else if (req.path().equals("/circulation/rules/request-policy")) {
           // These checks require that the query string parameters be produced in a specific order
@@ -542,33 +571,33 @@ public class PatronResourceImplTest {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
-              .end(readMockFile(mockDataFolder + "/requestPolicies/requestPolicyId_all.json"));
+              .end(readMockFile(mockDataFolder + "/requestPolicyId_all.json"));
           } else if (rulesParametersMatch(req, materialTypeId2)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
-              .end(readMockFile(mockDataFolder + "/requestPolicies/requestPolicyId_hold.json"));
+              .end(readMockFile(mockDataFolder + "/requestPolicyId_hold.json"));
           } else if (rulesParametersMatch(req, materialTypeId3)) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
-              .end(readMockFile(mockDataFolder + "/requestPolicies/requestPolicyId_page.json"));
+              .end(readMockFile(mockDataFolder + "/requestPolicyId_page.json"));
           }
       } else if (req.path().contains("/request-policy-storage/request-policies/" + requestPolicyIdAll)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/requestPolicies/requestPolicy_all.json"));
+          .end(readMockFile(mockDataFolder + "/requestPolicy_all.json"));
       } else if (req.path().contains("/request-policy-storage/request-policies/" + requestPolicyIdHold)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/requestPolicies/requestPolicy_hold.json"));
+            .end(readMockFile(mockDataFolder + "/requestPolicy_hold.json"));
       } else if (req.path().contains("/request-policy-storage/request-policies/" + requestPolicyIdPage)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/requestPolicies/requestPolicy_page.json"));
+          .end(readMockFile(mockDataFolder + "/requestPolicy_page.json"));
       } else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
@@ -576,20 +605,36 @@ public class PatronResourceImplTest {
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
   }
 
-  private boolean accountParametersMatch(HttpServerRequest request) {
+  private boolean accountParametersMatch(HttpServerRequest request, int limit) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("limit=" + limit)
+      && queryString.contains("query=(userId==" + goodUserId + " and status.name==Open)");
+  }
+
+  private boolean accountParametersWithSortByMatch(HttpServerRequest request) {
     final var queryString = UrlDecoder.decode(request.query());
 
     return queryString.contains("limit=" + Integer.MAX_VALUE)
-      && queryString.contains("query=(userId==" + goodUserId + " and status.name==Open)");
+      && queryString
+      .contains(String.format("query=(userId==%s and status.name==Open) sortBy %s", goodUserId, sortByParam));
   }
 
   private boolean requestsParametersMatch(HttpServerRequest request, int limit) {
     final var queryString = UrlDecoder.decode(request.query());
 
     return queryString.contains("limit=" + limit)
-      && queryString.contains("query=(requesterId==" + goodUserId + " and status==Open*)");
+      && queryString.contains(String.format("query=(requesterId==%s and status==Open*)", goodUserId));
   }
-  
+
+  private boolean requestsParametersWithSortByMatchMatch(HttpServerRequest request, int limit) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("limit=" + limit)
+      && queryString
+      .contains(String.format("query=(requesterId==%s and status==Open*) sortBy %s", goodUserId, sortByParam));
+  }
+
   private Boolean isInactiveUser(HttpServerRequest request) {
     final var queryString = UrlDecoder.decode(request.query());
     return queryString.contains(inactiveUserId);
@@ -599,7 +644,14 @@ public class PatronResourceImplTest {
     final var queryString = UrlDecoder.decode(request.query());
 
     return queryString.contains("limit=" + limit)
-      && queryString.contains("query=(userId==" + goodUserId + " and status.name==Open)");
+      && queryString.contains(String.format("query=(userId==%s and status.name==Open)", goodUserId));
+  }
+
+  private boolean loansParametersWithSortByMatch(HttpServerRequest request, int limit) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("limit=" + limit) && queryString
+      .contains(String.format("query=(userId==%s and status.name==Open) sortBy %s", goodUserId, sortByParam));
   }
 
   private boolean rulesParametersMatch(HttpServerRequest request, String materialTypeId) {
@@ -609,6 +661,12 @@ public class PatronResourceImplTest {
       && queryString.contains("loan_type_id=" + loanTypeId1)
       && queryString.contains("patron_type_id=" + patronGroupId1)
       && queryString.contains("location_id=" + effectiveLocation1);
+  }
+
+  private boolean offsetMatch(HttpServerRequest request, int offset) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("offset=" + offset);
   }
 
   @AfterEach
@@ -640,70 +698,87 @@ public class PatronResourceImplTest {
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
-    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/responses/response_testGetPatronAccountById.json"));
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testGetPatronAccountById.json"));
 
-    assertEquals(3, json.getInteger("totalLoans"));
-    assertEquals(3, json.getJsonArray("loans").size());
+    verifyAccount(json, expectedJson);
 
-    assertEquals(3, json.getInteger("totalHolds"));
-    assertEquals(3, json.getJsonArray("holds").size());
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testGetPatronAccountByIdSortedByItemId() {
+    logger.info("Testing for successful patron services account retrieval by id and sorted by item title");
+
+    final Response r = given()
+        .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
+        .queryParam("sortBy", sortByParam)
+      .when()
+        .get(accountPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+        .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(
+      readMockFile(mockDataFolder + "/response_testGetPatronAccountById_sortedByItemTitle.json"));
+
+    verifyAccount(json, expectedJson);
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testGetPatronAccountByIdWithLimitAndOffset() {
+    logger.info("Testing for successful patron services account retrieval by id");
+
+    final Response response = given()
+        .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("limit", "2")
+        .queryParam("offset", "1")
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
+      .when()
+        .get(accountPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+        .extract().response();
+
+    final String body = response.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testGetPatronAccountByIdByLimitAndOffset.json"));
+
+    assertEquals(1, json.getInteger("totalLoans"));
+    assertEquals(1, json.getJsonArray("loans").size());
+
+    assertEquals(1, json.getInteger("totalHolds"));
+    assertEquals(1, json.getJsonArray("holds").size());
 
     JsonObject money = json.getJsonObject("totalCharges");
-    assertEquals(255.0, money.getDouble("amount"));
+    assertEquals(50.0, money.getDouble("amount"));
     assertEquals("USD", money.getString("isoCurrencyCode"));
-    assertEquals(5, json.getInteger("totalChargesCount"));
-    assertEquals(5, json.getJsonArray("charges").size());
+    assertEquals(1, json.getInteger("totalChargesCount"));
+    assertEquals(1, json.getJsonArray("charges").size());
 
-    for (int i = 0; i < 5; i++) {
-      final JsonObject jo = json.getJsonArray("charges").getJsonObject(i);
-
-      boolean found = false;
-      for (int j = 0; j < 5; j++) {
-        final JsonObject expectedJO = expectedJson.getJsonArray("charges").getJsonObject(j);
-        if (verifyCharge(expectedJO, jo)) {
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        fail("Unexpected charge: " + jo);
-      }
-    }
-
-    for (int i = 0; i < 3; i++) {
-      final JsonObject jo = json.getJsonArray("holds").getJsonObject(i);
-
-      boolean found = false;
-      for (int j = 0; j < 3; j++) {
-        final JsonObject expectedJO = expectedJson.getJsonArray("holds").getJsonObject(j);
-        if (verifyHold(expectedJO, jo)) {
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        fail("Unexpected id: " + jo.getString("requestId"));
-      }
-    }
-
-    for (int i = 0; i < 3; i++) {
-      final JsonObject jo = json.getJsonArray("loans").getJsonObject(i);
-
-      boolean found = false;
-      for (int j = 0; j < 3; j++) {
-        final JsonObject expectedJO = expectedJson.getJsonArray("loans").getJsonObject(j);
-        if (verifyLoan(expectedJO, jo)) {
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        fail("Unexpected loan: " + jo);
-      }
-    }
+    assertEquals(expectedJson, json);
 
     // Test done
     logger.info("Test done");
@@ -711,6 +786,46 @@ public class PatronResourceImplTest {
 
   @Test
   public final void testGetPatronAccountByIdNoLists() {
+    logger.info("Testing for successful patron services account retrieval by id without item lists");
+
+    final Response r = given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("limit", "0")
+        .queryParam("includeLoans", "true")
+        .queryParam("includeHolds", "true")
+        .queryParam("includeCharges", "true")
+      .when()
+        .get(accountPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(200)
+        .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+
+    assertEquals(3, json.getInteger("totalLoans"));
+    assertEquals(0, json.getJsonArray("loans").size());
+
+    assertEquals(3, json.getInteger("totalHolds"));
+    assertEquals(0, json.getJsonArray("holds").size());
+
+    final JsonObject money = json.getJsonObject("totalCharges");
+    assertEquals(0.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(3, json.getInteger("totalChargesCount"));
+    assertEquals(0, json.getJsonArray("charges").size());
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testGetPatronAccountByIdNoListsWhenLimitZero() {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
 
     final Response r = given()
@@ -764,13 +879,13 @@ public class PatronResourceImplTest {
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
-  
+
     assertEquals(1, json.getInteger("totalLoans"));
     assertEquals(0, json.getJsonArray("loans").size());
-  
+
     assertEquals(0, json.getInteger("totalHolds"));
     assertEquals(0, json.getJsonArray("holds").size());
-  
+
     final JsonObject money = json.getJsonObject("totalCharges");
     assertEquals(100.0, money.getDouble("amount"));
     assertEquals("USD", money.getString("isoCurrencyCode"));
@@ -821,7 +936,7 @@ public class PatronResourceImplTest {
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
-    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/responses/response_testPostPatronAccountByIdItemByItemIdRenew.json"));
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdRenew.json"));
 
     verifyLoan(expectedJson, json);
 
@@ -1032,7 +1147,7 @@ public class PatronResourceImplTest {
       .extract()
         .asString();
 
-    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/responses/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
 
     verifyHold(expectedHold, new JsonObject(holdCancelResponse));
 
@@ -1068,7 +1183,7 @@ public class PatronResourceImplTest {
       .extract()
         .asString();
 
-    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/responses/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
 
     verifyHold(expectedHold, new JsonObject(holdCancelResponse));
 
@@ -1132,7 +1247,7 @@ public class PatronResourceImplTest {
       .extract()
         .asString();
 
-    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/responses/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"));
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"));
 
     verifyHold(expectedHold, new JsonObject(hold));
 
@@ -1356,8 +1471,8 @@ public class PatronResourceImplTest {
 
   static Stream<Arguments> itemRequestsParams() {
     return Stream.of(
-      Arguments.of(availableItemId, "/responses/response_testPostPatronAccountByIdItemByItemIdPage.json" ),
-      Arguments.of(checkedoutItemId, "/responses/response_testPostPatronAccountByIdItemByItemIdHold.json")
+      Arguments.of(availableItemId, "/response_testPostPatronAccountByIdItemByItemIdPage.json" ),
+      Arguments.of(checkedoutItemId, "/response_testPostPatronAccountByIdItemByItemIdHold.json")
     );
   }
 
@@ -1375,6 +1490,71 @@ public class PatronResourceImplTest {
     }
 
     return false;
+  }
+
+  private void verifyAccount(JsonObject actualAccountJson, JsonObject expectedAccountJson) {
+    assertEquals(3, actualAccountJson.getInteger("totalLoans"));
+    assertEquals(3, actualAccountJson.getJsonArray("loans").size());
+
+    assertEquals(3, actualAccountJson.getInteger("totalHolds"));
+    assertEquals(3, actualAccountJson.getJsonArray("holds").size());
+
+    JsonObject money = actualAccountJson.getJsonObject("totalCharges");
+    assertEquals(255.0, money.getDouble("amount"));
+    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals(5, actualAccountJson.getInteger("totalChargesCount"));
+    assertEquals(5, actualAccountJson.getJsonArray("charges").size());
+
+    for (int i = 0; i < 5; i++) {
+      final JsonObject jo = actualAccountJson.getJsonArray("charges").getJsonObject(i);
+
+      boolean found = false;
+      for (int j = 0; j < 5; j++) {
+        final JsonObject expectedJO = expectedAccountJson.getJsonArray("charges").getJsonObject(j);
+        if (verifyCharge(expectedJO, jo)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (found == false) {
+        fail("Unexpected charge: " + jo.toString());
+      }
+    }
+
+    for (int i = 0; i < 3; i++) {
+      final JsonObject jo = actualAccountJson.getJsonArray("holds").getJsonObject(i);
+
+      boolean found = false;
+      for (int j = 0; j < 3; j++) {
+        final JsonObject expectedJO = expectedAccountJson.getJsonArray("holds").getJsonObject(j);
+        if (verifyHold(expectedJO, jo)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (found == false) {
+        fail("Unexpected id: " + jo.getString("requestId"));
+      }
+    }
+
+    for (int i = 0; i < 3; i++) {
+      final JsonObject jo = actualAccountJson.getJsonArray("loans").getJsonObject(i);
+
+      boolean found = false;
+      for (int j = 0; j < 3; j++) {
+        final JsonObject expectedJO = expectedAccountJson.getJsonArray("loans").getJsonObject(j);
+        if (verifyLoan(expectedJO, jo)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (found == false) {
+        fail("Unexpected loan: " + jo.toString());
+      }
+    }
   }
 
   private void verifyAmount(JsonObject expectedAmount, JsonObject actualAmount) {

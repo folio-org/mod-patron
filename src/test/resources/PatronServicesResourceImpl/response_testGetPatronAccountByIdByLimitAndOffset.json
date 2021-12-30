@@ -1,0 +1,54 @@
+{
+    "totalCharges": {
+        "amount": 50.0,
+        "isoCurrencyCode": "USD"
+    },
+    "totalChargesCount": 1,
+    "totalLoans": 1,
+    "totalHolds": 1,
+    "charges": [
+      {
+        "item" : {
+          "instanceId" : "6e024cd5-c19a-4fe0-a2cd-64ce5814c694",
+          "itemId" : "7d9dfe70-0158-489d-a7ed-2789eac277b3",
+          "title" : "Some Book About Something",
+          "author" : "Some Guy; Another Guy"
+        },
+        "chargeAmount" : {
+          "amount" : 50.0,
+          "isoCurrencyCode" : "USD"
+        },
+        "accrualDate" : "2018-01-31T00:00:01.000+00:00",
+        "state" : "Paid Partially",
+        "reason" : "damage - rebinding"
+      }
+    ],
+    "holds": [
+        {
+            "requestId": "24a5de73-859b-491f-825d-a96ea47297fb",
+            "item": {
+                "instanceId": "0b559683-9059-4b6d-bb6a-c55aa3518df3",
+                "itemId": "dbdcb2b5-b302-4254-a55d-3c429794a4bb",
+                "title": "Hold On",
+                "author": "Jon Anderson; Trevor Rabin; Chris Squire"
+            },
+            "requestDate": "2018-05-01T05:01:15.000+00:00",
+            "status": "Open - Awaiting pickup",
+            "queuePosition":3
+        }
+    ],
+    "loans": [
+        {
+            "id": "76d957eb-df99-41b8-a495-d03541d079fb",
+            "item": {
+                "instanceId": "b3f5ef6d-2309-4935-858d-870cd7801632",
+                "itemId": "7d4bfd9c-dc46-46a1-89bd-160c61fe46d8",
+                "title": "This Book Is Overdue!",
+                "author": "Tempus Fugit"
+            },
+            "loanDate": "2018-03-05T22:01:00.000+00:00",
+            "dueDate": "2018-04-01T09:50:00.000+00:00",
+            "overdue": true
+        }
+    ]
+}

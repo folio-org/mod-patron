@@ -23,6 +23,7 @@ import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.*;
 
+import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -34,6 +35,7 @@ import java.util.concurrent.CompletionException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -70,6 +72,9 @@ public class PatronServicesResourceImpl implements Patron {
   @Override
   public void getPatronAccountById(String id, boolean includeLoans,
       boolean includeCharges, boolean includeHolds,
+      String sortBy,
+      int offset,
+      int limit,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
@@ -87,15 +92,15 @@ public class PatronServicesResourceImpl implements Patron {
             account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrencyCode("USD"));
             account.setTotalChargesCount(0);
 
-            final CompletableFuture<Account> cf1 = getLoans(id, includeLoans, okapiHeaders,
+            final CompletableFuture<Account> cf1 = getLoans(id, sortBy, limit, offset, includeLoans, okapiHeaders,
               httpClient)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = getRequests(id, includeHolds, okapiHeaders,
+            final CompletableFuture<Account> cf2 = getRequests(id, sortBy, limit, offset, includeHolds, okapiHeaders,
               httpClient)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
-            final CompletableFuture<Account> cf3 = getAccounts(id, okapiHeaders, httpClient)
+            final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges))
                 .thenCompose(charges -> {
                   if (includeCharges) {
@@ -134,32 +139,36 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id,
+    String sortBy, int limit, int offset,
     Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
-    final var queryParameters = Map.of(
-      "limit", String.valueOf(getLimit(true)),
-      "query", String.format("(userId==%s and status.name==Open)", id));
+
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, true));
+    queryParameters.put("query", buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/accounts", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getRequests(String id,
+    String sortBy, int limit, int offset,
     boolean includeHolds, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
 
-    final var queryParameters = Map.of(
-      "limit", String.valueOf(getLimit(includeHolds)),
-      "query", String.format("(requesterId==%s and status==Open*)", id));
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds));
+    queryParameters.put("query", buildQueryWithRequesterId(id, sortBy));
 
     return httpClient.get("/circulation/requests", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   private CompletableFuture<JsonObject> getLoans(String id,
+    String sortBy, int limit, int offset,
     boolean includeLoans, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
 
-    final var queryParameters = Map.of(
-      "limit", String.valueOf(getLimit(includeLoans)),
-      "query", String.format("(userId==%s and status.name==Open)", id));
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeLoans));
+    queryParameters.put("query", buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/circulation/loans", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
@@ -375,6 +384,7 @@ public class PatronServicesResourceImpl implements Patron {
           }
           sb.append(((JsonObject) o).getString(JSON_FIELD_NAME));
         }
+        sb.append(((JsonObject) o).getString(Constants.JSON_FIELD_NAME));
       }
     }
 
@@ -528,16 +538,18 @@ public class PatronServicesResourceImpl implements Patron {
     return account;
   }
 
-  private int getLimit(boolean includeItem) {
-    final int limit;
-
-    if (includeItem) {
-      limit = Integer.MAX_VALUE;
-    } else {
-      limit = 1; // until RMB-96 is implemented, then 0
+  private Map<String, String> getLimitAndOffsetParams(int limit, int offset, boolean includeItem) {
+    if (!includeItem || limit == 0) {
+      return Map.of(
+        "limit", "0");
     }
-
-    return limit;
+    if (limit > 0) {
+      return Map.of(
+        "limit", String.valueOf(limit),
+        "offset", String.valueOf(offset));
+    }
+    return Map.of(
+      "limit", String.valueOf(Integer.MAX_VALUE));
   }
 
   private Future<javax.ws.rs.core.Response> handleError(Throwable throwable) {
@@ -726,4 +738,19 @@ public class PatronServicesResourceImpl implements Patron {
 
     return result;
   }
+
+  private String buildQueryWithUserId(String userId, String sortBy) {
+    if(StringUtils.isNoneBlank(sortBy)) {
+      return String.format("(userId==%s and status.name==Open) sortBy %s", userId, sortBy);
+    }
+    return String.format("(userId==%s and status.name==Open)", userId);
+  }
+
+  private String buildQueryWithRequesterId(String requesterId, String sortBy) {
+    if(StringUtils.isNoneBlank(sortBy)) {
+      return String.format("(requesterId==%s and status==Open*) sortBy %s", requesterId, sortBy);
+    }
+    return String.format("(requesterId==%s and status==Open*)", requesterId);
+  }
+
 }
