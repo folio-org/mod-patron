@@ -42,7 +42,6 @@ public class RequestTypeItemStatusWhiteListTests {
     assertFalse(RequestTypeItemStatusWhiteList.canCreateRequestForItem(ItemStatus.ON_ORDER, RequestType.PAGE));
   }
 
-
   @Test
   public void canCreateHoldRequestWhenItemStatusInProcess() {
     assertTrue(RequestTypeItemStatusWhiteList.canCreateRequestForItem(ItemStatus.IN_PROCESS, RequestType.HOLD));
