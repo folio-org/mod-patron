@@ -1,0 +1,13 @@
+{
+  "errors": [
+    {
+      "message": "Cannot create a request with item ID but no holdings record ID",
+      "parameters": [
+        {
+          "key": "holdingsRecordId",
+          "value": null
+        }
+      ]
+    }
+  ]
+}

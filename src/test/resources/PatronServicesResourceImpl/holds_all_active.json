@@ -2,6 +2,30 @@
   "requests": [
     {
       "id": "8bbac557-d66f-4571-bbbf-47a107cc1589",
+      "requestLevel": "Item",
+      "instanceId": "255f82f3-5b1b-4239-93e4-ec6acf03ad9d",
+      "holdingsRecordId": "aa86b7ba-4c45-11ec-81d3-0242ac130003",
+      "instance": {
+        "title": "I Want to Hold Your Hand",
+        "identifiers": [
+          {
+            "value": "0262012103",
+            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+          },
+          {
+            "value": "9780262012102",
+            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+          },
+          {
+            "value": "2003065165",
+            "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb"
+          }
+        ],
+        "contributorNames": [
+          {"name": "John Lennon"},
+          {"name": "Paul McCartney"}
+        ]
+      },
       "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
       "itemId": "26670295-716a-4f84-8f65-2ef31707c017",
       "requestType": "Hold",
@@ -10,16 +34,36 @@
       "status": "Open - Not yet filled",
       "position": 1,
       "item" :{
-        "title": "I Want to Hold Your Hand",
-        "instanceId": "255f82f3-5b1b-4239-93e4-ec6acf03ad9d",
-        "contributors": [
-          {"name": "John Lennon"},
-          {"name": "Paul McCartney"}
-        ]
+        "barcode": "12345"
       }
     },
     {
       "id": "24a5de73-859b-491f-825d-a96ea47297fb",
+      "requestLevel": "Item",
+      "instanceId": "0b559683-9059-4b6d-bb6a-c55aa3518df3",
+      "holdingsRecordId": "aa86b9e0-4c45-11ec-81d3-0242ac130003",
+      "instance": {
+        "title": "Hold On",
+        "identifiers": [
+          {
+            "value": "0262012103",
+            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+          },
+          {
+            "value": "9780262012102",
+            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+          },
+          {
+            "value": "2003065165",
+            "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb"
+          }
+        ],
+        "contributorNames": [
+          {"name": "Jon Anderson"},
+          {"name": "Trevor Rabin"},
+          {"name": "Chris Squire"}
+        ]
+      },
       "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
       "itemId": "dbdcb2b5-b302-4254-a55d-3c429794a4bb",
       "requestType": "Hold",
@@ -28,17 +72,35 @@
       "status": "Open - Awaiting pickup",
       "position": 3,
       "item" :{
-        "title": "Hold On",
-        "instanceId": "0b559683-9059-4b6d-bb6a-c55aa3518df3",
-        "contributors": [
-          {"name": "Jon Anderson"},
-          {"name": "Trevor Rabin"},
-          {"name": "Chris Squire"}
-        ]
+        "barcode": "23456"
       }
     },
     {
       "id": "69273dca-eacf-4225-9065-c05bbffc9d7d",
+      "requestLevel": "Item",
+      "instanceId": "4bb0fffc-fe55-4445-819d-9bc5b8cd47ef",
+      "holdingsRecordId": "aa86bad0-4c45-11ec-81d3-0242ac130003",
+      "instance": {
+        "title": "Hold On, I'm Comin'",
+        "identifiers": [
+          {
+            "value": "0262012103",
+            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+          },
+          {
+            "value": "9780262012102",
+            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+          },
+          {
+            "value": "2003065165",
+            "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb"
+          }
+        ],
+        "contributorNames": [
+          {"name": "Isaac Hayes"},
+          {"name": "David Porter"}
+        ]
+      },
       "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
       "itemId": "c3cfcb01-4f5d-40df-856a-c86ffe8f2d5f",
       "requestType": "Hold",
@@ -48,12 +110,7 @@
       "requestExpirationDate": "2020-01-31T15:22:12Z",
       "position": 5,
       "item" :{
-        "title": "Hold On, I'm Comin'",
-        "instanceId": "4bb0fffc-fe55-4445-819d-9bc5b8cd47ef",
-        "contributors": [
-          {"name": "Isaac Hayes"},
-          {"name": "David Porter"}
-        ]
+        "barcode": "34567"
       }
     }
   ],
