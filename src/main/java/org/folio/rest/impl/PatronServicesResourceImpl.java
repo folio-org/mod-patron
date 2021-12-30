@@ -32,9 +32,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
@@ -66,7 +63,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
-  private final Logger log = LogManager.getLogger(PatronServicesResourceImpl.class);
 
   @Validate
   @Override
@@ -128,12 +124,10 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
         })
         .exceptionally(throwable -> {
-          logError(throwable);
           asyncResultHandler.handle(handleError(throwable));
           return null;
         });
     } catch (Exception e) {
-      logError(e);
       asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
@@ -195,12 +189,10 @@ public class PatronServicesResourceImpl implements Patron {
             asyncResultHandler.handle(succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
-            logError(throwable);
             asyncResultHandler.handle(handleRenewPOSTError(throwable));
             return null;
           });
     } catch (Exception e) {
-      logError(e);
       asyncResultHandler.handle(succeededFuture(PostPatronAccountItemRenewByIdAndItemIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
@@ -218,7 +210,6 @@ public class PatronServicesResourceImpl implements Patron {
     requestFactory.createRequestByItem(id, itemId, entity)
       .whenComplete((holdJSON, throwable) -> {
         if (throwable != null) {
-          logError(throwable);
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
             asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(
@@ -250,12 +241,10 @@ public class PatronServicesResourceImpl implements Patron {
                 asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
               })
               .exceptionally(e -> {
-                logError(e);
                 asyncResultHandler.handle(handleItemHoldPOSTError(e));
                 return null;
               });
           } catch (Exception e) {
-            logError(e);
             asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(e.getMessage())));
           }
         }
@@ -283,7 +272,6 @@ public class PatronServicesResourceImpl implements Patron {
             JsonObject cancelRequest = createCancelRequest(anUpdatedRequest, entity);
             return httpClient.put("/circulation/requests/" + holdId, cancelRequest, okapiHeaders);
           } catch (Exception e) {
-              logError(e);
               asyncResultHandler.handle(handleHoldCancelPOSTError(e));
               return null;
             }
@@ -293,12 +281,10 @@ public class PatronServicesResourceImpl implements Patron {
             body -> asyncResultHandler.handle(succeededFuture(
               PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0]))))
         .exceptionally(throwable -> {
-            logError(throwable);
             asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
             return null;
         });
     } catch (Exception e) {
-      logError(e);
       asyncResultHandler.handle(handleHoldCancelPOSTError(e));
     }
   }
@@ -334,18 +320,12 @@ public class PatronServicesResourceImpl implements Patron {
             asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
-            logError(throwable);
             asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
             return null;
           });
     } catch (Exception e) {
-      logError(e);
       asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
     }
-  }
-
-  private void logError(Throwable throwable) {
-    log.log(Level.ERROR, throwable.getMessage(), throwable);
   }
 
   private Account addLoans(Account account, JsonObject body, boolean includeLoans) {
