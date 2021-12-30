@@ -71,11 +71,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
-  private final Logger log = LogManager.getLogger(PatronServicesResourceImpl.class);
-
-  private void logError(Throwable throwable) {
-    log.log(Level.ERROR, throwable.getMessage(), throwable);
-  }
 
   @Validate
   @Override
@@ -137,7 +132,6 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
         })
         .exceptionally(throwable -> {
-          logError(throwable);
           asyncResultHandler.handle(handleError(throwable));
           return null;
         });
@@ -225,7 +219,6 @@ public class PatronServicesResourceImpl implements Patron {
       .whenComplete((holdJSON, throwable) -> {
         if (throwable != null) {
           Throwable cause = throwable.getCause();
-          logError(throwable);
           if (cause instanceof ValidationException) {
             asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(
               ((ValidationException) cause).getErrors())));
@@ -368,8 +361,6 @@ public class PatronServicesResourceImpl implements Patron {
 
   private Item getItem(String itemId, JsonObject itemJson) {
     final JsonArray contributors = itemJson.getJsonArray(JSON_FIELD_CONTRIBUTORS, new JsonArray());
-    System.out.println("22222222222222222222");
-    System.out.println(contributors);
     final StringBuilder sb = new StringBuilder();
 
     if (contributors != null) {
@@ -436,8 +427,6 @@ public class PatronServicesResourceImpl implements Patron {
 
     if (totalHolds > 0 && includeHolds) {
       final JsonArray holdsJson = body.getJsonArray("requests");
-      System.out.println("!!!!!!!!!!!!!!!!!");
-      System.out.println(holdsJson);
       for (Object o : holdsJson) {
         if (o instanceof JsonObject) {
           JsonObject holdJson = (JsonObject) o;
