@@ -13,7 +13,7 @@
       "position": 3,
       "instance": {
         "title": "Hold On",
-        "contributors": [
+        "contributorNames": [
           {
             "name": "Jon Anderson"
           },
@@ -40,7 +40,7 @@
       "position": 5,
       "instance": {
         "title": "Hold On, I'm Comin'",
-        "contributors": [
+        "contributorNames": [
           {"name": "Isaac Hayes"},
           {"name": "David Porter"}
         ]
@@ -59,7 +59,7 @@
       "position": 1,
       "instance": {
         "title": "I Want to Hold Your Hand",
-        "contributors": [
+        "contributorNames": [
           {"name": "John Lennon"},
           {"name": "Paul McCartney"}
         ]

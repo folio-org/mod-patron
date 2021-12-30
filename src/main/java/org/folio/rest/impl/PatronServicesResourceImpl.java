@@ -398,7 +398,7 @@ public class PatronServicesResourceImpl implements Patron {
     JsonObject instanceJson = body.getJsonObject(JSON_FIELD_INSTANCE);
     itemJson.put(JSON_FIELD_INSTANCE_ID, body.getString(JSON_FIELD_INSTANCE_ID));
     itemJson.put(JSON_FIELD_TITLE, instanceJson.getString(JSON_FIELD_TITLE));
-    itemJson.put(JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(JSON_FIELD_CONTRIBUTORS));
+    itemJson.put(JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(JSON_FIELD_CONTRIBUTOR_NAMES));
     return getItem(body.getString(JSON_FIELD_ITEM_ID), itemJson);
   }
 
