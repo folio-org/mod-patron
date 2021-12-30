@@ -21,7 +21,12 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
-import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.*;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond403WithTextPlain;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
 
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
@@ -33,6 +38,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -63,6 +71,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+  private final Logger log = LogManager.getLogger(PatronServicesResourceImpl.class);
+
+  private void logError(Throwable throwable) {
+    log.log(Level.ERROR, throwable.getMessage(), throwable);
+  }
 
   @Validate
   @Override
@@ -124,6 +137,7 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
         })
         .exceptionally(throwable -> {
+          logError(throwable);
           asyncResultHandler.handle(handleError(throwable));
           return null;
         });
@@ -211,6 +225,7 @@ public class PatronServicesResourceImpl implements Patron {
       .whenComplete((holdJSON, throwable) -> {
         if (throwable != null) {
           Throwable cause = throwable.getCause();
+          logError(throwable);
           if (cause instanceof ValidationException) {
             asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(
               ((ValidationException) cause).getErrors())));
@@ -353,7 +368,8 @@ public class PatronServicesResourceImpl implements Patron {
 
   private Item getItem(String itemId, JsonObject itemJson) {
     final JsonArray contributors = itemJson.getJsonArray(JSON_FIELD_CONTRIBUTORS, new JsonArray());
-
+    System.out.println("22222222222222222222");
+    System.out.println(contributors);
     final StringBuilder sb = new StringBuilder();
 
     if (contributors != null) {
@@ -364,7 +380,6 @@ public class PatronServicesResourceImpl implements Patron {
           }
           sb.append(((JsonObject) o).getString(JSON_FIELD_NAME));
         }
-        sb.append(((JsonObject) o).getString(Constants.JSON_FIELD_NAME));
       }
     }
 
@@ -377,11 +392,13 @@ public class PatronServicesResourceImpl implements Patron {
 
   private Item getItem(JsonObject body) {
     JsonObject itemJson = body.getJsonObject(JSON_FIELD_ITEM);
+    if (itemJson == null) {
+      itemJson = new JsonObject();
+    }
     JsonObject instanceJson = body.getJsonObject(JSON_FIELD_INSTANCE);
     itemJson.put(JSON_FIELD_INSTANCE_ID, body.getString(JSON_FIELD_INSTANCE_ID));
     itemJson.put(JSON_FIELD_TITLE, instanceJson.getString(JSON_FIELD_TITLE));
-    itemJson.put(JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(JSON_FIELD_CONTRIBUTOR_NAMES));
-
+    itemJson.put(JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(JSON_FIELD_CONTRIBUTORS));
     return getItem(body.getString(JSON_FIELD_ITEM_ID), itemJson);
   }
 
@@ -419,6 +436,8 @@ public class PatronServicesResourceImpl implements Patron {
 
     if (totalHolds > 0 && includeHolds) {
       final JsonArray holdsJson = body.getJsonArray("requests");
+      System.out.println("!!!!!!!!!!!!!!!!!");
+      System.out.println(holdsJson);
       for (Object o : holdsJson) {
         if (o instanceof JsonObject) {
           JsonObject holdJson = (JsonObject) o;

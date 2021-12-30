@@ -97,6 +97,7 @@ public class PatronResourceImplTest {
   private final String holdingsBook2Id = "75d0799a-66d8-46cf-a7e3-ed7390425112";
   private final String holdingsBook3Id = "39a2de0a-95a3-4870-9320-57476afc2faf";
   private final String holdingsCameraId = "29c35636-08d2-46d8-bb37-c1209a0db638";
+  private final String nullItemId = "34c35536-08d2-46d8-bb37-c1209a0db638";
   private final String instanceBook1Id = "6e024cd5-c19a-4fe0-a2cd-64ce5814c694";
   private final String instanceBook2Id = "b3f5ef6d-2309-4935-858d-870cd7801632";
   private final String instanceBook3Id = "f3482bed-a7e9-4f07-beb0-ebd693331350";
@@ -446,6 +447,12 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(instances.encodePrettily());
+
+      } else if (req.path().equals("/inventory/items/" + nullItemId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end();
       } else if (req.path().equals("/inventory/items/" + itemBook1Id)) {
         req.response()
           .setStatusCode(200)
@@ -480,7 +487,7 @@ public class PatronResourceImplTest {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/items/item_without_holdingsRecordId.json"));
+          .end(readMockFile(mockDataFolder + "/item_without_holdingsRecordId.json"));
       } else if (req.path().equals("/inventory/items/" + itemCameraId)) {
         req.response()
           .setStatusCode(200)
@@ -1068,6 +1075,43 @@ public class PatronResourceImplTest {
     final String body = r.getBody().asString();
     final Errors errors = Json.decodeValue(body, Errors.class);
     final String expectedMessage = "HoldingsRecordId for this item is null";
+    assertNotNull(errors);
+    assertNotNull(errors.getErrors());
+    assertEquals(1, errors.getErrors().size());
+    Error error = errors.getErrors().get(0);
+    assertEquals(expectedMessage, error.getMessage());
+
+    assertNotNull(error.getParameters());
+    assertEquals(1, error.getParameters().size());
+    assertEquals("itemId", error.getParameters().get(0).getKey());
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testCannotPostPatronAccountItemHoldByIdAndItemIdIfItemIsNullInModInventory() {
+    logger.info("Testing creating a hold on an item for the specified user");
+
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", nullItemId)
+      .when()
+      .post(accountPath + itemPath + holdPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(422)
+      .extract().response();
+
+    final String body = r.getBody().asString();
+    final Errors errors = Json.decodeValue(body, Errors.class);
+    final String expectedMessage = "Selected item is null in mod-inventory";
     assertNotNull(errors);
     assertNotNull(errors.getErrors());
     assertEquals(1, errors.getErrors().size());
