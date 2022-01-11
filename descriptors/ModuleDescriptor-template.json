@@ -34,7 +34,12 @@
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold",
           "permissionsRequired": ["patron.hold.item.post"],
           "modulePermissions": [
-            "circulation.requests.item.post"
+            "circulation.requests.item.post",
+            "inventory.items.item.get",
+            "inventory-storage.holdings.item.get",
+            "users.item.get",
+            "circulation.rules.request-policy.get",
+            "circulation-storage.request-policies.item.get"
           ]
         },
         {
