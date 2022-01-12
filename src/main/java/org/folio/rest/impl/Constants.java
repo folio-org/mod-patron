@@ -8,10 +8,8 @@ class Constants {
   static final String JSON_FIELD_REQUEST_DATE = "requestDate";
   static final String JSON_FIELD_NAME = "name";
   static final String JSON_FIELD_ITEM = "item";
-  static final String JSON_FIELD_INSTANCE = "instance";
   static final String JSON_FIELD_TOTAL_RECORDS = "totalRecords";
   static final String JSON_FIELD_CONTRIBUTORS = "contributors";
-  static final String JSON_FIELD_CONTRIBUTOR_NAMES = "contributorNames";
   static final String JSON_FIELD_TITLE = "title";
   static final String JSON_FIELD_HOLDINGS_RECORD_ID = "holdingsRecordId";
   static final String JSON_FIELD_INSTANCE_ID = "instanceId";
@@ -27,9 +25,4 @@ class Constants {
   static final String JSON_FIELD_CANCELLATION_USER_ID = "cancelledByUserId";
   static final String JSON_FIELD_CANCELLATION_ADDITIONAL_INFO = "cancellationAdditionalInformation";
   static final String JSON_FIELD_PATRON_COMMENTS = "patronComments";
-  static final String JSON_FIELD_REQUEST_LEVEL = "requestLevel";
-  static final String JSON_FIELD_REQUEST_TYPE = "requestType";
-  static final String JSON_FIELD_REQUESTER = "requester";
-  static final String JSON_FIELD_REQUESTER_ID = "requesterId";
-  static final String JSON_FIELD_FULFILMENT_PREFERENCE = "fulfilmentPreference";
 }

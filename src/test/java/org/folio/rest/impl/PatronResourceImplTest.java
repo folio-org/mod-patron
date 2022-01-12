@@ -4,7 +4,6 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.utils.Utils.readMockFile;
-import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -17,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.UrlDecoder;
 import org.folio.patron.utils.Utils;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.tools.utils.ModuleName;
 import org.hamcrest.Matchers;
@@ -72,7 +70,6 @@ public class PatronResourceImplTest {
   private final String renewPath = "/renew";
   private final String cancelPath = "/cancel";
   private final String okapiBadDataHeader = "x-okapi-bad-data";
-  private final String holdingsStorage = "/holdings-storage/holdings/";
 
   private final String goodUserId = "1ec54964-70f0-44cc-bd19-2a892ea0d336";
   private final String inactiveUserId = "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4";
@@ -83,7 +80,6 @@ public class PatronResourceImplTest {
   private final String badInstanceId = "68cb9692-aa5f-459d-8791-f79486c11225";
   private final String goodCancelHoldId = "dd238b5b-01fc-4205-83b8-888888888888";
   private final String badCancelHoldId = "dd238b5b-01fc-4205-83b8-999999999999";
-  private final String missingHoldingsRecordId = "dd238b5b-01fc-4205-83b8-777777777999";
 
   private final String chargeItemBook1Id = "e785f572-c5d4-4bbc-91ba-c0d62ebebc20";
   private final String chargeItemBook2Id = "cb958743-ddcd-4bf6-907a-e6962b66bfe9";
@@ -97,7 +93,6 @@ public class PatronResourceImplTest {
   private final String holdingsBook2Id = "75d0799a-66d8-46cf-a7e3-ed7390425112";
   private final String holdingsBook3Id = "39a2de0a-95a3-4870-9320-57476afc2faf";
   private final String holdingsCameraId = "29c35636-08d2-46d8-bb37-c1209a0db638";
-  private final String nullItemId = "34c35536-08d2-46d8-bb37-c1209a0db638";
   private final String instanceBook1Id = "6e024cd5-c19a-4fe0-a2cd-64ce5814c694";
   private final String instanceBook2Id = "b3f5ef6d-2309-4935-858d-870cd7801632";
   private final String instanceBook3Id = "f3482bed-a7e9-4f07-beb0-ebd693331350";
@@ -123,7 +118,6 @@ public class PatronResourceImplTest {
   private static final String availableItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
   private static final String checkedoutItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
   private static final String sortByParam = "item.title/sort.ascending";
-  private static final String holdingsRecordId = "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19";
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
@@ -131,7 +125,7 @@ public class PatronResourceImplTest {
   }
 
   @BeforeEach
-  public void setUp(Vertx vertx, VertxTestContext context) {
+  public void setUp(Vertx vertx, VertxTestContext context) throws Exception {
     vertx.exceptionHandler(context::failNow);
 
     moduleName = ModuleName.getModuleName().replaceAll("_", "-");
@@ -225,28 +219,23 @@ public class PatronResourceImplTest {
               String content = new String(body.getBytes());
               JsonObject jsonContent = new JsonObject(content);
 
-              if (jsonContent.getString(JSON_FIELD_HOLDINGS_RECORD_ID) == null) {
+              if (jsonContent != null) {
+                String itemId = jsonContent.getString("itemId");
+                RequestType requestType = RequestType.from(jsonContent.getString("requestType"));
+
+                var responsePayload = StringUtils.EMPTY;
+
+                if (itemId.equals(checkedoutItemId) && requestType == RequestType.HOLD) {
+                  responsePayload = readMockFile(mockDataFolder + "/holds_create.json");
+                } else if (itemId.equals(availableItemId) && requestType == RequestType.PAGE) {
+                  responsePayload = readMockFile(mockDataFolder + "/page_create.json");
+                }
+
                 req.response()
-                  .setStatusCode(422)
-                  .putHeader("content-type", "application/json")
-                  .end(readMockFile(mockDataFolder + "/items/item_hold_missing_holdings_record_id.json"));
+                    .setStatusCode(201)
+                    .putHeader("content-type", "application/json")
+                    .end(responsePayload);
               }
-
-              String itemId = jsonContent.getString("itemId");
-              RequestType requestType = RequestType.from(jsonContent.getString("requestType"));
-
-              var responsePayload = StringUtils.EMPTY;
-
-              if (itemId.equals(checkedoutItemId) && requestType == RequestType.HOLD) {
-                responsePayload = readMockFile(mockDataFolder + "/holds_create.json");
-              } else if (itemId.equals(availableItemId) && requestType == RequestType.PAGE) {
-                responsePayload = readMockFile(mockDataFolder + "/page_create.json");
-              }
-
-              req.response()
-                .setStatusCode(201)
-                .putHeader("content-type", "application/json")
-                .end(responsePayload);
             });
           }
         } else {
@@ -368,13 +357,6 @@ public class PatronResourceImplTest {
             .setStatusCode(500)
             .end("internal server error, contact administrator");
         }
-      } else if (req.path().equals(holdingsStorage + holdingsRecordId) ||
-        req.path().equals(holdingsStorage + intransitItemId)) {
-
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/holdingsRecord.json"));
       } else if (req.path().equals("/accounts")) {
         if (isInactiveUser(req)) {
           req.response()
@@ -447,12 +429,6 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(instances.encodePrettily());
-
-      } else if (req.path().equals("/inventory/items/" + nullItemId)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end();
       } else if (req.path().equals("/inventory/items/" + itemBook1Id)) {
         req.response()
           .setStatusCode(200)
@@ -483,11 +459,6 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/item_intransit.json"));
-      } else if (req.path().equals("/inventory/items/" + missingHoldingsRecordId)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/item_without_holdingsRecordId.json"));
       } else if (req.path().equals("/inventory/items/" + itemCameraId)) {
         req.response()
           .setStatusCode(200)
@@ -1047,80 +1018,6 @@ public class PatronResourceImplTest {
     final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder + responseFile));
 
     verifyRequests(expectedJson, json);
-
-    // Test done
-    logger.info("Test done");
-  }
-
-  @Test
-  public final void testCannotPostPatronAccountItemHoldByIdAndItemIdMissingField() {
-    logger.info("Testing creating a hold on an item for the specified user");
-
-    final Response r = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", missingHoldingsRecordId)
-      .when()
-      .post(accountPath + itemPath + holdPath)
-      .then()
-      .log().all()
-      .contentType(ContentType.JSON)
-      .statusCode(422)
-      .extract().response();
-
-    final String body = r.getBody().asString();
-    final Errors errors = Json.decodeValue(body, Errors.class);
-    final String expectedMessage = "HoldingsRecordId for this item is null";
-    assertNotNull(errors);
-    assertNotNull(errors.getErrors());
-    assertEquals(1, errors.getErrors().size());
-    Error error = errors.getErrors().get(0);
-    assertEquals(expectedMessage, error.getMessage());
-
-    assertNotNull(error.getParameters());
-    assertEquals(1, error.getParameters().size());
-    assertEquals("itemId", error.getParameters().get(0).getKey());
-
-    // Test done
-    logger.info("Test done");
-  }
-
-  @Test
-  public final void testCannotPostPatronAccountItemHoldByIdAndItemIdIfItemIsNullInModInventory() {
-    logger.info("Testing creating a hold on an item for the specified user");
-
-    final Response r = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(mockDataFolder + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
-      .pathParam("accountId", goodUserId)
-      .pathParam("itemId", nullItemId)
-      .when()
-      .post(accountPath + itemPath + holdPath)
-      .then()
-      .log().all()
-      .contentType(ContentType.JSON)
-      .statusCode(422)
-      .extract().response();
-
-    final String body = r.getBody().asString();
-    final Errors errors = Json.decodeValue(body, Errors.class);
-    final String expectedMessage = "Selected item is null in mod-inventory";
-    assertNotNull(errors);
-    assertNotNull(errors.getErrors());
-    assertEquals(1, errors.getErrors().size());
-    Error error = errors.getErrors().get(0);
-    assertEquals(expectedMessage, error.getMessage());
-
-    assertNotNull(error.getParameters());
-    assertEquals(1, error.getParameters().size());
-    assertEquals("itemId", error.getParameters().get(0).getKey());
 
     // Test done
     logger.info("Test done");

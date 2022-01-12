@@ -26,7 +26,7 @@ class HoldHelpersTest {
 
     final String userIdCanceledHold = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
     final String cancellationReasonId = "dd238b5b-01fc-4205-83b8-888888888888";
-    final String requestId = "d0f032db-9579-443e-a2ac-6add937f4aa2";
+    final String requestId = "dd238b5b-01fc-4205-83b8-888888888888";
     final String holdCancellationReason = "I really don't want it anymore";
     final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 

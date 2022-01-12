@@ -1,24 +1,15 @@
 package org.folio.rest.impl;
 
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
-import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
-import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
-import static org.folio.rest.impl.Constants.JSON_VALUE_HOLD_SHELF;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
-import org.folio.patron.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Hold;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -28,43 +19,27 @@ import io.vertx.core.json.JsonObject;
 class RequestObjectFactory {
   private final Map<String, String> okapiHeaders;
   private final VertxOkapiHttpClient httpClient;
-  private final ItemRepository itemRepository;
-  private final UserRepository userRepository;
-  private final HoldingsRecordRepository holdingsRecordRepository;
 
   RequestObjectFactory(VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
     this.okapiHeaders = okapiHeaders;
     this.httpClient = httpClient;
-    this.itemRepository = new ItemRepository(httpClient);
-    this.userRepository = new UserRepository(httpClient);
-    this.holdingsRecordRepository = new HoldingsRecordRepository(httpClient);
   }
 
   CompletableFuture<JsonObject> createRequestByItem(String patronId, String itemId, Hold entity) {
-
-    return completedFuture(new RequestContext(patronId, itemId, entity))
-      .thenCompose(this::fetchItem)
-      .thenCompose(this::fetchInstanceId)
-      .thenCompose(this::fetchUser)
-      .thenCompose(this::fetchRequestType)
-      .thenApply(context -> {
-        if (context.getRequestType() != RequestType.NONE) {
+    return getRequestType(patronId, itemId)
+      .thenApply(requestType -> {
+        if (requestType != RequestType.NONE) {
           final JsonObject holdJSON = new JsonObject()
-            .put("requestLevel", "Item")
-            .put("requestType", "Hold")
-            .put("instanceId", context.getInstanceId())
-            .put(JSON_FIELD_ITEM_ID, itemId)
-            .put(JSON_FIELD_HOLDINGS_RECORD_ID,
-              context.getItem().getString(JSON_FIELD_HOLDINGS_RECORD_ID))
+            .put(Constants.JSON_FIELD_ITEM_ID, itemId)
             .put("requesterId", patronId)
-            .put("requestType", context.getRequestType().getValue())
-            .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-            .put("fulfilmentPreference", JSON_VALUE_HOLD_SHELF)
-            .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-            .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
+            .put("requestType", requestType.getValue())
+            .put(Constants.JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+            .put("fulfilmentPreference", Constants.JSON_VALUE_HOLD_SHELF)
+            .put(Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+            .put(Constants.JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
           if (entity.getExpirationDate() != null) {
-            holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
+            holdJSON.put(Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE,
               new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
           }
           return holdJSON;
@@ -74,55 +49,35 @@ class RequestObjectFactory {
       });
   }
 
-  private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
-    return itemRepository.getItem(requestContext.getItemId(), okapiHeaders)
-      .thenApply(requestContext::setItem);
-  }
+  private CompletableFuture<RequestType> getRequestType(String patronId, String itemId) {
+    final var itemRepository = new ItemRepository(httpClient);
+    final var userRepository = new UserRepository(httpClient);
 
-  private CompletableFuture<RequestContext> fetchInstanceId(RequestContext requestContext)
-    throws ValidationException {
+    CompletableFuture<JsonObject> userFuture = userRepository.getUser(patronId, okapiHeaders);
+    CompletableFuture<JsonObject> itemFuture = itemRepository.getItem(itemId, okapiHeaders);
 
-    return holdingsRecordRepository.getHoldingsRecord(requestContext.getItem(), okapiHeaders)
-      .thenApply(requestContext::setInstanceId);
-  }
-
-  private CompletableFuture<RequestContext> fetchUser(RequestContext requestContext) {
-    return userRepository.getUser(requestContext.getPatronId(), okapiHeaders)
-      .thenApply(requestContext::setUser);
-  }
-
-  private CompletableFuture<RequestContext> fetchRequestType(RequestContext requestContext) {
-    return CompletableFuture.completedFuture(createRequestPolicyIdCriteria(requestContext))
-      .thenCompose(this::lookupRequestPolicyId)
-      .thenCompose(this::getRequestPolicy)
-      .thenApply(context -> RequestPolicy.from(context.getRequestPolicyId()))
-      .thenApply(requestContext::setRequestPolicy)
-      .thenApply(this::getRequestType)
-      .thenApply(requestContext::setRequestType);
-  }
-
-  private RequestContext createRequestPolicyIdCriteria(RequestContext requestContext) {
-    JsonObject itemJson = requestContext.getItem();
     RequestTypeParameters requestTypeParams = new RequestTypeParameters();
-    requestTypeParams.setItemMaterialTypeId(getJsonObjectProperty(itemJson, "materialType", JSON_FIELD_ID));
-    requestTypeParams.setItemLoanTypeId(getJsonObjectProperty(itemJson, "permanentLoanType", JSON_FIELD_ID));
-    requestTypeParams.setItemLocationId(getJsonObjectProperty(itemJson, "effectiveLocation", JSON_FIELD_ID));
-    requestTypeParams.setPatronGroupId(requestContext.getUser().getString(JSON_FIELD_PATRON_GROUP));
-    requestTypeParams.setItemStatus(ItemStatus.from(getJsonObjectProperty(itemJson, "status", JSON_FIELD_NAME)));
 
-    return requestContext
-      .setRequestTypeParams(requestTypeParams);
+    return CompletableFuture.allOf(userFuture, itemFuture)
+      .thenApply(x -> createRequestPolicyIdCriteria(itemFuture, userFuture, requestTypeParams))
+      .thenCompose(this::lookupRequestPolicyId)
+      .thenCompose(policyIdResponse ->
+          getRequestPolicy(policyIdResponse.getString("requestPolicyId"), okapiHeaders))
+      .thenApply(RequestPolicy::from)
+      .thenApply(requestPolicy -> getRequestType(requestPolicy, requestTypeParams.getItemStatus()));
   }
 
-  private String getJsonObjectProperty(JsonObject jsonObject, String objectName, String propertyName) {
-    return Optional.of(jsonObject.getJsonObject(objectName))
-      .map(entries -> entries.getString(propertyName))
-      .orElse(null);
+  private RequestType getRequestType(RequestPolicy policy,  ItemStatus itemStatus) {
+    List<RequestType> allowableRequestTypes = policy.getRequestTypes();
+    for (RequestType aRequestType : allowableRequestTypes) {
+      if (RequestTypeItemStatusWhiteList.canCreateRequestForItem(itemStatus, aRequestType)){
+        return aRequestType;
+      }
+    }
+    return RequestType.NONE;
   }
 
-  private CompletableFuture<RequestContext> lookupRequestPolicyId(RequestContext requestContext) {
-    RequestTypeParameters criteria = requestContext.getRequestTypeParams();
-
+  private CompletableFuture<JsonObject> lookupRequestPolicyId(RequestTypeParameters criteria) {
     final var queryParameters = Map.of(
       "item_type_id", criteria.getItemMaterialTypeId(),
       "loan_type_id", criteria.getItemLoanTypeId(),
@@ -130,22 +85,33 @@ class RequestObjectFactory {
       "location_id", criteria.getItemLocationId());
 
     return httpClient.get("/circulation/rules/request-policy", queryParameters, okapiHeaders)
-      .thenApply(ResponseInterpreter::verifyAndExtractBody)
-      .thenApply(requestContext::setRequestPolicyId);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
-  private CompletableFuture<RequestContext> getRequestPolicy(RequestContext requestContext) {
-    return httpClient.get("/request-policy-storage/request-policies/" + requestContext.getRequestPolicyId().getString("requestPolicyId"),
+  private CompletableFuture<JsonObject> getRequestPolicy(String requestPolicyId, Map<String, String> okapiHeaders) {
+    return httpClient.get("/request-policy-storage/request-policies/" + requestPolicyId,
         Map.of(), okapiHeaders)
-      .thenApply(ResponseInterpreter::verifyAndExtractBody)
-      .thenApply(requestContext::setRequestPolicyId);
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
-  private RequestType getRequestType(RequestContext requestContext) {
-    return requestContext.getRequestPolicy().getRequestTypes().stream()
-      .filter(aRequestType -> RequestTypeItemStatusWhiteList
-        .canCreateRequestForItem(requestContext.getRequestTypeParams().getItemStatus(), aRequestType))
-      .findFirst()
-      .orElse(RequestType.NONE);
+  private RequestTypeParameters createRequestPolicyIdCriteria(CompletableFuture<JsonObject> itemFuture,
+                                                              CompletableFuture<JsonObject> userFuture,
+                                                              RequestTypeParameters requestTypeParams) {
+    JsonObject itemJson = itemFuture.join();
+    requestTypeParams.setItemMaterialTypeId(getJsonObjectProperty(itemJson, "materialType", JSON_FIELD_ID));
+    requestTypeParams.setItemLoanTypeId(getJsonObjectProperty(itemJson, "permanentLoanType", JSON_FIELD_ID));
+    requestTypeParams.setItemLocationId(getJsonObjectProperty(itemJson, "effectiveLocation", JSON_FIELD_ID));
+    requestTypeParams.setPatronGroupId(userFuture.join().getString(JSON_FIELD_PATRON_GROUP));
+    requestTypeParams.setItemStatus(ItemStatus.from(getJsonObjectProperty(itemJson, "status", JSON_FIELD_NAME)));
+
+    return requestTypeParams;
+  }
+
+  private String getJsonObjectProperty(JsonObject jsonObject, String objectName, String propertyName) {
+    JsonObject destinedObject = jsonObject.getJsonObject(objectName);
+    if (destinedObject != null) {
+      return destinedObject.getString(propertyName);
+    }
+    return null;
   }
 }

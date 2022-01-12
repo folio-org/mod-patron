@@ -1,81 +1,23 @@
 {
-  "id": "d0f032db-9579-443e-a2ac-6add937f4aa2",
-  "requestLevel": "Item",
+  "id": "dd238b5b-01fc-4205-83b8-888888888888",
+  "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+  "itemId": "32e5757d-6566-466e-b69d-994eb33d2b73",
   "requestType": "Hold",
-  "requestDate": "2021-09-06T15:37:55.000+00:00",
+  "requestDate": "2018-05-30T08:01:30Z",
   "requestExpirationDate": "3000-01-30T08:16:30Z",
-  "requesterId": "bec20636-fb68-41fd-84ea-2cf910673599",
+  "fulfilmentPreference": "Hold Shelf",
   "status": "Closed - Cancelled",
   "cancellationReasonId": "b548b182-55c2-4741-b169-616d9cd995a8",
   "canceledByUserId": "ab5a5c57-491c-4b08-8f39-907810e14913",
   "cancellationAdditionalInformation": "I don't want it anymore",
-  "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
-  "holdingsRecordId": "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19",
-  "patronComments": "I need this book. Item level comment.",
-  "instance": {
-    "title": "A semantic web primer",
-    "identifiers": [
-      {
-        "value": "0262012103",
-        "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
-      },
-      {
-        "value": "9780262012102",
-        "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
-      },
-      {
-        "value": "2003065165",
-        "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb"
-      }
-    ],
-    "contributorNames": [
-      {
-        "name": "Antoniou, Grigoris"
-      },
-      {
-        "name": "Van Harmelen, Frank"
-      }
+  "item" :{
+    "title": "Something's Got a Hold on Me",
+    "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
+    "contributors": [
+      {"name": "Etta James"},
+      {"name": "Leroy Kirkland"},
+      {"name": "Pearl Woods"}
     ]
   },
-  "itemId": "32e5757d-6566-466e-b69d-994eb33d2b73",
-  "item": {
-    "barcode": "90000",
-    "location": {
-      "name": "Annex",
-      "libraryName": "Datalogisk Institut",
-      "code": "KU/CC/DI/A"
-    },
-    "enumeration": "",
-    "status": "Checked out",
-    "callNumber": "TK5105.88815 . A58 2004 FT MEADE",
-    "callNumberComponents": {
-      "callNumber": "TK5105.88815 . A58 2004 FT MEADE"
-    }
-  },
-  "requester": {
-    "lastName": "morty",
-    "firstName": "panic",
-    "barcode": "456",
-    "patronGroupId": "3684a786-6671-4268-8ed0-9db82ebca60b"
-  },
-  "fulfilmentPreference": "Hold Shelf",
-  "pickupServicePointId": "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
-  "metadata": {
-    "createdDate": "2021-09-06T15:37:56.188+00:00",
-    "createdByUserId": "226dfeeb-0264-57fc-afcd-d5df2d705dd5",
-    "updatedDate": "2021-09-06T15:37:56.188+00:00",
-    "updatedByUserId": "226dfeeb-0264-57fc-afcd-d5df2d705dd5"
-  },
-  "position": 1,
-  "loan": {
-    "dueDate": "2021-09-06T16:36:56.029Z"
-  },
-  "pickupServicePoint": {
-    "name": "Circ Desk 2",
-    "code": "cd2",
-    "discoveryDisplayName": "Circulation Desk -- Back Entrance",
-    "description": null,
-    "shelvingLagTime": null,
-    "pickupLocation": true
-  }
+  "pickupServicePointId": "963396d7-c96f-4bb1-a24c-42e868a8823d"
 }

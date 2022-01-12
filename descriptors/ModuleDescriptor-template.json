@@ -69,7 +69,7 @@
     },
     {
       "id": "circulation",
-      "version": "12.0"
+      "version": "9.5 10.0 11.0"
     },
     {
       "id": "feesfines",
