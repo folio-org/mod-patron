@@ -1,5 +1,9 @@
 ## 5.2.0 IN-PROGRESS
 
+## 5.1.1 2022-01-12 MINOR RELEASE
+* main purpose is reverting [MODPATRON-74](https://issues.folio.org/browse/MODPATRON-74) 
+and [MODPATRON-92](https://issues.folio.org/browse/MODPATRON-92) to be able to work with circulation interface less than 12
+
 ## 5.1.0 2022-01-12
 
 * Inactive patrons can now view their account details (MODPATRON-69)
