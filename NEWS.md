@@ -1,7 +1,14 @@
-## 5.1.0 IN-PROGRESS
+## 5.2.0 IN-PROGRESS
+
+## 5.1.0 2022-01-12
 
 * Inactive patrons can now view their account details (MODPATRON-69)
 * Upgrade to RMB 33.0.4 and Log4J to 2.16.0. (CVE-2021-44228) (MODPATRON-94)
+* [MODPATRON-79](https://issues.folio.org/browse/MODPATRON-79): Support sorting of patron account info
+* [MODPATRON-80](https://issues.folio.org/browse/MODPATRON-80): Support paging of patron account info
+* [MODPATRON-100](https://issues.folio.org/browse/MODPATRON-100): Inconsistent handling of invalid limit parameter
+* [MODPATRON-74](https://issues.folio.org/browse/MODPATRON-74): Update request schema according to request data migration changes
+* [MODPATRON-92](https://issues.folio.org/browse/MODPATRON-92): Update interface circulation version to 12.0
 
 ## 5.0.0 2021-10-05
 
