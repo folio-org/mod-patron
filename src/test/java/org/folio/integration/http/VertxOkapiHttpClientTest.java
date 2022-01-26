@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 
 import io.vertx.core.Vertx;
@@ -35,7 +36,7 @@ import io.vertx.ext.web.client.WebClient;
 import lombok.SneakyThrows;
 
 class VertxOkapiHttpClientTest {
-  private final WireMockServer fakeWebServer = new WireMockServer();
+  private final WireMockServer fakeWebServer = new WireMockServer(options().dynamicPort());
   private Vertx vertx;
 
   @BeforeEach
