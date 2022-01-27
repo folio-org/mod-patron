@@ -1,5 +1,7 @@
 ## 5.2.0 IN-PROGRESS
 
+* Upgrade to RMB 33.2.4 (MODPATRON-103)
+
 ## 5.1.0 2022-01-12
 
 * Inactive patrons can now view their account details (MODPATRON-69)
