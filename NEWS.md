@@ -1,4 +1,4 @@
-## 5.2.0 IN-PROGRESS
+## 5.2.0 2022-02-22
 
 * Upgrade to RMB 33.2.4 (MODPATRON-103)
 
