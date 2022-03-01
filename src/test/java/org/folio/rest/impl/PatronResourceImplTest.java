@@ -302,11 +302,11 @@ public class PatronResourceImplTest {
                 .putHeader("content-type", "text/plain")
                 .end(badDataValue);
             }
-          } else if (tlrEnabled && req.getHeader("X-No-Item-Id") != null) {
+          } else if (tlrEnabled && req.getHeader("X-Okapi-TLR-no-item-id") != null) {
             req.response()
               .setStatusCode(201)
               .putHeader("content-type", "application/json")
-              .end(readMockFile(mockDataFolder + "/instance_hold_tlr_create.json"));
+              .end(readMockFile(mockDataFolder + "/instance_holds_tlr_create.json"));
           } else {
             req.response()
               .setStatusCode(201)
@@ -1290,7 +1290,7 @@ public class PatronResourceImplTest {
 
     tlrEnabled = tlrState;
     final var hold = given()
-        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader, new Header("X-No-Item-Id", tlrNoItemId)))
+        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader, noItemId))
         .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
         .and().body(readMockFile(mockDataFolder
             + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
