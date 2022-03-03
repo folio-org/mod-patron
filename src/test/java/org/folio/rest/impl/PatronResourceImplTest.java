@@ -301,7 +301,7 @@ public class PatronResourceImplTest {
                 .putHeader("content-type", "text/plain")
                 .end(badDataValue);
             }
-          } else if (tlrEnabled && req.getHeader("X-Okapi-TLR-no-item-id") != null) {
+          } else if (tlrEnabled && req.getHeader("X-Okapi-TLR-No-Item-id") != null) {
             req.response()
               .setStatusCode(201)
               .putHeader("content-type", "application/json")
@@ -1293,7 +1293,7 @@ public class PatronResourceImplTest {
 
     if (noItemId) {
       headers = new Headers(tenantHeader, urlHeader, contentTypeHeader,
-        new Header("X-Okapi-TLR-no-item-id", "application/json"));
+        new Header("X-Okapi-TLR-No-Item-id", "application/json"));
     } else {
       headers =  new Headers(tenantHeader, urlHeader, contentTypeHeader);
     }
