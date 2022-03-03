@@ -63,7 +63,6 @@ public class PatronResourceImplTest {
   private final Header tenantHeader = new Header("X-Okapi-Tenant", "patronresourceimpltest");
   private final Header urlHeader = new Header("X-Okapi-Url", "http://localhost:" + serverPort);
   private final Header contentTypeHeader = new Header("Content-Type", "application/json");
-  private final Header noItemId = new Header("X-Okapi-TLR-no-item-id", "application/json");
 
   private final String mockDataFolder = "PatronServicesResourceImpl";
   private final String accountPath = "/patron/account/{accountId}";
@@ -1284,13 +1283,23 @@ public class PatronResourceImplTest {
   @ParameterizedTest
   @MethodSource("tlrFeatureStates")
   public final void testPostPatronAccountByIdInstanceByInstanceIdHold(String responseFile,
-    boolean tlrState) {
+    boolean tlrState, boolean noItemId) {
 
     logger.info("Testing creating a hold on an instance for the specified user");
 
     tlrEnabled = tlrState;
+
+    Headers headers;
+
+    if (noItemId) {
+      headers = new Headers(tenantHeader, urlHeader, contentTypeHeader,
+        new Header("X-Okapi-TLR-no-item-id", "application/json"));
+    } else {
+      headers =  new Headers(tenantHeader, urlHeader, contentTypeHeader);
+    }
+
     final var hold = given()
-        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader, noItemId))
+        .headers(headers)
         .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
         .and().body(readMockFile(mockDataFolder
             + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
@@ -1474,8 +1483,8 @@ public class PatronResourceImplTest {
 
   static Stream<Arguments> tlrFeatureStates() {
     return Stream.of(
-      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHoldNoItemId.json", true),
-      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json", false)
+      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHoldNoItemId.json", true, true),
+      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json", false, false)
     );
   }
 
