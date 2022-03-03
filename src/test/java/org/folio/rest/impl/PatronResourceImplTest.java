@@ -1201,7 +1201,7 @@ public class PatronResourceImplTest {
 
     final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
 
-    verifyHold(expectedHold, new JsonObject(holdCancelResponse), null);
+    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
 
     // Test done
     logger.info("Test done");
@@ -1237,7 +1237,7 @@ public class PatronResourceImplTest {
 
     final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
 
-    verifyHold(expectedHold, new JsonObject(holdCancelResponse), null);
+    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
 
     // Test done
     logger.info("Test done");
@@ -1284,7 +1284,7 @@ public class PatronResourceImplTest {
   @ParameterizedTest
   @MethodSource("tlrFeatureStates")
   public final void testPostPatronAccountByIdInstanceByInstanceIdHold(String responseFile,
-    boolean tlrState, String tlrNoItemId) {
+    boolean tlrState) {
 
     logger.info("Testing creating a hold on an instance for the specified user");
 
@@ -1305,7 +1305,7 @@ public class PatronResourceImplTest {
 
     final var expectedHold = new JsonObject(readMockFile(mockDataFolder + responseFile));
 
-    verifyHold(expectedHold, new JsonObject(hold), tlrNoItemId);
+    verifyHold(expectedHold, new JsonObject(hold));
 
     // Test done
     logger.info("Test done");
@@ -1474,8 +1474,8 @@ public class PatronResourceImplTest {
 
   static Stream<Arguments> tlrFeatureStates() {
     return Stream.of(
-      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHoldNoItemId.json", true, "tlrhasnoitem"),
-      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json", false, null)
+      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHoldNoItemId.json", true),
+      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json", false)
     );
   }
 
@@ -1591,7 +1591,7 @@ public class PatronResourceImplTest {
       boolean found = false;
       for (int j = 0; j < 3; j++) {
         final JsonObject expectedJO = expectedAccountJson.getJsonArray("holds").getJsonObject(j);
-        if (verifyHold(expectedJO, jo, null)) {
+        if (verifyHold(expectedJO, jo)) {
           found = true;
           break;
         }
@@ -1626,12 +1626,12 @@ public class PatronResourceImplTest {
   }
 
   private void verifyRequests(JsonObject expectedHold, JsonObject actualHold) {
-    if (!verifyHold(expectedHold, actualHold, null)) {
+    if (!verifyHold(expectedHold, actualHold)) {
       fail("verification of request objects failed");
     }
   }
 
-  private boolean verifyHold(JsonObject expectedHold, JsonObject actualHold, String tlrNoItemId) {
+  private boolean verifyHold(JsonObject expectedHold, JsonObject actualHold) {
     if (expectedHold.getString("requestId").equals(actualHold.getString("requestId"))) {
       assertEquals(expectedHold.getString("pickupLocationId"), actualHold.getString("pickupLocationId"));
       assertEquals(expectedHold.getString("status"), actualHold.getString("status"));
@@ -1641,7 +1641,7 @@ public class PatronResourceImplTest {
           actualHold.getInteger("requestPosition"));
       assertEquals(expectedHold.getString("patronComments"),
           actualHold.getString("patronComments"));
-      return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"), tlrNoItemId);
+      return verifyItem(expectedHold.getJsonObject("item"), actualHold.getJsonObject("item"));
     }
     return false;
   }
@@ -1659,17 +1659,13 @@ public class PatronResourceImplTest {
   }
 
   private boolean verifyItem(JsonObject expectedItem, JsonObject actualItem) {
-    return verifyItem(expectedItem, actualItem, null);
-  }
+    if (Objects.equals(expectedItem.getString("itemId"), actualItem.getString("itemId"))) {
+      assertEquals(expectedItem.getString("instanceId"), actualItem.getString("instanceId"));
+      assertEquals(expectedItem.getString("title"), actualItem.getString("title"));
+      assertEquals(expectedItem.getString("author"), actualItem.getString("author"));
 
-  private boolean verifyItem(JsonObject expectedItem, JsonObject actualItem, String noItemId) {
-    assertEquals(expectedItem.getString("instanceId"), actualItem.getString("instanceId"));
-    assertEquals(expectedItem.getString("title"), actualItem.getString("title"));
-    assertEquals(expectedItem.getString("author"), actualItem.getString("author"));
-    if (tlrEnabled && noItemId != null) {
-      assertEquals(expectedItem.getString("itemId"),actualItem.getString("itemId"));
+      return true;
     }
-
-    return true;
+    return false;
   }
 }
