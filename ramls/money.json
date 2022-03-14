@@ -8,7 +8,7 @@
     "amount": {
       "type": "number",
       "description": "The amount of the fine or charge",
-      "example": "3.14"
+      "example": 3.14
     },
     "isoCurrencyCode": {
       "type": "string",
