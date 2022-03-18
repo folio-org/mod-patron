@@ -18,17 +18,17 @@
     "totalChargesCount": {
       "type": "integer",
       "description": "The total number of fines and charges for the patron",
-      "example": "10"
+      "example": 10
     },
     "totalLoans": {
       "type": "integer",
       "description": "The total number of items loaned to the patron",
-      "example": "10"
+      "example": 10
     },
     "totalHolds": {
       "type": "integer",
       "description": "The total number of requested items for the patron",
-      "example": "10"
+      "example": 10
     },
     "charges": {
       "type": "array",

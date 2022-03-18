@@ -88,7 +88,7 @@ traits:
             description: Returns the user account info
             body:
               application/json:
-                schema: account
+                type: account
                 example: !include examples/account.json
           400:
             description: Bad request
@@ -133,7 +133,7 @@ traits:
                   description: Returns the renewed loan data
                   body:
                     application/json:
-                      schema: loan
+                      type: loan
                       example: !include examples/loan.json
                 400:
                   description: Bad request
@@ -175,7 +175,7 @@ traits:
               is: [validate]
               body:
                 application/json:
-                  schema: hold
+                  type: hold
                   example: !include examples/hold.json
               responses:
                 201:
@@ -183,7 +183,7 @@ traits:
                     Returns data for a new hold request on the specified item
                   body:
                     application/json:
-                      schema: hold
+                      type: hold
                       example: !include examples/hold.json
                 400:
                   description: Bad request
@@ -240,7 +240,7 @@ traits:
               is: [validate]
               body:
                 application/json:
-                  schema: hold
+                  type: hold
                   example: !include examples/hold.json
               responses:
                 201:
@@ -248,7 +248,7 @@ traits:
                     Returns data for a new hold request on the selected item
                   body:
                     application/json:
-                      schema: hold
+                      type: hold
                       example: !include examples/hold.json
                 400:
                   description: Bad request
@@ -295,7 +295,7 @@ traits:
               description: cancels the request
               body:
                 application/json:
-                  schema: hold
+                  type: hold
                   example: !include examples/hold.json
               responses:
                 200:
@@ -303,7 +303,7 @@ traits:
                     Returns an updated hold request after cancelling
                   body:
                     application/json:
-                      schema: hold
+                      type: hold
                       example: !include examples/hold.json
                 400:
                   description: Bad request
@@ -335,7 +335,7 @@ traits:
                   description: Validation error
                   body:
                     application/json:
-                      schema : errors
+                      type: errors
                 500:
                   description: |
                     Internal server error, e.g. due to misconfiguration
