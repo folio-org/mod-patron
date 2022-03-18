@@ -14,7 +14,6 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
 import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_TOTAL_RECORDS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
@@ -38,9 +37,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -309,7 +305,6 @@ public class PatronServicesResourceImpl implements Patron {
     final JsonObject holdJSON = new JsonObject()
         .put(JSON_FIELD_INSTANCE_ID, instanceId)
         .put(JSON_FIELD_REQUESTER_ID, id)
-        .put(JSON_FIELD_REQUEST_LEVEL, "Item")
         .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
         .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
         .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
