@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -125,6 +126,7 @@ public class PatronResourceImplTest {
   private static final String checkedoutItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
   private static final String sortByParam = "item.title/sort.ascending";
   private static final String holdingsRecordId = "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19";
+  private boolean tlrEnabled;
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
@@ -316,6 +318,11 @@ public class PatronResourceImplTest {
                 .putHeader("content-type", "text/plain")
                 .end(badDataValue);
             }
+          } else if (tlrEnabled && req.getHeader("X-Okapi-TLR-No-Item-id") != null) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/instance_holds_tlr_create.json"));
           } else {
             req.response()
               .setStatusCode(201)
@@ -1336,12 +1343,26 @@ public class PatronResourceImplTest {
     logger.info("Test done");
   }
 
-  @Test
-  public final void testPostPatronAccountByIdInstanceByInstanceIdHold() {
+  @ParameterizedTest
+  @MethodSource("tlrFeatureStates")
+  public final void testPostPatronAccountByIdInstanceByInstanceIdHold(String responseFile,
+    boolean tlrState, boolean noItemId) {
+
     logger.info("Testing creating a hold on an instance for the specified user");
 
+    tlrEnabled = tlrState;
+
+    Headers headers;
+
+    if (noItemId) {
+      headers = new Headers(tenantHeader, urlHeader, contentTypeHeader,
+        new Header("X-Okapi-TLR-No-Item-id", "application/json"));
+    } else {
+      headers =  new Headers(tenantHeader, urlHeader, contentTypeHeader);
+    }
+
     final var hold = given()
-        .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader))
+        .headers(headers)
         .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
         .and().body(readMockFile(mockDataFolder
             + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
@@ -1354,7 +1375,7 @@ public class PatronResourceImplTest {
       .extract()
         .asString();
 
-    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"));
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + responseFile));
 
     verifyHold(expectedHold, new JsonObject(hold));
 
@@ -1521,6 +1542,13 @@ public class PatronResourceImplTest {
     assertEquals(errorText, response);
     // Test done
     logger.info("Test done");
+  }
+
+  static Stream<Arguments> tlrFeatureStates() {
+    return Stream.of(
+      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHoldNoItemId.json", true, true),
+      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json", false, false)
+    );
   }
 
   static Stream<Arguments> instanceHoldsFailureCodes() {
@@ -1703,14 +1731,13 @@ public class PatronResourceImplTest {
   }
 
   private boolean verifyItem(JsonObject expectedItem, JsonObject actualItem) {
-    if (expectedItem.getString("itemId").equals(actualItem.getString("itemId"))) {
+    if (Objects.equals(expectedItem.getString("itemId"), actualItem.getString("itemId"))) {
       assertEquals(expectedItem.getString("instanceId"), actualItem.getString("instanceId"));
       assertEquals(expectedItem.getString("title"), actualItem.getString("title"));
       assertEquals(expectedItem.getString("author"), actualItem.getString("author"));
 
       return true;
     }
-
     return false;
   }
 }
