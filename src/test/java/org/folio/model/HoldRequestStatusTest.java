@@ -17,7 +17,6 @@ class HoldRequestStatusTest {
     "Open - Awaiting delivery", "Open - In transit", "Closed - Filled",
     "Closed - Cancelled", "Closed - Unfilled", "Closed - Pickup expired"
   })
-
   void testValidHoldRequestStatus(String status) {
     Hold.Status requestStatus = fromValue(status);
     assertNotNull(requestStatus);
@@ -25,7 +24,7 @@ class HoldRequestStatusTest {
   }
 
   @Test
-  void testInValidRequestStatus() {
-    assertThrows(IllegalArgumentException.class, () -> fromValue("Invalid Status"));
+  void testInvalidRequestStatus() {
+    assertThrows(IllegalArgumentException.class, () -> fromValue("Invalid status"));
   }
 }
