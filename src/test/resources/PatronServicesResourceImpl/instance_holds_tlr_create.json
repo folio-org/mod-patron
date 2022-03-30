@@ -1,0 +1,63 @@
+{
+  "id": "d0f032db-9579-443e-a2ac-6add937f4aa2",
+  "requestLevel": "Title",
+  "requestType": "Hold",
+  "requestDate": "2021-09-06T15:37:55.000+00:00",
+  "requestExpirationDate": "3000-01-30T08:16:30Z",
+  "requesterId": "bec20636-fb68-41fd-84ea-2cf910673599",
+  "status": "Open - Not yet filled",
+  "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
+  "holdingsRecordId": "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19",
+  "patronComments": "I need this book. Instance level comment.",
+  "instance": {
+    "title": "A semantic web primer",
+    "identifiers": [
+      {
+        "value": "0262012103",
+        "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+      },
+      {
+        "value": "9780262012102",
+        "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+      },
+      {
+        "value": "2003065165",
+        "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb"
+      }
+    ],
+    "contributorNames": [
+      {
+        "name": "Antoniou, Grigoris"
+      },
+      {
+        "name": "Van Harmelen, Frank"
+      }
+    ]
+  },
+  "requester": {
+    "lastName": "morty",
+    "firstName": "panic",
+    "barcode": "456",
+    "patronGroupId": "3684a786-6671-4268-8ed0-9db82ebca60b"
+  },
+  "fulfilmentPreference": "Hold Shelf",
+  "pickupServicePointId": "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
+  "metadata": {
+    "createdDate": "2021-09-06T15:37:56.188+00:00",
+    "createdByUserId": "226dfeeb-0264-57fc-afcd-d5df2d705dd5",
+    "updatedDate": "2021-09-06T15:37:56.188+00:00",
+    "updatedByUserId": "226dfeeb-0264-57fc-afcd-d5df2d705dd5"
+  },
+  "position": 1,
+  "loan": {
+    "dueDate": "2021-09-06T16:36:56.029Z"
+  },
+  "pickupServicePoint": {
+    "name": "Circ Desk 2",
+    "code": "cd2",
+    "discoveryDisplayName": "Circulation Desk -- Back Entrance",
+    "description": null,
+    "shelvingLagTime": null,
+    "pickupLocation": true
+  }
+}

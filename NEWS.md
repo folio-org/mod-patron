@@ -1,3 +1,7 @@
+## 5.2.1 2022-03-28
+
+* Do not pass request level to mod-circulation when creating instance request (MODPATRON-104)
+
 ## 5.2.0 2022-02-22
 
 * Upgrade to RMB 33.2.4 (MODPATRON-103)

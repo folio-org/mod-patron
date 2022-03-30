@@ -1,0 +1,14 @@
+{
+  "requestId": "d0f032db-9579-443e-a2ac-6add937f4aa2",
+  "requestDate": "2021-09-06T15:37:55.000+00:00",
+  "item": {
+    "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
+    "title": "A semantic web primer",
+    "author": "Antoniou, Grigoris; Van Harmelen, Frank"
+  },
+  "queuePosition": 1,
+  "expirationDate": "3000-01-30T08:16:30Z",
+  "status": "Open - Not yet filled",
+  "pickupLocationId": "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
+  "patronComments": "I need this book. Instance level comment."
+}
