@@ -30,9 +30,12 @@
       "enum": [
         "Open - Not yet filled",
         "Open - Awaiting pickup",
+        "Open - Awaiting delivery",
         "Open - In transit",
         "Closed - Filled",
-        "Closed - Cancelled"
+        "Closed - Cancelled",
+        "Closed - Unfilled",
+        "Closed - Pickup expired"
       ]
     },
     "pickupLocationId": {
