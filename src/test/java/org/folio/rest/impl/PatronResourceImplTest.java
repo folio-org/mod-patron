@@ -189,7 +189,7 @@ public class PatronResourceImplTest {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/loans_zero_record.json"));
+            .end(readMockFile(mockDataFolder + "/loans_zero_records.json"));
         }
         else if (loansParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
@@ -970,8 +970,9 @@ public class PatronResourceImplTest {
     logger.info("Test done");
   }
 
+  // TODO: Return 422 instead of 500
   @Test
-  final void testGetPatronAccountWithInvalidHoldRequestById() {
+  final void testGetPatronAccountWithInvalidRequestStatusById() {
     logger.info("Testing for 500 due to invalid hold request status");
 
     given()
