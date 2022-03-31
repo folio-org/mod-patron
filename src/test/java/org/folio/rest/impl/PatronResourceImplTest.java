@@ -77,6 +77,7 @@ public class PatronResourceImplTest {
 
   private final String goodUserId = "1ec54964-70f0-44cc-bd19-2a892ea0d336";
   private final String inactiveUserId = "4a87f60c-ebb1-4726-a9b2-548cdd17bbd4";
+  private final String userIdForInvalidStatusRequest = "f8c72621-7f9f-4f66-ae4c-32d971076973";
   private final String badUserId = "3ed07e77-a5c9-47c8-bb0b-381099e10a42";
   private final String goodItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
   private final String badItemId = "3dda4eb9-a156-474c-829f-bd5a386f382c";
@@ -168,6 +169,11 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/user_not_active.json"));
+      } else if (req.path().equals(String.format("/users/%s", userIdForInvalidStatusRequest))) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/user_for_invalid_status_request.json"));
       } else if (req.path().equals(String.format("/users/%s", badUserId))) {
         req.response()
           .setStatusCode(404)
@@ -179,7 +185,13 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/loans_all_inactive.json"));
-        } else if (loansParametersMatch(req, Integer.MAX_VALUE)) {
+        } else if(loansParametersMatchForInvalidStatusRequest(req)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/loans_zero_records.json"));
+        }
+        else if (loansParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -257,6 +269,11 @@ public class PatronResourceImplTest {
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/holds_all_inactive.json"));
+          } else if(requestsParametersMatchForInvalidStatus(req)) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/holds_one_invalid_status.json"));
           } else if (requestsParametersMatch(req, Integer.MAX_VALUE)) {
             req.response()
               .setStatusCode(200)
@@ -388,6 +405,11 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/accounts_all_inactive.json"));
+        } else if (accountParametersMatchForInvalidStatusRequest(req)) {
+          req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/accounts_zero_record.json"));
         } else if (accountParametersMatch(req, Integer.MAX_VALUE)) {
           req.response()
             .setStatusCode(200)
@@ -619,6 +641,12 @@ public class PatronResourceImplTest {
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
   }
 
+  private boolean accountParametersMatchForInvalidStatusRequest(HttpServerRequest request) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains("query=(userId==" + userIdForInvalidStatusRequest + " and status.name==Open)");
+  }
+
   private boolean accountParametersMatch(HttpServerRequest request, int limit) {
     final var queryString = UrlDecoder.decode(request.query());
 
@@ -632,6 +660,12 @@ public class PatronResourceImplTest {
     return queryString.contains("limit=" + Integer.MAX_VALUE)
       && queryString
       .contains(String.format("query=(userId==%s and status.name==Open) sortBy %s", goodUserId, sortByParam));
+  }
+
+  private boolean requestsParametersMatchForInvalidStatus(HttpServerRequest request) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains(String.format("query=(requesterId==%s and status==Open*)", userIdForInvalidStatusRequest));
   }
 
   private boolean requestsParametersMatch(HttpServerRequest request, int limit) {
@@ -652,6 +686,12 @@ public class PatronResourceImplTest {
   private Boolean isInactiveUser(HttpServerRequest request) {
     final var queryString = UrlDecoder.decode(request.query());
     return queryString.contains(inactiveUserId);
+  }
+
+  private boolean loansParametersMatchForInvalidStatusRequest(HttpServerRequest request) {
+    final var queryString = UrlDecoder.decode(request.query());
+
+    return queryString.contains(String.format("query=(userId==%s and status.name==Open)", userIdForInvalidStatusRequest));
   }
 
   private boolean loansParametersMatch(HttpServerRequest request, int limit) {
@@ -925,6 +965,30 @@ public class PatronResourceImplTest {
       .log().all()
       .contentType(ContentType.TEXT)
       .statusCode(404);
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  // TODO: Return 422 instead of 500
+  @Test
+  final void testGetPatronAccountWithInvalidRequestStatusById() {
+    logger.info("Testing for 500 due to invalid hold request status");
+
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", userIdForInvalidStatusRequest)
+      .queryParam("includeLoans", "true")
+      .queryParam("includeHolds", "true")
+      .queryParam("includeCharges", "false")
+    .when()
+      .get(accountPath)
+    .then()
+      .log().all()
+      .contentType(TEXT)
+      .statusCode(500);
 
     // Test done
     logger.info("Test done");
