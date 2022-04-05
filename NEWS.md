@@ -1,3 +1,7 @@
+## 5.2.2 2022-04-05
+
+* Add missing request statuses (MODPATRON-22)
+
 ## 5.2.1 2022-03-28
 
 * Do not pass request level to mod-circulation when creating instance request (MODPATRON-104)
