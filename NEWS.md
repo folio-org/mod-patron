@@ -3,7 +3,6 @@
 * Upgrade to RMB 34.0.0 (MODPATRON-114)
 * Missing statuses added (MODPATRON-22)
 * Title-level requests properly created (MODPATRON-104)
-* 
 
 ## 5.2.0 2022-02-22
 
