@@ -3,7 +3,7 @@
 * Upgrade to RMB 34.0.0 (MODPATRON-114)
 * Missing statuses added (MODPATRON-22)
 * Title-level requests properly created (MODPATRON-104)
-* Upgrade user interface to 16.0([MODINV-686](https://issues.folio.org/browse/MODPATRON-116))
+* Upgrade user interface to 16.0([MODINV-116](https://issues.folio.org/browse/MODPATRON-116))
 
 ## 5.2.0 2022-02-22
 
