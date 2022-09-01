@@ -3,6 +3,7 @@
 * Upgrade to RMB 34.0.0 (MODPATRON-114)
 * Missing statuses added (MODPATRON-22)
 * Title-level requests properly created (MODPATRON-104)
+* Requires `inventory` `5.2 6.0 7.0 8.0 9.0 10.0 11.0 or 12.0` ([MODPATRON-120](https://issues.folio.org/browse/MODPATRON-120))
 
 ## 5.2.0 2022-02-22
 
