@@ -42,11 +42,6 @@ public class VertxOkapiHttpClient {
     queryParameters.forEach(request::addQueryParam);
 
     return request.send()
-      .onFailure(err -> {
-        String errorMsg = "Error when trying to retrive data from " +
-          url.getPath() + " " + err.getMessage();
-        logger.error(errorMsg);
-      })
       .toCompletionStage()
       .toCompletableFuture()
       .thenApply(this::toResponse);
@@ -81,11 +76,6 @@ public class VertxOkapiHttpClient {
     HttpRequest<Buffer> request, JsonObject body, String path) {
 
     return request.sendJson(body)
-      .onFailure(err -> {
-        String errorMsg = "Error when trying to retrive data from " +
-          path + " " + err.getMessage();
-        logger.error(errorMsg);
-      })
       .toCompletionStage()
       .toCompletableFuture()
       .thenApply(this::toResponse);
