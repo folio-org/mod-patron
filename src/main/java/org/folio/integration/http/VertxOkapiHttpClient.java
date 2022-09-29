@@ -13,8 +13,13 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 public class VertxOkapiHttpClient {
   private final WebClient client;
+  private static final Logger logger = LogManager.getLogger("okapi");
+  
 
   public VertxOkapiHttpClient(WebClient client) {
     this.client = client;
@@ -31,11 +36,17 @@ public class VertxOkapiHttpClient {
 
     final var request = client
       .get(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
+      .putHeaders(buildHeaders(okapiHeaders))
+      .timeout(5000);
 
     queryParameters.forEach(request::addQueryParam);
 
     return request.send()
+      .onFailure(err -> {
+        String errorMsg = "Error when trying to retrive data from " +
+          url.getPath() + " " + err.getMessage();
+        logger.error(errorMsg);
+      })
       .toCompletionStage()
       .toCompletableFuture()
       .thenApply(this::toResponse);
@@ -48,9 +59,10 @@ public class VertxOkapiHttpClient {
 
     final var request = client
       .post(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
+      .putHeaders(buildHeaders(okapiHeaders))
+      .timeout(5000);
 
-    return makeRequestWithBody(request, body);
+    return makeRequestWithBody(request, body, url.getPath());
   }
 
   public CompletableFuture<Response> put(String path, JsonObject body,
@@ -62,13 +74,18 @@ public class VertxOkapiHttpClient {
       .put(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
 
-    return makeRequestWithBody(request, body);
+    return makeRequestWithBody(request, body, url.getPath());
   }
 
   private CompletableFuture<Response> makeRequestWithBody(
-    HttpRequest<Buffer> request, JsonObject body) {
+    HttpRequest<Buffer> request, JsonObject body, String path) {
 
     return request.sendJson(body)
+      .onFailure(err -> {
+        String errorMsg = "Error when trying to retrive data from " +
+          path + " " + err.getMessage();
+        logger.error(errorMsg);
+      })
       .toCompletionStage()
       .toCompletableFuture()
       .thenApply(this::toResponse);
