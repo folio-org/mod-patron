@@ -15,6 +15,7 @@ import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -35,7 +36,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import lombok.SneakyThrows;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
 class VertxOkapiHttpClientTest {
+  private static final Logger logger = LogManager.getLogger("okapi");
   private final WireMockServer fakeWebServer = new WireMockServer(options().dynamicPort());
   private Vertx vertx;
 
@@ -52,6 +57,30 @@ class VertxOkapiHttpClientTest {
     fakeWebServer.stop();
 
     stopVertx();
+  }
+
+  @SneakyThrows
+  @Test
+  void throwsTimeoutWhenResponseTakesOverFiveSeconds() {
+    final var getEndpoint = matchingFolioHeaders(get(urlPathEqualTo("/record")));
+
+    fakeWebServer.stubFor(getEndpoint.willReturn(ok()
+      .withFixedDelay(6000)
+      .withBody(dummyJsonResponseBody())
+      .withHeader("Content-Type", "application/json")));
+
+    final var client = createClient();
+
+    final var getCompleted = client.get(
+      "/record", Headers.toMap(fakeWebServer.baseUrl()));
+    try {
+      final var response = getCompleted.get(6, SECONDS);
+      assertThat("Timeout exception should have been thrown.", response, is(-1));
+    } catch(Exception e) {
+      String err = "The timeout period of 5000ms has been exceeded";
+      assertThat(e.getMessage().indexOf(err), not(-1));
+    }
+
   }
 
   @SneakyThrows
