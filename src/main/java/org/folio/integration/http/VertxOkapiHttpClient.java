@@ -13,14 +13,9 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
 public class VertxOkapiHttpClient {
   private final WebClient client;
-  private static final Logger logger = LogManager.getLogger("okapi");
   
-
   public VertxOkapiHttpClient(WebClient client) {
     this.client = client;
   }
@@ -57,7 +52,7 @@ public class VertxOkapiHttpClient {
       .putHeaders(buildHeaders(okapiHeaders))
       .timeout(5000);
 
-    return makeRequestWithBody(request, body, url.getPath());
+    return makeRequestWithBody(request, body);
   }
 
   public CompletableFuture<Response> put(String path, JsonObject body,
@@ -69,11 +64,11 @@ public class VertxOkapiHttpClient {
       .put(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders));
 
-    return makeRequestWithBody(request, body, url.getPath());
+    return makeRequestWithBody(request, body);
   }
 
   private CompletableFuture<Response> makeRequestWithBody(
-    HttpRequest<Buffer> request, JsonObject body, String path) {
+    HttpRequest<Buffer> request, JsonObject body) {
 
     return request.sendJson(body)
       .toCompletionStage()
