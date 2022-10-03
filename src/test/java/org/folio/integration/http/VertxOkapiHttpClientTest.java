@@ -71,7 +71,7 @@ class VertxOkapiHttpClientTest {
       "/record", Headers.toMap(fakeWebServer.baseUrl()));
 
     Exception exception = assertThrows(ExecutionException.class, ()->{
-      final var response = getCompleted.get(6, SECONDS);
+      getCompleted.get(6, SECONDS);
     });
 
     String err = "The timeout period of 5000ms has been exceeded";
