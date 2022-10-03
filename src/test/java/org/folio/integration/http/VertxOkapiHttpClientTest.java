@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,17 +31,12 @@ import org.junit.jupiter.api.Test;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import lombok.SneakyThrows;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
 class VertxOkapiHttpClientTest {
-  private static final Logger logger = LogManager.getLogger("okapi");
   private final WireMockServer fakeWebServer = new WireMockServer(options().dynamicPort());
   private Vertx vertx;
 
@@ -73,13 +69,13 @@ class VertxOkapiHttpClientTest {
 
     final var getCompleted = client.get(
       "/record", Headers.toMap(fakeWebServer.baseUrl()));
-    try {
+
+    Exception exception = assertThrows(ExecutionException.class, ()->{
       final var response = getCompleted.get(6, SECONDS);
-      assertThat("Timeout exception should have been thrown.", response, is(-1));
-    } catch(Exception e) {
-      String err = "The timeout period of 5000ms has been exceeded";
-      assertThat(e.getMessage().indexOf(err), not(-1));
-    }
+    });
+
+    String err = "The timeout period of 5000ms has been exceeded";
+    assertThat(exception.getMessage().indexOf(err), not(-1));
 
   }
 
