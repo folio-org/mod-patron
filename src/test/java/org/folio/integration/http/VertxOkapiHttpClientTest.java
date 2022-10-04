@@ -15,8 +15,8 @@ import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Map;
@@ -75,7 +75,7 @@ class VertxOkapiHttpClientTest {
     });
 
     String err = "The timeout period of 5000ms has been exceeded";
-    assertThat(exception.getMessage().indexOf(err), not(-1));
+    assertThat(exception.getMessage(), containsString(err));
 
   }
 
