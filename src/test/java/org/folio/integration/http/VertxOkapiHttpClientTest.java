@@ -70,7 +70,7 @@ class VertxOkapiHttpClientTest {
     final var getCompleted = client.get(
       "/record", Headers.toMap(fakeWebServer.baseUrl()));
 
-    Exception exception = assertThrows(ExecutionException.class, ()->{
+    Exception exception = assertThrows(ExecutionException.class, ()-> {
       getCompleted.get(6, SECONDS);
     });
 
