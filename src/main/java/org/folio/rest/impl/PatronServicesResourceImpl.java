@@ -66,11 +66,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
 public class PatronServicesResourceImpl implements Patron {
-  private static final Logger logger = LogManager.getLogger("okapi");
 
   @Validate
   @Override
@@ -151,14 +147,17 @@ public class PatronServicesResourceImpl implements Patron {
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(response -> {
         String currencyType = "USD";
-        String value = response
-          .getJsonArray("configs")
-          .getJsonObject(0)
-          .getString("value");
-        JsonObject settings = new JsonObject(value);
-        if (settings.containsKey("currency")) {
-          currencyType = settings.getString("currency");
-        } 
+        Integer numOfResults = Integer.parseInt(response.getString("totalRecords"));
+        if (numOfResults == 1) {
+          String value = response
+            .getJsonArray("configs")
+            .getJsonObject(0)
+            .getString("value");
+          JsonObject settings = new JsonObject(value);
+          if (settings.containsKey("currency")) {
+            currencyType = settings.getString("currency");
+          }
+        }
         return currencyType;
       });
   }

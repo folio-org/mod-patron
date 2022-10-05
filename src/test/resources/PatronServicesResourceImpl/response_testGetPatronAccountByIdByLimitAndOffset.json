@@ -1,7 +1,7 @@
 {
     "totalCharges": {
         "amount": 50.0,
-        "isoCurrencyCode": "USD"
+        "isoCurrencyCode": "UYU"
     },
     "totalChargesCount": 1,
     "totalLoans": 1,
@@ -16,7 +16,7 @@
         },
         "chargeAmount" : {
           "amount" : 50.0,
-          "isoCurrencyCode" : "USD"
+          "isoCurrencyCode" : "UYU"
         },
         "accrualDate" : "2018-01-31T00:00:01.000+00:00",
         "state" : "Paid Partially",

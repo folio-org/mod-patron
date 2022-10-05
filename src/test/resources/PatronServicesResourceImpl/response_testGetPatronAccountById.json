@@ -1,7 +1,7 @@
 {
     "totalCharges": {
         "amount": 255.0,
-        "isoCurrencyCode": "USD"
+        "isoCurrencyCode": "UYU"
     },
     "totalChargesCount": 5,
     "totalLoans": 3,
@@ -10,7 +10,7 @@
       {
         "chargeAmount" : {
           "amount" : 100.0,
-          "isoCurrencyCode" : "USD"
+          "isoCurrencyCode" : "UYU"
         },
         "accrualDate" : "2018-01-30T00:00:01.000+00:00",
         "state" : "Unpaid",
@@ -25,7 +25,7 @@
         },
         "chargeAmount" : {
           "amount" : 50.0,
-          "isoCurrencyCode" : "USD"
+          "isoCurrencyCode" : "UYU"
         },
         "accrualDate" : "2018-01-31T00:00:01.000+00:00",
         "state" : "Paid Partially",
@@ -39,7 +39,7 @@
         },
         "chargeAmount" : {
           "amount" : 25.0,
-          "isoCurrencyCode" : "USD"
+          "isoCurrencyCode" : "UYU"
         },
         "accrualDate" : "2018-04-30T00:00:01.000+00:00",
         "state" : "Unpaid",
@@ -53,7 +53,7 @@
         },
         "chargeAmount" : {
           "amount" : 5.0,
-          "isoCurrencyCode" : "USD"
+          "isoCurrencyCode" : "UYU"
         },
         "accrualDate" : "2018-05-31T00:00:01.000+00:00",
         "state" : "Paid Partially",
@@ -67,7 +67,7 @@
         },
         "chargeAmount" : {
           "amount" : 75.0,
-          "isoCurrencyCode" : "USD"
+          "isoCurrencyCode" : "UYU"
         },
         "accrualDate" : "2018-06-01T00:00:01.000+00:00",
         "state" : "Paid Partially",
