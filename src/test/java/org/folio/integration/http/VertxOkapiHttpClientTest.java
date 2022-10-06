@@ -16,12 +16,14 @@ import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -52,6 +53,30 @@ class VertxOkapiHttpClientTest {
     fakeWebServer.stop();
 
     stopVertx();
+  }
+
+  @SneakyThrows
+  @Test
+  void throwsTimeoutWhenResponseTakesOverFiveSeconds() {
+    final var getEndpoint = matchingFolioHeaders(get(urlPathEqualTo("/record")));
+
+    fakeWebServer.stubFor(getEndpoint.willReturn(ok()
+      .withFixedDelay(6000)
+      .withBody(dummyJsonResponseBody())
+      .withHeader("Content-Type", "application/json")));
+
+    final var client = createClient();
+
+    final var getCompleted = client.get(
+      "/record", Headers.toMap(fakeWebServer.baseUrl()));
+
+    Exception exception = assertThrows(ExecutionException.class, ()-> {
+      getCompleted.get(6, SECONDS);
+    });
+
+    String err = "The timeout period of 5000ms has been exceeded";
+    assertThat(exception.getMessage(), containsString(err));
+
   }
 
   @SneakyThrows
