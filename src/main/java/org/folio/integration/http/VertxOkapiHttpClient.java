@@ -15,7 +15,7 @@ import io.vertx.ext.web.client.WebClient;
 
 public class VertxOkapiHttpClient {
   private final WebClient client;
-
+  
   public VertxOkapiHttpClient(WebClient client) {
     this.client = client;
   }
@@ -31,7 +31,8 @@ public class VertxOkapiHttpClient {
 
     final var request = client
       .get(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
+      .putHeaders(buildHeaders(okapiHeaders))
+      .timeout(5000);
 
     queryParameters.forEach(request::addQueryParam);
 
@@ -48,7 +49,8 @@ public class VertxOkapiHttpClient {
 
     final var request = client
       .post(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
+      .putHeaders(buildHeaders(okapiHeaders))
+      .timeout(5000);
 
     return makeRequestWithBody(request, body);
   }
