@@ -1,5 +1,6 @@
 ## 5.3.0 IN-PROGRESS
 
+* Now checks localization settings and uses local currency code.  (MODPATRON-7)
 * Upgrade to RMB 34.0.0 (MODPATRON-114)
 * Missing statuses added (MODPATRON-22)
 * Title-level requests properly created (MODPATRON-104)
