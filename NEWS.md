@@ -1,5 +1,6 @@
 ## 5.3.0 IN-PROGRESS
 
+* Now checks localization settings and uses local currency code.  (MODPATRON-7)
 * Adding timeout and error handlers for requests to external modules (MODPATRON-119)
 * Upgrade to RMB 34.0.0 (MODPATRON-114)
 * Missing statuses added (MODPATRON-22)

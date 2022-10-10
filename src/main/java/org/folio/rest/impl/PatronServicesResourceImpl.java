@@ -85,11 +85,14 @@ public class PatronServicesResourceImpl implements Patron {
     try {
       // Look up the user to ensure that the user exists and is enabled
       userRepository.getUser(id, okapiHeaders)
-        .thenCompose(v -> {
+        .thenCompose(notUsed -> {
+          return getCurrencyCode(okapiHeaders, httpClient);
+        })
+        .thenCompose(code -> {
           try {
             final Account account = new Account();
 
-            account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrencyCode("USD"));
+            account.setTotalCharges(new TotalCharges().withAmount(0.0).withIsoCurrencyCode(code));
             account.setTotalChargesCount(0);
 
             final CompletableFuture<Account> cf1 = getLoans(id, sortBy, limit, offset, includeLoans, okapiHeaders,
@@ -101,7 +104,7 @@ public class PatronServicesResourceImpl implements Patron {
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
             final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, okapiHeaders, httpClient)
-                .thenApply(body -> addCharges(account, body, includeCharges))
+                .thenApply(body -> addCharges(account, body, includeCharges, code))
                 .thenCompose(charges -> {
                   if (includeCharges) {
                     List<CompletableFuture<Account>> cfs = new ArrayList<>();
@@ -134,6 +137,29 @@ public class PatronServicesResourceImpl implements Patron {
     } catch (Exception e) {
       asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
     }
+  }
+
+  private CompletableFuture<String> getCurrencyCode(Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+    String path = "/configurations/entries";
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.put("query", "(module==ORG and configName==localeSettings)");
+    return httpClient.get(path, queryParameters, okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody)
+      .thenApply(response -> {
+        String currencyType = "USD";
+        Integer numOfResults = Integer.parseInt(response.getString("totalRecords"));
+        if (numOfResults == 1) {
+          String value = response
+            .getJsonArray("configs")
+            .getJsonObject(0)
+            .getString("value");
+          JsonObject settings = new JsonObject(value);
+          if (settings.containsKey("currency")) {
+            currencyType = settings.getString("currency");
+          }
+        }
+        return currencyType;
+      });
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id,
@@ -435,7 +461,7 @@ public class PatronServicesResourceImpl implements Patron {
     return account;
   }
 
-  private Account addCharges(Account account, JsonObject body, boolean includeCharges) {
+  private Account addCharges(Account account, JsonObject body, boolean includeCharges, String currencyCode) {
     final int totalCharges = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Charge> charges = new ArrayList<>();
     account.setTotalChargesCount(totalCharges);
@@ -448,7 +474,7 @@ public class PatronServicesResourceImpl implements Patron {
       for (Object o : accountsJson) {
         if (o instanceof JsonObject) {
           final JsonObject accountJson = (JsonObject) o;
-          Charge charge = getCharge(accountJson);
+          Charge charge = getCharge(accountJson, currencyCode);
           if (accountJson.getString(JSON_FIELD_ITEM_ID) != null) {
             final Item item = new Item().withItemId(accountJson.getString(JSON_FIELD_ITEM_ID));
             charge.setItem(item);
@@ -463,15 +489,15 @@ public class PatronServicesResourceImpl implements Patron {
 
     account.setTotalCharges(new TotalCharges()
         .withAmount(amount)
-        .withIsoCurrencyCode("USD"));
+        .withIsoCurrencyCode(currencyCode));
 
     return account;
   }
 
-  private Charge getCharge(JsonObject chargeJson) {
+  private Charge getCharge(JsonObject chargeJson, String currencyCode) {
     return new Charge()
         .withAccrualDate(new DateTime(chargeJson.getJsonObject("metadata").getString("createdDate"), DateTimeZone.UTC).toDate())
-        .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode("USD"))
+        .withChargeAmount(new TotalCharges().withAmount(chargeJson.getDouble("remaining")).withIsoCurrencyCode(currencyCode))
         .withState(chargeJson.getJsonObject("paymentStatus",
             new JsonObject().put(JSON_FIELD_NAME,  "Unknown"))
                   .getString(JSON_FIELD_NAME))

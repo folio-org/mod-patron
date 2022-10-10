@@ -634,6 +634,11 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/requestPolicy_page.json"));
+      } else if (req.path().contains("/configurations/entries")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/localization_settings.json"));
       } else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
@@ -828,7 +833,7 @@ public class PatronResourceImplTest {
 
     JsonObject money = json.getJsonObject("totalCharges");
     assertEquals(50.0, money.getDouble("amount"));
-    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals("UYU", money.getString("isoCurrencyCode"));
     assertEquals(1, json.getInteger("totalChargesCount"));
     assertEquals(1, json.getJsonArray("charges").size());
 
@@ -870,7 +875,7 @@ public class PatronResourceImplTest {
 
     final JsonObject money = json.getJsonObject("totalCharges");
     assertEquals(0.0, money.getDouble("amount"));
-    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals("UYU", money.getString("isoCurrencyCode"));
     assertEquals(3, json.getInteger("totalChargesCount"));
     assertEquals(0, json.getJsonArray("charges").size());
 
@@ -906,7 +911,7 @@ public class PatronResourceImplTest {
 
     final JsonObject money = json.getJsonObject("totalCharges");
     assertEquals(255.0, money.getDouble("amount"));
-    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals("UYU", money.getString("isoCurrencyCode"));
     assertEquals(5, json.getInteger("totalChargesCount"));
     assertEquals(0, json.getJsonArray("charges").size());
 
@@ -942,7 +947,7 @@ public class PatronResourceImplTest {
 
     final JsonObject money = json.getJsonObject("totalCharges");
     assertEquals(100.0, money.getDouble("amount"));
-    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals("UYU", money.getString("isoCurrencyCode"));
     assertEquals(1, json.getInteger("totalChargesCount"));
     assertEquals(0, json.getJsonArray("charges").size());
 
@@ -1637,7 +1642,7 @@ public class PatronResourceImplTest {
 
     JsonObject money = actualAccountJson.getJsonObject("totalCharges");
     assertEquals(255.0, money.getDouble("amount"));
-    assertEquals("USD", money.getString("isoCurrencyCode"));
+    assertEquals("UYU", money.getString("isoCurrencyCode"));
     assertEquals(5, actualAccountJson.getInteger("totalChargesCount"));
     assertEquals(5, actualAccountJson.getJsonArray("charges").size());
 
