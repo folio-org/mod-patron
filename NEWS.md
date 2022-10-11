@@ -1,12 +1,15 @@
-## 5.3.0 IN-PROGRESS
+## 5.4.0 IN-PROGRESS
 
-* Now checks localization settings and uses local currency code.  (MODPATRON-7)
+* Now checks localization settings and uses local currency code. (MODPATRON-7)
 * Adding timeout and error handlers for requests to external modules (MODPATRON-119)
+* Upgrade user interface to 16.0 ([MODPATRON-116](https://issues.folio.org/browse/MODPATRON-116))
+* Requires `inventory` `5.2 6.0 7.0 8.0 9.0 10.0 11.0 or 12.0`([MODPATRON-120](https://issues.folio.org/browse/MODPATRON-120))
+
+## 5.3.0 2022-06-15
+
 * Upgrade to RMB 34.0.0 (MODPATRON-114)
 * Missing statuses added (MODPATRON-22)
 * Title-level requests properly created (MODPATRON-104)
-* Upgrade user interface to 16.0([MODINV-116](https://issues.folio.org/browse/MODPATRON-116))
-* Requires `inventory` `5.2 6.0 7.0 8.0 9.0 10.0 11.0 or 12.0` ([MODPATRON-120](https://issues.folio.org/browse/MODPATRON-120))
 
 ## 5.2.0 2022-02-22
 
