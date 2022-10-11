@@ -1,5 +1,6 @@
 ## 5.4.0 IN-PROGRESS
 
+* Upgraded RMB to 35.0.0 ([MODPATRON-122](https://issues.folio.org/browse/MODPATRON-122))
 * Now checks localization settings and uses local currency code. (MODPATRON-7)
 * Adding timeout and error handlers for requests to external modules (MODPATRON-119)
 * Upgrade user interface to 16.0 ([MODPATRON-116](https://issues.folio.org/browse/MODPATRON-116))
