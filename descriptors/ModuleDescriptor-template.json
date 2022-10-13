@@ -12,6 +12,7 @@
           "permissionsRequired": ["patron.account.item.get"],
           "modulePermissions": [
             "configuration.entries.item.get",
+            "configuration.entries.collection.get",
             "users.item.get",
             "circulation.loans.collection.get",
             "circulation.requests.collection.get",
