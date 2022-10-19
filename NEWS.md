@@ -1,4 +1,4 @@
-## 5.4.0 IN-PROGRESS
+## 5.4.0 2022-10-19
 
 * Upgraded RMB to 35.0.0 ([MODPATRON-122](https://issues.folio.org/browse/MODPATRON-122))
 * Now checks localization settings and uses local currency code. (MODPATRON-7)
