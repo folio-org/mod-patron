@@ -19,7 +19,7 @@ For the purposes of this form, "store" includes the following:
 - [ ] This module does not store any PD.
 - [ ] This module does not process any PD.
 - [ ] This module provides [custom fields](https://github.com/folio-org/folio-custom-fields).
-- [x] This module stores fields with free-form text (tags, notes, descriptions, etc.)
+- [ ] This module stores fields with free-form text (tags, notes, descriptions, etc.)
 - [ ] This module caches PD
 - [ ] This module logs PD
   - [ ] Log level ERROR includes PD
@@ -27,6 +27,7 @@ For the purposes of this form, "store" includes the following:
   - [ ] Log level INFO includes PD
   - [ ] Log level DEBUG includes PD
 - [x] This module transmits PD (including queues, additional databases, etc.)
+- [x] This module transmits fields with free-form text (tags, notes, descriptions, etc.)
 
 ---
 
