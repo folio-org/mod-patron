@@ -1,3 +1,7 @@
+# 5.5.0 IN-PROGRESS
+
+* Requires `inventory` `5.2 6.0 7.0 8.0 9.0 10.0 11.0 12.0 or 13.0` ([MODPATRON-124](https://issues.folio.org/browse/MODPATRON-124))
+
 ## 5.4.0 2022-10-19
 
 * Upgraded RMB to 35.0.0 ([MODPATRON-122](https://issues.folio.org/browse/MODPATRON-122))
