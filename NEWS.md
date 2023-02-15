@@ -1,4 +1,4 @@
-# 5.5.0 IN-PROGRESS
+# 5.5.0 2023-02-15
 
 * Requires `inventory` `5.2 6.0 7.0 8.0 9.0 10.0 11.0 12.0 or 13.0` ([MODPATRON-124](https://issues.folio.org/browse/MODPATRON-124))
 
