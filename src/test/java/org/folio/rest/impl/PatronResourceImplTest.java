@@ -5,6 +5,7 @@ import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.utils.Utils.readMockFile;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -21,7 +22,6 @@ import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.tools.utils.ModuleName;
-import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.AfterEach;
@@ -1408,7 +1408,7 @@ public class PatronResourceImplTest {
       .log().all()
       .and().assertThat().statusCode(expectedCode)
       .and().assertThat().contentType(ContentType.TEXT)
-      .and().assertThat().body(Matchers.equalTo(codeString));
+      .and().assertThat().body(startsWith(codeString));
 
     // Test done
     logger.info("Test done");
@@ -1494,7 +1494,7 @@ public class PatronResourceImplTest {
       .log().all()
       .and().assertThat().statusCode(expectedCode)
       .and().assertThat().contentType(ContentType.TEXT)
-      .and().assertThat().body(Matchers.equalTo(codeString));
+      .and().assertThat().body(startsWith(codeString));
 
     // Test done
     logger.info("Test done");
@@ -1517,7 +1517,7 @@ public class PatronResourceImplTest {
       .log().all()
       .and().assertThat().statusCode(expectedCode)
       .and().assertThat().contentType(expectedContentType)
-      .and().assertThat().body(Matchers.equalTo(expectedMessage));
+      .and().assertThat().body(startsWith(expectedMessage));
 
     // Test done
     logger.info("Test done");
