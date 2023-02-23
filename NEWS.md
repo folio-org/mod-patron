@@ -1,3 +1,7 @@
+# 5.5.1 2023-02-23
+
+* Upgrade dependencies for Orchid (RMB, Vertx, Log4j, lombok) ([MODPATRON-126](https://github.com/folio-org/mod-patron/pull/123))
+
 # 5.5.0 2023-02-15
 
 * Requires `inventory` `5.2 6.0 7.0 8.0 9.0 10.0 11.0 12.0 or 13.0` ([MODPATRON-124](https://issues.folio.org/browse/MODPATRON-124))
