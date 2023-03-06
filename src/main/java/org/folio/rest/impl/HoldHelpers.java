@@ -101,6 +101,7 @@ class HoldHelpers {
       .put("requestType", body.getString(JSON_FIELD_REQUEST_TYPE))
       .put("pickupServicePointId", body.getString(JSON_FIELD_PICKUP_SERVICE_POINT_ID))
       .put("patronComments", body.getString(JSON_FIELD_PATRON_COMMENTS));
+
     return addCancellationFieldsToRequest(cancelRequest, entity);
   }
 }
