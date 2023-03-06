@@ -1365,23 +1365,23 @@ public class PatronResourceImplTest {
     aBody = jsonBody.encodePrettily();
 
     var holdCancelResponse = given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(new Header(okapiBadDataHeader, "hold_cancel_request_without_item"))
-      .header(contentTypeHeader)
-      .body(aBody)
-      .pathParam("accountId", goodUserId)
-      .pathParam("holdId", goodCancelHoldId)
-      .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(new Header(okapiBadDataHeader, "hold_cancel_request_without_item"))
+        .header(contentTypeHeader)
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
       .when()
-      .contentType(ContentType.JSON)
-      .post(accountPath + holdPath + holdIdPath + cancelPath)
+        .contentType(ContentType.JSON)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
       .then()
-      .log().all()
-      .and().assertThat().contentType(ContentType.JSON)
-      .and().assertThat().statusCode(200)
-      .extract()
-      .asString();
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(200)
+        .extract()
+        .asString();
 
     final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
     verifyHold(expectedHold, new JsonObject(holdCancelResponse));
