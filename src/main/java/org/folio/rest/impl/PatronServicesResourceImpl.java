@@ -28,7 +28,6 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
 
-import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -58,6 +57,8 @@ import org.folio.rest.jaxrs.resource.Patron;
 import org.folio.util.StringUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+
+import com.google.common.collect.Maps;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -292,13 +293,11 @@ public class PatronServicesResourceImpl implements Patron {
     httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(body -> {
-        final Item item = getItem(body);
-        final Hold hold = getHold(body, item);
-        holds[0] = constructNewHoldWithCancellationFields(hold, entity);
+        holds[0] = constructNewHoldWithCancellationFields(getHold(body, getItem(body)), entity);
         return body;
       })
-      .thenCompose(anUpdatedRequest -> httpClient.put("/circulation/requests/" + holdId,
-        createCancelRequest(anUpdatedRequest, entity), okapiHeaders))
+      .thenCompose(updatedRequest -> httpClient.put("/circulation/requests/" + holdId,
+        createCancelRequest(updatedRequest, entity), okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .whenComplete((body, throwable) -> {
         if (throwable != null) {
