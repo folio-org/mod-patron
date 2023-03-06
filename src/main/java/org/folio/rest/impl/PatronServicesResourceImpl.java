@@ -20,6 +20,7 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond403WithTextPlain;
@@ -288,35 +289,24 @@ public class PatronServicesResourceImpl implements Patron {
 
     final Hold[] holds = new Hold[1];
 
-    try {
-      httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
-        .thenApply(ResponseInterpreter::verifyAndExtractBody)
-        .thenApply( body -> {
-          final Item item = getItem(body);
-          final Hold hold = getHold(body, item);
-          holds[0] = constructNewHoldWithCancellationFields(hold, entity);
-          return body;
-        })
-        .thenCompose( anUpdatedRequest -> {
-          try {
-            JsonObject cancelRequest = createCancelRequest(anUpdatedRequest, entity);
-            return httpClient.put("/circulation/requests/" + holdId, cancelRequest, okapiHeaders);
-          } catch (Exception e) {
-              asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-              return null;
-            }
-        })
-        .thenApply(ResponseInterpreter::verifyAndExtractBody)
-        .thenAccept(
-            body -> asyncResultHandler.handle(succeededFuture(
-              PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0]))))
-        .exceptionally(throwable -> {
-            asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
-            return null;
-        });
-    } catch (Exception e) {
-      asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-    }
+    httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody)
+      .thenApply(body -> {
+        final Item item = getItem(body);
+        final Hold hold = getHold(body, item);
+        holds[0] = constructNewHoldWithCancellationFields(hold, entity);
+        return body;
+      })
+      .thenCompose(anUpdatedRequest -> httpClient.put("/circulation/requests/" + holdId,
+        createCancelRequest(anUpdatedRequest, entity), okapiHeaders))
+      .thenApply(ResponseInterpreter::verifyAndExtractBody)
+      .whenComplete((body, throwable) -> {
+        if (throwable != null) {
+          asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
+        } else {
+          asyncResultHandler.handle(succeededFuture(respond200WithApplicationJson(holds[0])));
+        }
+      });
   }
 
   @Validate
