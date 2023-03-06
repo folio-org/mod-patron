@@ -1,0 +1,72 @@
+{
+  "id":"6d2a6f6d-d60e-427f-98fa-9d159b2920f5",
+  "requestLevel":"Title",
+  "requestType":"Hold",
+  "requestDate":"2023-03-02T00:00:00.000+00:00",
+  "patronComments":"",
+  "requesterId":"b297f9f0-d3d6-4e2b-886d-f7624a974eec",
+  "instanceId":"589edce1-51b6-4a2b-878e-d640819d0db3",
+  "status":"Open - Not yet filled",
+  "position":1,
+  "instance":{
+    "title":"A semantic web primer test",
+    "identifiers":[
+      {
+        "identifierTypeId":"8261054f-be78-422d-bd51-4ed9f33c3422",
+        "value":"0262012103"
+      },
+      {
+        "identifierTypeId":"8261054f-be78-422d-bd51-4ed9f33c3422",
+        "value":"9780262012102"
+      },
+      {
+        "identifierTypeId":"c858e4f2-2b6b-4385-842b-60732ee14abb",
+        "value":"2003065165"
+      }
+    ],
+    "contributorNames":[
+      {
+        "name":"Antoniou, Grigoris"
+      },
+      {
+        "name":"Van Harmelen, Frank"
+      }
+    ],
+    "publication":[
+      {
+        "publisher":"MIT Press",
+        "place":"Cambridge, Mass. ",
+        "dateOfPublication":"c2004",
+        "role":"Publisher"
+      }
+    ]
+  },
+  "requester":{
+    "lastName":"TestLastName",
+    "firstName":"TestFirstName",
+    "barcode":"12345",
+    "patronGroup":{
+      "id":"3684a786-6671-4268-8ed0-9db82ebca60b",
+      "group":"staff",
+      "desc":"Staff Member"
+    },
+    "patronGroupId":"3684a786-6671-4268-8ed0-9db82ebca60b"
+  },
+  "fulfilmentPreference":"Hold Shelf",
+  "requestExpirationDate":"2023-03-03T23:59:59.000+00:00",
+  "pickupServicePointId":"3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
+  "metadata":{
+    "createdDate":"2023-03-02T21:25:14.046+00:00",
+    "createdByUserId":"0b0e6da6-4cd7-52c3-9225-bb710651fc15",
+    "updatedDate":"2023-03-02T21:25:15.377+00:00",
+    "updatedByUserId":"0b0e6da6-4cd7-52c3-9225-bb710651fc15"
+  },
+  "pickupServicePoint":{
+    "name":"Circ Desk 1",
+    "code":"cd1",
+    "discoveryDisplayName":"Circulation Desk -- Hallway",
+    "description":null,
+    "shelvingLagTime":null,
+    "pickupLocation":true
+  }
+}
