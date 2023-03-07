@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
@@ -120,7 +121,7 @@ public class PatronServicesResourceImpl implements Patron {
                     return CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
                         .thenApply(done -> account);
                   }
-                  return CompletableFuture.completedFuture(account);
+                  return completedFuture(account);
                 });
 
             return CompletableFuture.allOf(cf1, cf2, cf3)
@@ -290,7 +291,8 @@ public class PatronServicesResourceImpl implements Patron {
 
     final Hold[] holds = new Hold[1];
 
-    httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
+    completedFuture("/circulation/requests/" + holdId)
+      .thenCompose(path -> httpClient.get(path, Map.of(), okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(body -> {
         holds[0] = constructNewHoldWithCancellationFields(getHold(body, getItem(body)), entity);
