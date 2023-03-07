@@ -1,6 +1,8 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.String.format;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
@@ -20,6 +22,7 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond403WithTextPlain;
@@ -27,7 +30,6 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
 
-import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -58,6 +60,8 @@ import org.folio.util.StringUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.google.common.collect.Maps;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -67,6 +71,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+
+  private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
 
   @Validate
   @Override
@@ -118,7 +124,7 @@ public class PatronServicesResourceImpl implements Patron {
                     return CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
                         .thenApply(done -> account);
                   }
-                  return CompletableFuture.completedFuture(account);
+                  return completedFuture(account);
                 });
 
             return CompletableFuture.allOf(cf1, cf2, cf3)
@@ -288,35 +294,23 @@ public class PatronServicesResourceImpl implements Patron {
 
     final Hold[] holds = new Hold[1];
 
-    try {
-      httpClient.get("/circulation/requests/" + holdId, Map.of(), okapiHeaders)
-        .thenApply(ResponseInterpreter::verifyAndExtractBody)
-        .thenApply( body -> {
-          final Item item = getItem(body);
-          final Hold hold = getHold(body, item);
-          holds[0] = constructNewHoldWithCancellationFields(hold, entity);
-          return body;
-        })
-        .thenCompose( anUpdatedRequest -> {
-          try {
-            JsonObject cancelRequest = createCancelRequest(anUpdatedRequest, entity);
-            return httpClient.put("/circulation/requests/" + holdId, cancelRequest, okapiHeaders);
-          } catch (Exception e) {
-              asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-              return null;
-            }
-        })
-        .thenApply(ResponseInterpreter::verifyAndExtractBody)
-        .thenAccept(
-            body -> asyncResultHandler.handle(succeededFuture(
-              PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson(holds[0]))))
-        .exceptionally(throwable -> {
-            asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
-            return null;
-        });
-    } catch (Exception e) {
-      asyncResultHandler.handle(handleHoldCancelPOSTError(e));
-    }
+    completedFuture(format(CIRCULATION_REQUESTS, holdId))
+      .thenCompose(path -> httpClient.get(path, Map.of(), okapiHeaders))
+      .thenApply(ResponseInterpreter::verifyAndExtractBody)
+      .thenApply(body -> {
+        holds[0] = constructNewHoldWithCancellationFields(getHold(body, getItem(body)), entity);
+        return body;
+      })
+      .thenCompose(updatedRequest -> httpClient.put(format(CIRCULATION_REQUESTS, holdId),
+        createCancelRequest(updatedRequest, entity), okapiHeaders))
+      .thenApply(ResponseInterpreter::verifyAndExtractBody)
+      .whenComplete((body, throwable) -> {
+        if (throwable != null) {
+          asyncResultHandler.handle(handleHoldCancelPOSTError(throwable));
+        } else {
+          asyncResultHandler.handle(succeededFuture(respond200WithApplicationJson(holds[0])));
+        }
+      });
   }
 
   @Validate
@@ -750,16 +744,16 @@ public class PatronServicesResourceImpl implements Patron {
 
   private String buildQueryWithUserId(String userId, String sortBy) {
     if(StringUtils.isNoneBlank(sortBy)) {
-      return String.format("(userId==%s and status.name==Open) sortBy %s", userId, sortBy);
+      return format("(userId==%s and status.name==Open) sortBy %s", userId, sortBy);
     }
-    return String.format("(userId==%s and status.name==Open)", userId);
+    return format("(userId==%s and status.name==Open)", userId);
   }
 
   private String buildQueryWithRequesterId(String requesterId, String sortBy) {
     if(StringUtils.isNoneBlank(sortBy)) {
-      return String.format("(requesterId==%s and status==Open*) sortBy %s", requesterId, sortBy);
+      return format("(requesterId==%s and status==Open*) sortBy %s", requesterId, sortBy);
     }
-    return String.format("(requesterId==%s and status==Open*)", requesterId);
+    return format("(requesterId==%s and status==Open*)", requesterId);
   }
 
 }

@@ -357,6 +357,12 @@ public class PatronResourceImplTest {
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(responseBody);
+          } if (badDataValue != null && badDataValue.equals("hold_cancel_request_without_item")) {
+            String responseBody = readMockFile(mockDataFolder + "/hold_cancel_request_without_item.json");
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(responseBody);
           } else {
             String responseBody = readMockFile(mockDataFolder + "/hold_cancel.json");
             req.response()
@@ -1346,6 +1352,39 @@ public class PatronResourceImplTest {
       holdErrorResponse.getErrors().get(0).getParameters().get(0).getValue());
 
     // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void cancelRequestShouldNotFailWithoutItem() {
+    logger.info("Testing cancelling request without item");
+
+    String aBody = readMockFile(mockDataFolder + "/hold_cancel_request.json");
+    JsonObject jsonBody = new JsonObject(aBody);
+    jsonBody.remove("item");
+    aBody = jsonBody.encodePrettily();
+
+    var holdCancelResponse = given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(new Header(okapiBadDataHeader, "hold_cancel_request_without_item"))
+        .header(contentTypeHeader)
+        .body(aBody)
+        .pathParam("accountId", goodUserId)
+        .pathParam("holdId", goodCancelHoldId)
+        .log().all()
+      .when()
+        .contentType(ContentType.JSON)
+        .post(accountPath + holdPath + holdIdPath + cancelPath)
+      .then()
+        .log().all()
+        .and().assertThat().contentType(ContentType.JSON)
+        .and().assertThat().statusCode(200)
+        .extract()
+        .asString();
+
+    final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
+    verifyHold(expectedHold, new JsonObject(holdCancelResponse));
     logger.info("Test done");
   }
 
