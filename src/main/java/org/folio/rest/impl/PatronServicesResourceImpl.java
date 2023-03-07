@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
@@ -70,6 +71,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+
+  private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
 
   @Validate
   @Override
@@ -291,14 +294,14 @@ public class PatronServicesResourceImpl implements Patron {
 
     final Hold[] holds = new Hold[1];
 
-    completedFuture("/circulation/requests/" + holdId)
+    completedFuture(format(CIRCULATION_REQUESTS, holdId))
       .thenCompose(path -> httpClient.get(path, Map.of(), okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(body -> {
         holds[0] = constructNewHoldWithCancellationFields(getHold(body, getItem(body)), entity);
         return body;
       })
-      .thenCompose(updatedRequest -> httpClient.put("/circulation/requests/" + holdId,
+      .thenCompose(updatedRequest -> httpClient.put(format(CIRCULATION_REQUESTS, holdId),
         createCancelRequest(updatedRequest, entity), okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .whenComplete((body, throwable) -> {
@@ -741,16 +744,16 @@ public class PatronServicesResourceImpl implements Patron {
 
   private String buildQueryWithUserId(String userId, String sortBy) {
     if(StringUtils.isNoneBlank(sortBy)) {
-      return String.format("(userId==%s and status.name==Open) sortBy %s", userId, sortBy);
+      return format("(userId==%s and status.name==Open) sortBy %s", userId, sortBy);
     }
-    return String.format("(userId==%s and status.name==Open)", userId);
+    return format("(userId==%s and status.name==Open)", userId);
   }
 
   private String buildQueryWithRequesterId(String requesterId, String sortBy) {
     if(StringUtils.isNoneBlank(sortBy)) {
-      return String.format("(requesterId==%s and status==Open*) sortBy %s", requesterId, sortBy);
+      return format("(requesterId==%s and status==Open*) sortBy %s", requesterId, sortBy);
     }
-    return String.format("(requesterId==%s and status==Open*)", requesterId);
+    return format("(requesterId==%s and status==Open*)", requesterId);
   }
 
 }

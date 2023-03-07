@@ -1385,8 +1385,6 @@ public class PatronResourceImplTest {
 
     final var expectedHold = new JsonObject(readMockFile(mockDataFolder + "/response_testPostPatronAccountByIdItemByItemIdHoldCancel.json"));
     verifyHold(expectedHold, new JsonObject(holdCancelResponse));
-
-    // Test done
     logger.info("Test done");
   }
 
