@@ -1,3 +1,7 @@
+# 5.5.2 2023-03-14
+
+* Fix HTTP 500 error when cancelling TLR without an item ([MODPATRON-131](https://github.com/folio-org/mod-patron/pull/125))
+
 # 5.5.1 2023-02-23
 
 * Upgrade dependencies for Orchid (RMB, Vertx, Log4j, lombok) ([MODPATRON-126](https://github.com/folio-org/mod-patron/pull/123))
