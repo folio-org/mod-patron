@@ -80,9 +80,11 @@ class HoldHelpers {
 
   static JsonObject createCancelRequest(JsonObject body, Hold entity) {
     JsonObject itemJson = body.getJsonObject(JSON_FIELD_ITEM);
-    itemJson.remove(JSON_FIELD_TITLE);
-    itemJson.remove(JSON_FIELD_INSTANCE_ID);
-    itemJson.remove(JSON_FIELD_CONTRIBUTORS);
+    if (itemJson != null) {
+      itemJson.remove(JSON_FIELD_TITLE);
+      itemJson.remove(JSON_FIELD_INSTANCE_ID);
+      itemJson.remove(JSON_FIELD_CONTRIBUTORS);
+    }
 
     JsonObject cancelRequest = new JsonObject()
       .put("id", body.getString(JSON_FIELD_ID))
