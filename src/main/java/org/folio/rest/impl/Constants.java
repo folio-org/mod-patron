@@ -31,5 +31,5 @@ class Constants {
   static final String JSON_FIELD_REQUEST_TYPE = "requestType";
   static final String JSON_FIELD_REQUESTER = "requester";
   static final String JSON_FIELD_REQUESTER_ID = "requesterId";
-  static final String JSON_FIELD_FULFILMENT_PREFERENCE = "fulfilmentPreference";
+  static final String JSON_FIELD_FULFILLMENT_PREFERENCE = "fulfillmentPreference";
 }

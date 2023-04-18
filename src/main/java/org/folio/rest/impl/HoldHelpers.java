@@ -5,7 +5,7 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_DATE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_REASON_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_USER_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
-import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILMENT_PREFERENCE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILLMENT_PREFERENCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
@@ -97,7 +97,7 @@ class HoldHelpers {
       .put("holdingsRecordId", body.getString(JSON_FIELD_HOLDINGS_RECORD_ID))
       .put("itemId", body.getString(JSON_FIELD_ITEM_ID))
       .put("item", itemJson)
-      .put("fulfilmentPreference", body.getString(JSON_FIELD_FULFILMENT_PREFERENCE))
+      .put("fulfillmentPreference", body.getString(JSON_FIELD_FULFILLMENT_PREFERENCE))
       .put("requestType", body.getString(JSON_FIELD_REQUEST_TYPE))
       .put("pickupServicePointId", body.getString(JSON_FIELD_PICKUP_SERVICE_POINT_ID))
       .put("patronComments", body.getString(JSON_FIELD_PATRON_COMMENTS));

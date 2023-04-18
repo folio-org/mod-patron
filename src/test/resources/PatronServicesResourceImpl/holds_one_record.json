@@ -9,7 +9,7 @@
       "requestLevel": "Item",
       "requestType": "Hold",
       "requestDate": "2018-05-01T05:01:15Z",
-      "fulfilmentPreference": "Hold Shelf",
+      "fulfillmentPreference": "Hold Shelf",
       "status": "Open - Awaiting pickup",
       "position": 3,
       "instance": {

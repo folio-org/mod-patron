@@ -40,7 +40,7 @@
     "barcode": "456",
     "patronGroupId": "3684a786-6671-4268-8ed0-9db82ebca60b"
   },
-  "fulfilmentPreference": "Hold Shelf",
+  "fulfillmentPreference": "Hold Shelf",
   "pickupServicePointId": "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
   "metadata": {
     "createdDate": "2021-09-06T15:37:56.188+00:00",

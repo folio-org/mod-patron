@@ -70,8 +70,11 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class PatronServicesResourceImpl implements Patron {
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+public class PatronServicesResourceImpl implements Patron {
+  private final Logger logger = LogManager.getLogger();
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
 
   @Validate
@@ -277,6 +280,7 @@ public class PatronServicesResourceImpl implements Patron {
                 asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
               })
               .exceptionally(e -> {
+                
                 asyncResultHandler.handle(handleItemHoldPOSTError(e));
                 return null;
               });
@@ -319,7 +323,6 @@ public class PatronServicesResourceImpl implements Patron {
       String instanceId, Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
       Context vertxContext) {
-
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject holdJSON = new JsonObject()
@@ -334,6 +337,7 @@ public class PatronServicesResourceImpl implements Patron {
           new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
     }
 
+    logger.info(holdJSON);
     try {
       httpClient.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
@@ -343,10 +347,12 @@ public class PatronServicesResourceImpl implements Patron {
             asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
+            logger.info("error placing hold (inner): " + throwable.getMessage());
             asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
             return null;
           });
     } catch (Exception e) {
+      logger.info("error placing hold (outer): " + e.getMessage());
       asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
@@ -638,6 +644,7 @@ public class PatronServicesResourceImpl implements Patron {
     final Throwable t = throwable.getCause();
     if (t instanceof HttpException) {
       final int code = ((HttpException) t).getCode();
+      logger.info("returned code: " + code);
       final String message = ((HttpException) t).getMessage();
       switch (code) {
       case 400:
