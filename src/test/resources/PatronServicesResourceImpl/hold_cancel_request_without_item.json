@@ -52,7 +52,7 @@
     },
     "patronGroupId":"3684a786-6671-4268-8ed0-9db82ebca60b"
   },
-  "fulfilmentPreference":"Hold Shelf",
+  "fulfillmentPreference":"Hold Shelf",
   "requestExpirationDate":"2023-03-03T23:59:59.000+00:00",
   "pickupServicePointId":"3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
   "metadata":{

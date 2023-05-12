@@ -6,7 +6,7 @@
   "requestType": "Hold",
   "requestDate": "2018-05-30T08:01:30Z",
   "requestExpirationDate": "3000-01-30T08:16:30Z",
-  "fulfilmentPreference": "Hold Shelf",
+  "fulfillmentPreference": "Hold Shelf",
   "status": "Closed - Cancelled",
   "cancellationReasonId": "b548b182-55c2-4741-b169-616d9cd995a8",
   "cancelledByUserId": "ab5a5c57-491c-4b08-8f39-907810e14913",

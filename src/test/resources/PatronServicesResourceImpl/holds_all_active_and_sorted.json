@@ -8,7 +8,7 @@
       "requestLevel": "Item",
       "requestType": "Hold",
       "requestDate": "2018-05-01T05:01:15Z",
-      "fulfilmentPreference": "Hold Shelf",
+      "fulfillmentPreference": "Hold Shelf",
       "status": "Open - Awaiting pickup",
       "position": 3,
       "instance": {
@@ -34,7 +34,7 @@
       "requestType": "Hold",
       "requestDate": "2018-04-01T15:22:12Z",
       "requestLevel": "Item",
-      "fulfilmentPreference": "Hold Shelf",
+      "fulfillmentPreference": "Hold Shelf",
       "status": "Open - Not yet filled",
       "requestExpirationDate": "2020-01-31T15:22:12Z",
       "position": 5,
@@ -54,7 +54,7 @@
       "requestLevel": "Item",
       "requestType": "Hold",
       "requestDate": "2018-06-02T08:16:30Z",
-      "fulfilmentPreference": "Hold Shelf",
+      "fulfillmentPreference": "Hold Shelf",
       "status": "Open - Not yet filled",
       "position": 1,
       "instance": {

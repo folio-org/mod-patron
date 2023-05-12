@@ -71,7 +71,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
-
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
 
   @Validate
@@ -277,6 +276,7 @@ public class PatronServicesResourceImpl implements Patron {
                 asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
               })
               .exceptionally(e -> {
+                
                 asyncResultHandler.handle(handleItemHoldPOSTError(e));
                 return null;
               });
@@ -319,7 +319,6 @@ public class PatronServicesResourceImpl implements Patron {
       String instanceId, Hold entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
       Context vertxContext) {
-
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject holdJSON = new JsonObject()

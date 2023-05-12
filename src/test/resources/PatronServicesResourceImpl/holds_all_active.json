@@ -30,7 +30,7 @@
       "itemId": "26670295-716a-4f84-8f65-2ef31707c017",
       "requestType": "Hold",
       "requestDate": "2018-06-02T08:16:30Z",
-      "fulfilmentPreference": "Hold Shelf",
+      "fulfillmentPreference": "Hold Shelf",
       "status": "Open - Not yet filled",
       "position": 1,
       "item" :{
@@ -68,7 +68,7 @@
       "itemId": "dbdcb2b5-b302-4254-a55d-3c429794a4bb",
       "requestType": "Hold",
       "requestDate": "2018-05-01T05:01:15Z",
-      "fulfilmentPreference": "Hold Shelf",
+      "fulfillmentPreference": "Hold Shelf",
       "status": "Open - Awaiting pickup",
       "position": 3,
       "item" :{
@@ -105,7 +105,7 @@
       "itemId": "c3cfcb01-4f5d-40df-856a-c86ffe8f2d5f",
       "requestType": "Hold",
       "requestDate": "2018-04-01T15:22:12Z",
-      "fulfilmentPreference": "Hold Shelf",
+      "fulfillmentPreference": "Hold Shelf",
       "status": "Open - Not yet filled",
       "requestExpirationDate": "2020-01-31T15:22:12Z",
       "position": 5,

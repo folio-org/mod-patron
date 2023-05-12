@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "4.3",
+      "version": "5.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -75,7 +75,7 @@
     },
     {
       "id": "circulation",
-      "version": "11.0 12.0 13.0"
+      "version": "14.0"
     },
     {
       "id": "feesfines",
