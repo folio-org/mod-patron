@@ -648,10 +648,25 @@ public class PatronResourceImplTest {
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/localization_settings.json"));
       } else if (req.path().equals("/circulation/requests/allowed-service-points")) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(mockDataFolder + "/allowed_sp_mod_circulation_response.json"));
+        final String errorStatusCode = req.getHeader(okapiBadDataHeader);
+        if (errorStatusCode != null) {
+          if ("422".equals(errorStatusCode)) {
+            req.response()
+              .setStatusCode(422)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/allowed_service_points_instance_not_found.json"));
+          } else {
+            req.response()
+              .setStatusCode(Integer.parseInt(errorStatusCode))
+              .putHeader("content-type", "text/plain")
+              .end("Internal error");
+          }
+        } else {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/allowed_sp_mod_circulation_response.json"));
+        }
       }
       else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
@@ -1601,7 +1616,7 @@ public class PatronResourceImplTest {
   final void allowedServicePointsShouldSucceed() {
     logger.info("Testing allowed service points");
 
-    var allowedSpResponse = given()
+    var response = given()
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
@@ -1620,7 +1635,61 @@ public class PatronResourceImplTest {
 
     final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder +
       "/allowed_sp_mod_patron_expected_response.json"));
-    verifyAllowedServicePoints(expectedJson, new JsonObject(allowedSpResponse));
+    verifyAllowedServicePoints(expectedJson, new JsonObject(response));
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsShouldFailWhenModCirculationFails() {
+    logger.info("Testing allowed service points");
+
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .header(new Header(okapiBadDataHeader, "500"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(TEXT)
+      .and().assertThat().statusCode(500)
+      .extract()
+      .asString();
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsShouldProxyModCirculationErrors() {
+    logger.info("Testing allowed service points");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .header(new Header(okapiBadDataHeader, "422"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(JSON)
+      .and().assertThat().statusCode(422)
+      .extract()
+      .asString();
+
+    final var expected = readMockFile(mockDataFolder +
+      "/allowed_service_points_instance_not_found.json");
+    assertEquals(new JsonObject(expected), new JsonObject(response));
+
     logger.info("Test done");
   }
 
