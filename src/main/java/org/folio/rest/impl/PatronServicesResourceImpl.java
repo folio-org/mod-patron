@@ -800,8 +800,8 @@ public class PatronServicesResourceImpl implements Patron {
     final Future<javax.ws.rs.core.Response> result;
 
     final Throwable t = throwable.getCause();
-    if (t instanceof HttpException) {
-      final int code = ((HttpException) t).getCode();
+    if (t instanceof HttpException httpexception) {
+      final int code = httpexception.getCode();
       final String message = t.getMessage();
       if (code == 422) {
         final Errors errors = Json.decodeValue(message, Errors.class);

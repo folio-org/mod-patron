@@ -1598,7 +1598,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void allowedServicePointsShouldSucceed() {
+  final void allowedServicePointsShouldSucceed() {
     logger.info("Testing allowed service points");
 
     var allowedSpResponse = given()
