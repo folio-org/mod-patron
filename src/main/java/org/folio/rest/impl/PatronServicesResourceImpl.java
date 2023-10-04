@@ -590,12 +590,8 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private AllowedServicePoints getAllowedServicePoints(JsonObject body) {
-    JsonArray pageAllowedServicePoints = body.getJsonArray("Page");
-    JsonArray holdAllowedServicePoints = body.getJsonArray("Hold");
-    JsonArray recallAllowedServicePoints = body.getJsonArray("Recall");
-
-    Set<AllowedServicePoint> allowedSpSet = Stream.of(pageAllowedServicePoints,
-        holdAllowedServicePoints, recallAllowedServicePoints)
+    Set<AllowedServicePoint> allowedSpSet = Stream.of(body.getJsonArray("Page"),
+        body.getJsonArray("Hold"), body.getJsonArray("Recall"))
       .filter(Objects::nonNull)
       .flatMap(JsonArray::stream)
       .map(JsonObject.class::cast)
