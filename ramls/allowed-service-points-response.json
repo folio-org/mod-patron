@@ -9,5 +9,7 @@
       "$ref": "allowed-service-point.json"
     }
   },
-  "additionalProperties": false
+  "required": [
+    "allowedServicePoints"
+  ]
 }
