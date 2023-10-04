@@ -2,7 +2,7 @@
 title: Patron Services
 baseUri: https://github.com/folio-org/mod-patron
 protocols: [ HTTPS ]
-version: v4.1
+version: v4.2
 
 documentation:
   - title: Patron Services
@@ -17,6 +17,7 @@ types:
   charge: !include charge.json
   money: !include money.json
   item: !include item.json
+  allowedServicePoints: !include allowed-service-points-response.json
   errors: !include raml-util/schemas/errors.schema
   error: !include raml-util/schemas/error.schema
   parameters: !include raml-util/schemas/parameters.schema
@@ -275,6 +276,32 @@ traits:
                   body:
                     text/plain:
                       example: Optimistic Locking Conflict
+                500:
+                  description: |
+                    Internal server error, e.g. due to misconfiguration
+                  body:
+                    text/plain:
+                      example: internal server error, contact administrator
+          /allowed-service-points:
+            displayName: Allowed service points
+            description: Services that provides a list of allowed pickup service points
+            get:
+              description: |
+                Returns a list of pickup service points allowed for a particular patron and instance
+              is: [ validate ]
+              responses:
+                200:
+                  description: |
+                    Successfully returns a list of allowed service points
+                  body:
+                    application/json:
+                      type: allowedServicePoints
+                      example: !include examples/allowed-service-points-response.json
+                422:
+                  description: Validation error
+                  body:
+                    application/json:
+                      type: errors
                 500:
                   description: |
                     Internal server error, e.g. due to misconfiguration

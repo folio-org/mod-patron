@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "5.0",
+      "version": "5.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -60,6 +60,14 @@
             "circulation.requests.item.put",
             "circulation.requests.item.get"
           ]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/allowed-service-points",
+          "permissionsRequired": ["patron.hold.allowed-service-points.get"],
+          "modulePermissions": [
+            "circulation.requests.allowed-service-points.get"
+          ]
         }
       ]
     }
@@ -111,6 +119,11 @@
       "permissionName": "patron.hold.cancel.item.post",
       "displayName": "patron - remove a hold",
       "description": "Removes the specified hold"
+    },
+    {
+      "permissionName": "patron.hold.allowed-service-points.get",
+      "displayName": "patron - get a list of allowed service points for a hold",
+      "description": "Get a list of allowed service points for a hold"
     },
     {
       "permissionName": "patron.all",

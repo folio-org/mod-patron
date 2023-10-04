@@ -8,6 +8,7 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Objects;
@@ -72,6 +73,7 @@ public class PatronResourceImplTest {
   private final String holdIdPath = "/{holdId}";
   private final String renewPath = "/renew";
   private final String cancelPath = "/cancel";
+  private final String allowedServicePointsPath = "/allowed-service-points";
   private final String okapiBadDataHeader = "x-okapi-bad-data";
   private final String holdingsStorage = "/holdings-storage/holdings/";
 
@@ -645,7 +647,28 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/localization_settings.json"));
-      } else {
+      } else if (req.path().equals("/circulation/requests/allowed-service-points")) {
+        final String errorStatusCode = req.getHeader(okapiBadDataHeader);
+        if (errorStatusCode != null) {
+          if ("422".equals(errorStatusCode)) {
+            req.response()
+              .setStatusCode(422)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/allowed_service_points_instance_not_found.json"));
+          } else {
+            req.response()
+              .setStatusCode(Integer.parseInt(errorStatusCode))
+              .putHeader("content-type", "text/plain")
+              .end("Internal error");
+          }
+        } else {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/allowed_sp_mod_circulation_response.json"));
+        }
+      }
+      else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
     });
@@ -1589,6 +1612,87 @@ public class PatronResourceImplTest {
     logger.info("Test done");
   }
 
+  @Test
+  final void allowedServicePointsShouldSucceed() {
+    logger.info("Testing allowed service points");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder +
+      "/allowed_sp_mod_patron_expected_response.json"));
+    verifyAllowedServicePoints(expectedJson, new JsonObject(response));
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsShouldFailWhenModCirculationFails() {
+    logger.info("Testing allowed service points");
+
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .header(new Header(okapiBadDataHeader, "500"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(TEXT)
+      .and().assertThat().statusCode(500)
+      .extract()
+      .asString();
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsShouldProxyModCirculationErrors() {
+    logger.info("Testing allowed service points");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .header(new Header(okapiBadDataHeader, "422"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(JSON)
+      .and().assertThat().statusCode(422)
+      .extract()
+      .asString();
+
+    final var expected = readMockFile(mockDataFolder +
+      "/allowed_service_points_instance_not_found.json");
+    assertEquals(new JsonObject(expected), new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
   static Stream<Arguments> tlrFeatureStates() {
     return Stream.of(
       Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHoldNoItemId.json", true, true),
@@ -1784,5 +1888,26 @@ public class PatronResourceImplTest {
       return true;
     }
     return false;
+  }
+
+  private void verifyAllowedServicePoints(JsonObject expectedAllowedServicePoints,
+    JsonObject actualAllowedServicePoints) {
+
+    JsonArray expectedAllowedServicePointsArray = expectedAllowedServicePoints
+      .getJsonArray("allowedServicePoints");
+    JsonArray actualAllowedServicePointsArray = actualAllowedServicePoints
+      .getJsonArray("allowedServicePoints");
+
+    assertEquals(expectedAllowedServicePointsArray.size(), actualAllowedServicePointsArray.size());
+
+    expectedAllowedServicePoints.getJsonArray("allowedServicePoints").stream()
+      .map(JsonObject.class::cast)
+      .forEach(e -> {
+        boolean match = actualAllowedServicePointsArray.stream()
+          .map(JsonObject.class::cast)
+          .map(a -> a.getString("id"))
+          .anyMatch(aid -> aid.equals(e.getString("id")));
+        assertTrue(match);
+      });
   }
 }

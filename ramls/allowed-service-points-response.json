@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Allowed pickup service points grouped by request type",
+  "type": "object",
+  "properties": {
+    "allowedServicePoints": {
+      "description": "Allowed pickup service point IDs for Page requests",
+      "type": "array",
+      "$ref": "allowed-service-point.json"
+    }
+  },
+  "required": [
+    "allowedServicePoints"
+  ]
+}
