@@ -35,8 +35,17 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.http.HttpClientFactory;
@@ -47,6 +56,8 @@ import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
 import org.folio.patron.rest.exceptions.ValidationException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.AllowedServicePoint;
+import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.Charge;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -72,6 +83,8 @@ import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
+  private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
+    "/circulation/requests/allowed-service-points?operation=create&requesterId=%s&instanceId=%s";
 
   @Validate
   @Override
@@ -350,6 +363,34 @@ public class PatronServicesResourceImpl implements Patron {
     }
   }
 
+  @Override
+  public void getPatronAccountInstanceAllowedServicePointsByIdAndInstanceId(String requesterId,
+    String instanceId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    String url = format(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS, requesterId, instanceId);
+
+    try {
+      httpClient.get(url, okapiHeaders)
+        .thenApply(ResponseInterpreter::verifyAndExtractBody)
+        .thenAccept(body -> {
+          AllowedServicePoints allowedServicePoints = getAllowedServicePoints(body);
+          asyncResultHandler.handle(succeededFuture(
+            GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
+              .respond200WithApplicationJson(allowedServicePoints)));
+        })
+        .exceptionally(throwable -> {
+          asyncResultHandler.handle(handleAllowedServicePointsGetError(throwable));
+          return null;
+        });
+    } catch (Exception e) {
+      asyncResultHandler.handle(succeededFuture(
+        GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
+          .respond500WithTextPlain(e.getMessage())));
+    }
+  }
+
   private Account addLoans(Account account, JsonObject body, boolean includeLoans) {
     final int totalLoans = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Loan> loans = new ArrayList<>();
@@ -554,6 +595,30 @@ public class PatronServicesResourceImpl implements Patron {
       "limit", String.valueOf(Integer.MAX_VALUE));
   }
 
+  private AllowedServicePoints getAllowedServicePoints(JsonObject body) {
+    JsonArray pageAllowedServicePoints = body.getJsonArray("Page");
+    JsonArray holdAllowedServicePoints = body.getJsonArray("Hold");
+    JsonArray recallAllowedServicePoints = body.getJsonArray("Recall");
+
+    Set<AllowedServicePoint> allowedSpSet = Stream.of(pageAllowedServicePoints,
+        holdAllowedServicePoints, recallAllowedServicePoints)
+      .filter(Objects::nonNull)
+      .flatMap(JsonArray::stream)
+      .map(JsonObject.class::cast)
+      .map(sp -> new AllowedServicePoint()
+        .withId(sp.getString("id"))
+        .withName(sp.getString("name")))
+      .filter(distinctBy(AllowedServicePoint::getId))
+      .collect(Collectors.toSet());
+
+    return new AllowedServicePoints().withAllowedServicePoints(allowedSpSet);
+  }
+
+  public static <T> Predicate<T> distinctBy(Function<? super T, ?> keyFunction) {
+    Set<Object> result = ConcurrentHashMap.newKeySet();
+    return o -> result.add(keyFunction.apply(o));
+  }
+
   private Future<javax.ws.rs.core.Response> handleError(Throwable throwable) {
     final Future<javax.ws.rs.core.Response> result;
 
@@ -736,6 +801,31 @@ public class PatronServicesResourceImpl implements Patron {
       }
     } else {
       result = succeededFuture(PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond500WithTextPlain(throwable.getMessage()));
+    }
+
+    return result;
+  }
+
+  private Future<javax.ws.rs.core.Response> handleAllowedServicePointsGetError(Throwable throwable) {
+    final Future<javax.ws.rs.core.Response> result;
+
+    final Throwable t = throwable.getCause();
+    if (t instanceof HttpException) {
+      final int code = ((HttpException) t).getCode();
+      final String message = t.getMessage();
+      if (code == 422) {
+        final Errors errors = Json.decodeValue(message, Errors.class);
+        result = succeededFuture(
+          GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
+            .respond422WithApplicationJson(errors));
+      } else {
+        result = succeededFuture(
+          GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
+            .respond500WithTextPlain(message));
+      }
+    } else {
+      result = succeededFuture(GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
+        .respond500WithTextPlain(throwable.getMessage()));
     }
 
     return result;
