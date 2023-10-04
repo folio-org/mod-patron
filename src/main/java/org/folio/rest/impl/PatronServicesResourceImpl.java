@@ -369,26 +369,20 @@ public class PatronServicesResourceImpl implements Patron {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
-    String url = format(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS, requesterId, instanceId);
 
-    try {
-      httpClient.get(url, okapiHeaders)
-        .thenApply(ResponseInterpreter::verifyAndExtractBody)
-        .thenAccept(body -> {
-          AllowedServicePoints allowedServicePoints = getAllowedServicePoints(body);
+    completedFuture(format(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS, requesterId, instanceId))
+      .thenCompose(path -> httpClient.get(path, Map.of(), okapiHeaders))
+      .thenApply(ResponseInterpreter::verifyAndExtractBody)
+      .thenApply(this::getAllowedServicePoints)
+      .whenComplete((allowedServicePoints, throwable) -> {
+        if (throwable != null) {
+          asyncResultHandler.handle(handleAllowedServicePointsGetError(throwable));
+        } else {
           asyncResultHandler.handle(succeededFuture(
             GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
               .respond200WithApplicationJson(allowedServicePoints)));
-        })
-        .exceptionally(throwable -> {
-          asyncResultHandler.handle(handleAllowedServicePointsGetError(throwable));
-          return null;
-        });
-    } catch (Exception e) {
-      asyncResultHandler.handle(succeededFuture(
-        GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
-          .respond500WithTextPlain(e.getMessage())));
-    }
+        }
+      });
   }
 
   private Account addLoans(Account account, JsonObject body, boolean includeLoans) {
