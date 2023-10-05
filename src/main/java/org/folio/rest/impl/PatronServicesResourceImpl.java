@@ -84,7 +84,7 @@ import io.vertx.core.json.JsonObject;
 public class PatronServicesResourceImpl implements Patron {
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
-    "/circulation/requests/allowed-service-points?operation=create&requesterId=%s&instanceId=%s";
+    "/circulation/requests/allowed-service-points";
 
   @Validate
   @Override
@@ -369,9 +369,11 @@ public class PatronServicesResourceImpl implements Patron {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    var queryParameters = Map.of("operation", "create",
+      "requesterId", requesterId, "instanceId", instanceId);
 
-    completedFuture(format(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS, requesterId, instanceId))
-      .thenCompose(path -> httpClient.get(path, Map.of(), okapiHeaders))
+    completedFuture(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS)
+      .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getAllowedServicePoints)
       .whenComplete((allowedServicePoints, throwable) -> {
