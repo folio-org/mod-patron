@@ -662,10 +662,19 @@ public class PatronResourceImplTest {
               .end("Internal error");
           }
         } else {
-          req.response()
-            .setStatusCode(200)
-            .putHeader("content-type", "application/json")
-            .end(readMockFile(mockDataFolder + "/allowed_sp_mod_circulation_response.json"));
+          if ("create".equals(req.getParam("operation"))
+            && goodUserId.equals(req.getParam("requesterId"))
+            && goodInstanceId.equals(req.getParam("instanceId"))) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/allowed_sp_mod_circulation_response.json"));
+          } else {
+            req.response()
+              .setStatusCode(400)
+              .putHeader("content-type", "text/plain")
+              .end("Invalid combination of query parameters");
+          }
         }
       }
       else {
