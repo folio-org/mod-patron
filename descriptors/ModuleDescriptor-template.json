@@ -134,7 +134,8 @@
         "patron.renew.item.post",
         "patron.hold.item.post",
         "patron.hold.instance.item.post",
-        "patron.hold.cancel.item.post"
+        "patron.hold.cancel.item.post",
+        "patron.hold.allowed-service-points.get"
       ]
     }
   ],
