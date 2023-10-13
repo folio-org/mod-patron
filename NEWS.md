@@ -1,3 +1,16 @@
+# 6.0.0 2023-10-13
+
+* Add allowed SP permission (MODPATRON-147)
+* Add query parameters to allowed SP call (MODPATRON-147)
+* Add allowed-service-points endpoint (MODPATRON-147)
+* Move to Java 17 (MODPATRON-146)
+* Fix holdId description
+* Use GitHub Workflows api-lint and api-schema-lint and api-doc (MODPATRON-139)
+* Change spelling of parameter (MODPATRON-137)
+* Updating feesfines interface to 18.0 (MODPATRON-133)
+* Fix HTTP 500 error when cancelling TLR without an item (MODPATRON-131)
+* Upgrade dependencies for Orchid (RMB, Vertx, Log4j, lombok) (MODPATRON-126)
+
 # 5.5.0 2023-02-15
 
 * Requires `inventory` `5.2 6.0 7.0 8.0 9.0 10.0 11.0 12.0 or 13.0` ([MODPATRON-124](https://issues.folio.org/browse/MODPATRON-124))
