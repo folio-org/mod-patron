@@ -23,6 +23,9 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_TYPE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
 
 import io.vertx.core.json.JsonObject;
+import java.lang.invoke.MethodHandles;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.jaxrs.model.Item;
 import org.joda.time.DateTime;
@@ -31,6 +34,9 @@ import org.joda.time.DateTimeZone;
 import java.text.SimpleDateFormat;
 
 class HoldHelpers {
+
+  private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
+
   private HoldHelpers() {}
 
   static JsonObject addCancellationFieldsToRequest(JsonObject request, Hold entity) {
@@ -42,6 +48,8 @@ class HoldHelpers {
     request.put("cancelledByUserId", entity.getCanceledByUserId());
     request.put("cancelledDate", formatter.format(entity.getCanceledDate()));
     request.put("status", Hold.Status.CLOSED_CANCELLED.value());
+
+    log.info("Cancellation request with populated fields: {}", request);
     return request;
   }
 
@@ -51,6 +59,8 @@ class HoldHelpers {
     newHold.withCanceledByUserId(tempHoldEntity.getCanceledByUserId());
     newHold.withCanceledDate(tempHoldEntity.getCanceledDate());
     newHold.withStatus(Hold.Status.CLOSED_CANCELLED);
+
+    log.info("New hold with cancellation field: {}", newHold);
     return newHold;
   }
 
@@ -75,6 +85,8 @@ class HoldHelpers {
     if (canceledationDate != null && !canceledationDate.isEmpty()) {
       hold.withCanceledDate(new DateTime(canceledationDate, DateTimeZone.UTC).toDate());
     }
+
+    log.info("Populated hold entity: {}", JsonObject.mapFrom(hold));
     return hold;
   }
 

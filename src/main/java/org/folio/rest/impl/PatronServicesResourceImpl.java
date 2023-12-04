@@ -30,6 +30,7 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -39,6 +40,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -71,6 +74,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+
+  private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
 
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
 
@@ -334,6 +339,8 @@ public class PatronServicesResourceImpl implements Patron {
           new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
     }
 
+    log.info("Prepared holdJSON: {}", holdJSON);
+
     try {
       httpClient.post("/circulation/requests/instances", holdJSON, okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
@@ -343,10 +350,12 @@ public class PatronServicesResourceImpl implements Patron {
             asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
           })
           .exceptionally(throwable -> {
+            log.error("Exception during handling circulation response: {}", throwable);
             asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
             return null;
           });
     } catch (Exception e) {
+      log.error("Exception during place request: {}", e);
       asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
@@ -389,11 +398,14 @@ public class PatronServicesResourceImpl implements Patron {
       }
     }
 
-    return new Item()
-        .withAuthor(sb.length() == 0 ? null : sb.toString())
-        .withInstanceId(itemJson.getString(JSON_FIELD_INSTANCE_ID))
-        .withItemId(itemId)
-        .withTitle(itemJson.getString(JSON_FIELD_TITLE));
+    var item = new Item()
+      .withAuthor(sb.length() == 0 ? null : sb.toString())
+      .withInstanceId(itemJson.getString(JSON_FIELD_INSTANCE_ID))
+      .withItemId(itemId)
+      .withTitle(itemJson.getString(JSON_FIELD_TITLE));
+
+    log.info("Populated item object: {}", JsonObject.mapFrom(item));
+    return item;
   }
 
   private Item getItem(JsonObject body) {

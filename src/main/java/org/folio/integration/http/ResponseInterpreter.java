@@ -2,17 +2,22 @@ package org.folio.integration.http;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletionException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.patron.rest.exceptions.HttpException;
 
 import io.vertx.core.json.JsonObject;
 
 public class ResponseInterpreter {
+  private static final Logger log = LogManager.getLogger(MethodHandles.lookup().lookupClass());
   private ResponseInterpreter() {}
 
   public static JsonObject verifyAndExtractBody(Response response) {
     if (!response.isSuccess()) {
+      log.error("Error during parsing response: {}", response.body);
       throw new CompletionException(new HttpException(response.statusCode,
         response.body));
     }
