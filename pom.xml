@@ -39,8 +39,8 @@
     <ramlfiles_util_path>${ramlfiles_path}/raml-util</ramlfiles_util_path>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <aspectj.version>1.9.19</aspectj.version>
-    <raml-module-builder.version>35.0.6</raml-module-builder.version> <!-- also update vertx.version -->
-    <vertx.version>4.3.8</vertx.version>
+    <raml-module-builder.version>35.2.0</raml-module-builder.version> <!-- also update vertx.version -->
+    <vertx.version>4.5.5</vertx.version>
   </properties>
 
   <repositories>
