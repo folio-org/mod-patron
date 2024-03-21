@@ -1,3 +1,8 @@
+# 6.1.0 2023-03-21
+
+* Upgrade to RMB 35.2.0, Vertx 4.5.5, Spring 6.1.5 (MODPATRON-160)
+* Raise feesfines interface version to 19.0 (MODPATRON-149)
+
 # 6.0.0 2023-10-13
 
 * Add allowed SP permission (MODPATRON-147)
