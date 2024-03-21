@@ -39,8 +39,8 @@
     <ramlfiles_util_path>${ramlfiles_path}/raml-util</ramlfiles_util_path>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <aspectj.version>1.9.19</aspectj.version>
-    <raml-module-builder.version>35.0.6</raml-module-builder.version> <!-- also update vertx.version -->
-    <vertx.version>4.3.8</vertx.version>
+    <raml-module-builder.version>35.2.0</raml-module-builder.version> <!-- also update vertx.version -->
+    <vertx.version>4.5.5</vertx.version>
   </properties>
 
   <repositories>
@@ -523,16 +523,16 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-stack-depchain</artifactId>
-        <version>${vertx.version}</version>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-bom</artifactId>
+        <version>2.23.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-bom</artifactId>
-        <version>2.19.0</version>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-stack-depchain</artifactId>
+        <version>${vertx.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
