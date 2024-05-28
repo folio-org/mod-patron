@@ -1,0 +1,31 @@
+{
+  "generalInfo": {
+    "externalSystemId": "ext-123456",
+    "firstName": "John",
+    "preferredFirstName": "Johnny",
+    "middleName": "M",
+    "lastName": "Doe"
+  },
+  "address0": {
+    "addressLine0": "123 Main St",
+    "addressLine1": "Apt 4B",
+    "city": "Metropolis",
+    "province": "NY",
+    "zip": "12345",
+    "country": "USA"
+  },
+  "address1": {
+    "addressLine0": "456 Side St",
+    "addressLine1": "Suite 500",
+    "city": "Metropolis",
+    "province": "NY",
+    "zip": "12346",
+    "country": "USA"
+  },
+  "contactInfo": {
+    "phone": "555-1234",
+    "mobilePhone": "555-5678",
+    "email": "john.doe@example.com"
+  },
+  "preferredEmailCommunication": ["Support", "Programs"]
+}

@@ -1,0 +1,23 @@
+{
+  "addressTypes": [
+    {
+      "addressType": "Home",
+      "desc": "Home Address",
+      "id": "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+      "metadata": {
+        "createdDate": "2024-04-18T04:59:28.712+00:00",
+        "updatedDate": "2024-04-18T04:59:28.712+00:00"
+      }
+    },
+    {
+      "addressType": "Work",
+      "desc": "Work Address",
+      "id": "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+      "metadata": {
+        "createdDate": "2024-04-18T04:59:28.754+00:00",
+        "updatedDate": "2024-04-18T04:59:28.754+00:00"
+      }
+    }
+  ],
+  "totalRecords": 2
+}

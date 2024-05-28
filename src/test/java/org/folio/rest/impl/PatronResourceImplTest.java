@@ -67,6 +67,7 @@ public class PatronResourceImplTest {
 
   private final String mockDataFolder = "PatronServicesResourceImpl";
   private final String accountPath = "/patron/account/{accountId}";
+  private final String remotePatronAccountPath = "/patron/account";
   private final String itemPath = "/item/{itemId}";
   private final String instancePath = "/instance/{instanceId}";
   private final String holdPath = "/hold";
@@ -171,6 +172,43 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/user_not_active.json"));
+      } else if (req.path().equals("/groups")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/group.json"));
+      } else if (req.path().equals("/addresstypes")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/addressTypes.json"));
+      } else if (req.path().equals("/users")) {
+        if (req.uri().equals("/users?query=%28personal.email%3D%3Dads%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dtst%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user3.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dtst12%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user4.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dtst123%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user5.json"));
+        } else {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user2.json"));
+        }
       } else if (req.path().equals(String.format("/users/%s", userIdForInvalidStatusRequest))) {
         req.response()
           .setStatusCode(200)
@@ -1167,6 +1205,102 @@ public class PatronResourceImplTest {
   }
 
   @Test
+  public final void testSuccessCreatePatron() {
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron.json"))
+      .when()
+      .post(remotePatronAccountPath)
+      .then()
+      .contentType(JSON)
+      .statusCode(201);
+  }
+
+  @Test
+  public final void testCreateDuplicateUser() {
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron2.json"))
+      .when()
+      .post(remotePatronAccountPath)
+      .then()
+      .contentType(TEXT)
+      .statusCode(403)
+      .extract()
+      .response();
+    final String body = r.getBody().asString();
+    assertNotNull(body);
+    assertEquals("User already exists", body);
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testDuplicateInactiveUser() {
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron3.json"))
+      .when()
+      .post(remotePatronAccountPath)
+      .then()
+      .contentType(TEXT)
+      .statusCode(403)
+      .extract()
+      .response();
+    final String body = r.getBody().asString();
+    assertNotNull(body);
+    assertEquals("User account is not active", body);
+  }
+
+  @Test
+  public final void testCreatePatronWithRandomPatronGroup() {
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron4.json"))
+      .when()
+      .post(remotePatronAccountPath)
+      .then()
+      .contentType(TEXT)
+      .statusCode(403)
+      .extract()
+      .response();
+    final String body = r.getBody().asString();
+    assertNotNull(body);
+    assertEquals("User does not belong to the required patron group", body);
+  }
+
+  @Test
+  public final void testCreateDuplicateUserWithDuplicateEmail() {
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron5.json"))
+      .when()
+      .post(remotePatronAccountPath)
+      .then()
+      .contentType(TEXT)
+      .statusCode(400)
+      .extract()
+      .response();
+    final String body = r.getBody().asString();
+    assertNotNull(body);
+    assertEquals("Multiple users found with the same email", body);
+  }
+
+  @Test
   public final void testCannotPostPatronAccountItemHoldByIdAndItemIdMissingField() {
     logger.info("Testing creating a hold on an item for the specified user");
 
@@ -1202,6 +1336,7 @@ public class PatronResourceImplTest {
     // Test done
     logger.info("Test done");
   }
+
 
   @Test
   public final void testCannotPostPatronAccountItemHoldByIdAndItemIdIfItemIsNullInModInventory() {

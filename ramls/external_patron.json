@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "User Information Schema",
+  "description": "Schema for user information including general info, addresses, contact info",
+  "type": "object",
+  "properties": {
+    "generalInfo": {
+      "type": "object",
+      "properties": {
+        "externalSystemId": {
+          "type": "string",
+          "description": "A unique ID that corresponds to an external authority"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The user's given name"
+        },
+        "preferredFirstName": {
+          "type": "string",
+          "description": "The user's preferred name"
+        },
+        "middleName": {
+          "type": "string",
+          "description": "The user's middle name (if any)"
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The user's surname"
+        }
+      },
+      "required": ["externalSystemId", "firstName", "lastName"],
+      "additionalProperties": false
+    },
+    "address0": {
+      "type": "object",
+      "properties": {
+        "addressLine0": {
+          "type": "string",
+          "description": "Address, Line 0"
+        },
+        "addressLine1": {
+          "type": "string",
+          "description": "Address, Line 1"
+        },
+        "city": {
+          "type": "string",
+          "description": "City name"
+        },
+        "province": {
+          "type": "string",
+          "description": "Province"
+        },
+        "zip": {
+          "type": "string",
+          "description": "Zip Code"
+        },
+        "country": {
+          "type": "string",
+          "description": "Country"
+        }
+      },
+      "required": ["addressLine0", "city", "province", "zip", "country"],
+      "additionalProperties": false
+    },
+    "address1": {
+      "type": "object",
+      "properties": {
+        "addressLine0": {
+          "type": "string",
+          "description": "Address, Line 0"
+        },
+        "addressLine1": {
+          "type": "string",
+          "description": "Address, Line 1"
+        },
+        "city": {
+          "type": "string",
+          "description": "City name"
+        },
+        "province": {
+          "type": "string",
+          "description": "Province"
+        },
+        "zip": {
+          "type": "string",
+          "description": "Zip Code"
+        },
+        "country": {
+          "type": "string",
+          "description": "Country"
+        }
+      },
+      "required": ["addressLine0", "city", "province", "zip", "country"],
+      "additionalProperties": false
+    },
+    "contactInfo": {
+      "type": "object",
+      "properties": {
+        "phone": {
+          "type": "string",
+          "description": "The user's primary phone number"
+        },
+        "mobilePhone": {
+          "type": "string",
+          "description": "The user's mobile phone number"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address",
+          "format": "email"
+        }
+      },
+      "required": ["email"],
+      "additionalProperties": false
+    },
+    "preferredEmailCommunication": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["Support", "Programs", "Service"]
+      },
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "description": "Preferred email communication types"
+    }
+  },
+  "required": ["generalInfo", "address0", "contactInfo", "preferredEmailCommunication"],
+  "additionalProperties": false
+}

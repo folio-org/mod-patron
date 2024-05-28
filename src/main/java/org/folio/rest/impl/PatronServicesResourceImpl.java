@@ -54,6 +54,8 @@ import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
 import org.folio.patron.rest.exceptions.ValidationException;
+import org.folio.patron.rest.models.User;
+import org.folio.patron.rest.utils.PatronUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AllowedServicePoint;
@@ -61,6 +63,7 @@ import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.Charge;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.ExternalPatron;
 import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loan;
@@ -82,9 +85,108 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+  private static final String HOME_ADDRESS_TYPE = "home";
+  private static final String WORK_ADDRESS_TYPE = "work";
+  private static final String TOTAL_RECORDS = "total_records";
+  private static final String QUERY = "query";
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
     "/circulation/requests/allowed-service-points";
+
+  @Override
+  public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    final var userRepository = new UserRepository(httpClient);
+    String patronEmail = entity.getContactInfo().getEmail();
+
+    getRemotePatronGroupId(userRepository, okapiHeaders)
+      .thenCompose(remotePatronGroupId -> getAddressTypes(userRepository, okapiHeaders)
+        .thenCompose(addressTypes -> {
+          String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
+          String workAddressTypeId = addressTypes.getString(WORK_ADDRESS_TYPE);
+          return getUserByEmail(patronEmail, okapiHeaders, userRepository)
+            .thenCompose(totalRecords -> handleUserRecords(totalRecords, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId));
+        })
+      )
+      .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+      .exceptionally(throwable -> {
+        asyncResultHandler.handle(Future.failedFuture(throwable));
+        return null;
+      });
+  }
+
+  private CompletableFuture<String> getRemotePatronGroupId(UserRepository userRepository, Map<String, String> okapiHeaders) {
+    return userRepository.getGroupByGroupName("staff", okapiHeaders)
+      .thenApply(responseJson -> {
+        if (responseJson.getInteger(TOTAL_RECORDS) > 0) {
+          return responseJson.getJsonArray("usergroups").getJsonObject(0).getString("id");
+        } else {
+          throw new IllegalArgumentException(new HttpException(500, "Remote patron group not found"));
+        }
+      });
+  }
+
+  private CompletableFuture<JsonObject> getAddressTypes(UserRepository userRepository, Map<String, String> okapiHeaders) {
+    return userRepository.getAddressByType(okapiHeaders)
+      .thenApply(responseJson -> {
+        JsonObject addressTypes = new JsonObject();
+        responseJson.getJsonArray("addressTypes").forEach(item -> {
+          JsonObject addressType = (JsonObject) item;
+          if ("Home".equalsIgnoreCase(addressType.getString("addressType"))) {
+            addressTypes.put("home", addressType.getString("id"));
+          } else if ("Work".equalsIgnoreCase(addressType.getString("addressType"))) {
+            addressTypes.put("work", addressType.getString("id"));
+          }
+        });
+        return addressTypes;
+      });
+  }
+
+  private CompletableFuture<Integer> getUserByEmail(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
+    return userRepository.getUserByEmail(email, okapiHeaders)
+      .thenApply(responseJson -> responseJson.getInteger(TOTAL_RECORDS));
+  }
+
+  private CompletableFuture<Response> handleUserRecords(int totalRecords, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId, String workAddressTypeId) {
+    if (totalRecords > 1) {
+      return CompletableFuture.completedFuture(
+        PostPatronAccountResponse.respond400WithTextPlain("Multiple users found with the same email")
+      );
+    } else if (totalRecords == 1) {
+      return userRepository.getUserByEmail(entity.getContactInfo().getEmail(), okapiHeaders)
+        .thenApply(responseJson -> responseJson.getJsonArray("users").getJsonObject(0))
+        .thenCompose(userJson -> processSingleUser(userJson, remotePatronGroupId));
+    } else {
+      return createUser(entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+    }
+  }
+
+  private CompletableFuture<Response> processSingleUser(JsonObject userJson, String remotePatronGroupId) {
+    boolean isActive = userJson.getBoolean("active", false);
+    String patronGroup = userJson.getString("patronGroup", "");
+
+    if (!isActive) {
+      return CompletableFuture.completedFuture(
+        PostPatronAccountResponse.respond403WithTextPlain("User account is not active")
+      );
+    } else if (remotePatronGroupId.equals(patronGroup)) {
+      return CompletableFuture.completedFuture(
+        PostPatronAccountResponse.respond403WithTextPlain("User already exists")
+      );
+    } else {
+      return CompletableFuture.completedFuture(
+        PostPatronAccountResponse.respond403WithTextPlain("User does not belong to the required patron group")
+      );
+    }
+  }
+
+  private CompletableFuture<Response> createUser(ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId, String workAddressTypeId) {
+    User user = PatronUtils.mapToUser(entity, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+    return userRepository.createUser(user, okapiHeaders)
+      .thenApply(createdUserJson ->
+        PostPatronAccountResponse.respond201WithApplicationJson(entity)
+      );
+  }
 
   @Validate
   @Override
@@ -160,7 +262,7 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<String> getCurrencyCode(Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
     String path = "/configurations/entries";
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
-    queryParameters.put("query", "(module==ORG and configName==localeSettings)");
+    queryParameters.put(QUERY, "(module==ORG and configName==localeSettings)");
     return httpClient.get(path, queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(response -> {
@@ -186,7 +288,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.putAll(getLimitAndOffsetParams(limit, offset, true));
-    queryParameters.put("query", buildQueryWithUserId(id, sortBy));
+    queryParameters.put(QUERY, buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/accounts", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
@@ -198,7 +300,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds));
-    queryParameters.put("query", buildQueryWithRequesterId(id, sortBy));
+    queryParameters.put(QUERY, buildQueryWithRequesterId(id, sortBy));
 
     return httpClient.get("/circulation/requests", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
@@ -210,7 +312,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeLoans));
-    queryParameters.put("query", buildQueryWithUserId(id, sortBy));
+    queryParameters.put(QUERY, buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/circulation/loans", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
@@ -289,7 +391,7 @@ public class PatronServicesResourceImpl implements Patron {
                 asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
               })
               .exceptionally(e -> {
-                
+
                 asyncResultHandler.handle(handleItemHoldPOSTError(e));
                 return null;
               });
@@ -553,7 +655,7 @@ public class PatronServicesResourceImpl implements Patron {
       String cql = "holdingsRecords.id==" +
           StringUtil.cqlEncode(item.getString(JSON_FIELD_HOLDINGS_RECORD_ID));
 
-      return httpClient.get("/inventory/instances", Map.of("query", cql), okapiHeaders)
+      return httpClient.get("/inventory/instances", Map.of(QUERY, cql), okapiHeaders)
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenApply(instances -> instances.getJsonArray("instances").getJsonObject(0));
     } catch (Exception e) {
