@@ -6,6 +6,7 @@
   "properties": {
     "generalInfo": {
       "type": "object",
+      "description": "General info of patron",
       "properties": {
         "externalSystemId": {
           "type": "string",
@@ -33,6 +34,7 @@
     },
     "address0": {
       "type": "object",
+      "description": "Primary address info of patron",
       "properties": {
         "addressLine0": {
           "type": "string",
@@ -64,6 +66,7 @@
     },
     "address1": {
       "type": "object",
+      "description": "Secondary address info of patron",
       "properties": {
         "addressLine0": {
           "type": "string",
@@ -95,6 +98,7 @@
     },
     "contactInfo": {
       "type": "object",
+      "description": "Contact info of patron",
       "properties": {
         "phone": {
           "type": "string",
@@ -115,6 +119,7 @@
     },
     "preferredEmailCommunication": {
       "type": "array",
+      "description": "Email communication info of patron",
       "items": {
         "type": "string",
         "enum": ["Support", "Programs", "Service"]
