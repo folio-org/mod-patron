@@ -267,7 +267,7 @@ public class PatronServicesResourceImpl implements Patron {
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(response -> {
         String currencyType = "USD";
-        Integer numOfResults = Integer.parseInt(response.getString("totalRecords"));
+        Integer numOfResults = Integer.parseInt(response.getString(TOTAL_RECORDS));
         if (numOfResults == 1) {
           String value = response
             .getJsonArray("configs")
