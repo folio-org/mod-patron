@@ -87,7 +87,7 @@ import io.vertx.core.json.JsonObject;
 public class PatronServicesResourceImpl implements Patron {
   private static final String HOME_ADDRESS_TYPE = "home";
   private static final String WORK_ADDRESS_TYPE = "work";
-  private static final String TOTAL_RECORDS = "total_records";
+  private static final String TOTAL_RECORDS = "totalRecords";
   private static final String QUERY = "query";
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
