@@ -72,6 +72,11 @@ traits:
           body:
             text/plain:
               example: Optimistic Locking Conflict
+        422:
+          description: Validation error
+          body:
+            text/plain:
+              example: Validation error
         500:
           description: |
             Internal server error, e.g. due to misconfiguration

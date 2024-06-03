@@ -1231,7 +1231,7 @@ public class PatronResourceImplTest {
       .post(remotePatronAccountPath)
       .then()
       .contentType(TEXT)
-      .statusCode(403)
+      .statusCode(422)
       .extract()
       .response();
     final String body = r.getBody().asString();
@@ -1252,7 +1252,7 @@ public class PatronResourceImplTest {
       .post(remotePatronAccountPath)
       .then()
       .contentType(TEXT)
-      .statusCode(403)
+      .statusCode(422)
       .extract()
       .response();
     final String body = r.getBody().asString();
@@ -1272,7 +1272,7 @@ public class PatronResourceImplTest {
       .post(remotePatronAccountPath)
       .then()
       .contentType(TEXT)
-      .statusCode(403)
+      .statusCode(422)
       .extract()
       .response();
     final String body = r.getBody().asString();

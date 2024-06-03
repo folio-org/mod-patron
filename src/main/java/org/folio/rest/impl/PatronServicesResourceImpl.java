@@ -92,6 +92,16 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
     "/circulation/requests/allowed-service-points";
+  private static final String ACTIVE = "active";
+  private static final String PATRON_GROUP = "patronGroup";
+  private static final String ADDRESS_TYPES = "addressTypes";
+  private static final String USER_GROUPS = "usergroups";
+  private static final String REMOTE_GROUP = "Remote Non-circulating";
+  private static final String HOME = "home";
+  private static final String WORK = "work";
+  private static final String ADDRESS_TYPE = "addressType";
+  private static final String ID = "id";
+  private static final String USERS = "users";
 
   @Override
   public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -116,10 +126,10 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<String> getRemotePatronGroupId(UserRepository userRepository, Map<String, String> okapiHeaders) {
-    return userRepository.getGroupByGroupName("staff", okapiHeaders)
+    return userRepository.getGroupByGroupName(REMOTE_GROUP, okapiHeaders)
       .thenApply(responseJson -> {
         if (responseJson.getInteger(TOTAL_RECORDS) > 0) {
-          return responseJson.getJsonArray("usergroups").getJsonObject(0).getString("id");
+          return responseJson.getJsonArray(USER_GROUPS).getJsonObject(0).getString(ID);
         } else {
           throw new IllegalArgumentException(new HttpException(500, "Remote patron group not found"));
         }
@@ -130,12 +140,12 @@ public class PatronServicesResourceImpl implements Patron {
     return userRepository.getAddressByType(okapiHeaders)
       .thenApply(responseJson -> {
         JsonObject addressTypes = new JsonObject();
-        responseJson.getJsonArray("addressTypes").forEach(item -> {
+        responseJson.getJsonArray(ADDRESS_TYPES).forEach(item -> {
           JsonObject addressType = (JsonObject) item;
-          if ("Home".equalsIgnoreCase(addressType.getString("addressType"))) {
-            addressTypes.put("home", addressType.getString("id"));
-          } else if ("Work".equalsIgnoreCase(addressType.getString("addressType"))) {
-            addressTypes.put("work", addressType.getString("id"));
+          if (HOME.equalsIgnoreCase(addressType.getString(ADDRESS_TYPE))) {
+            addressTypes.put(HOME, addressType.getString(ID));
+          } else if (WORK.equalsIgnoreCase(addressType.getString(ADDRESS_TYPE))) {
+            addressTypes.put(WORK, addressType.getString(ID));
           }
         });
         return addressTypes;
@@ -154,7 +164,7 @@ public class PatronServicesResourceImpl implements Patron {
       );
     } else if (totalRecords == 1) {
       return userRepository.getUserByEmail(entity.getContactInfo().getEmail(), okapiHeaders)
-        .thenApply(responseJson -> responseJson.getJsonArray("users").getJsonObject(0))
+        .thenApply(responseJson -> responseJson.getJsonArray(USERS).getJsonObject(0))
         .thenCompose(userJson -> processSingleUser(userJson, remotePatronGroupId));
     } else {
       return createUser(entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
@@ -162,20 +172,20 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Response> processSingleUser(JsonObject userJson, String remotePatronGroupId) {
-    boolean isActive = userJson.getBoolean("active", false);
-    String patronGroup = userJson.getString("patronGroup", "");
+    boolean isActive = userJson.getBoolean(ACTIVE, false);
+    String patronGroup = userJson.getString(PATRON_GROUP, "");
 
     if (!isActive) {
       return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond403WithTextPlain("User account is not active")
+        PostPatronAccountResponse.respond422WithTextPlain("User account is not active")
       );
     } else if (remotePatronGroupId.equals(patronGroup)) {
       return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond403WithTextPlain("User already exists")
+        PostPatronAccountResponse.respond422WithTextPlain("User already exists")
       );
     } else {
       return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond403WithTextPlain("User does not belong to the required patron group")
+        PostPatronAccountResponse.respond422WithTextPlain("User does not belong to the required patron group")
       );
     }
   }

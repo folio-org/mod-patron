@@ -12,10 +12,8 @@ import org.folio.rest.jaxrs.model.PreferredEmailCommunication;
 @Data
 public class User {
 
-  private String username;
   private String id;
   private String externalSystemId;
-  private String barcode;
   private Boolean active;
   private String type;
   @Valid
@@ -25,12 +23,6 @@ public class User {
   private String patronGroup;
 
   @Valid
-  private Set<String> departments;
-
-  @Valid
-  private List<String> proxyFor;
-
-  @Valid
   private Personal personal;
 
   private Date enrollmentDate;
@@ -38,20 +30,12 @@ public class User {
   private Date createdDate;
   private Date updatedDate;
 
-  public String getUsername() {
-    return username;
-  }
-
   public Set<PreferredEmailCommunication> getPreferredEmailCommunication() {
     return preferredEmailCommunication;
   }
 
   public void setPreferredEmailCommunication(Set<PreferredEmailCommunication> preferredEmailCommunication) {
     this.preferredEmailCommunication = preferredEmailCommunication;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
   }
 
   public String getId() {
@@ -68,14 +52,6 @@ public class User {
 
   public void setExternalSystemId(String externalSystemId) {
     this.externalSystemId = externalSystemId;
-  }
-
-  public String getBarcode() {
-    return barcode;
-  }
-
-  public void setBarcode(String barcode) {
-    this.barcode = barcode;
   }
 
   public Boolean getActive() {
@@ -102,22 +78,6 @@ public class User {
     this.patronGroup = patronGroup;
   }
 
-  public Set<String> getDepartments() {
-    return departments;
-  }
-
-  public void setDepartments(Set<String> departments) {
-    this.departments = departments;
-  }
-
-  public List<String> getProxyFor() {
-    return proxyFor;
-  }
-
-  public void setProxyFor(List<String> proxyFor) {
-    this.proxyFor = proxyFor;
-  }
-
   public Personal getPersonal() {
     return personal;
   }
@@ -125,11 +85,6 @@ public class User {
   public void setPersonal(Personal personal) {
     this.personal = personal;
   }
-
-  public Date getEnrollmentDate() {
-    return enrollmentDate;
-  }
-
   public void setEnrollmentDate(Date enrollmentDate) {
     this.enrollmentDate = enrollmentDate;
   }
@@ -225,36 +180,8 @@ public class User {
       this.mobilePhone = mobilePhone;
     }
 
-    public Date getDateOfBirth() {
-      return dateOfBirth;
-    }
-
-    public void setDateOfBirth(Date dateOfBirth) {
-      this.dateOfBirth = dateOfBirth;
-    }
-
-    public List<Address> getAddresses() {
-      return addresses;
-    }
-
     public void setAddresses(List<Address> addresses) {
       this.addresses = addresses;
-    }
-
-    public String getPreferredContactTypeId() {
-      return preferredContactTypeId;
-    }
-
-    public void setPreferredContactTypeId(String preferredContactTypeId) {
-      this.preferredContactTypeId = preferredContactTypeId;
-    }
-
-    public String getProfilePictureLink() {
-      return profilePictureLink;
-    }
-
-    public void setProfilePictureLink(String profilePictureLink) {
-      this.profilePictureLink = profilePictureLink;
     }
 
     private Date dateOfBirth;
@@ -263,7 +190,6 @@ public class User {
     private List<Address> addresses;
 
     private String preferredContactTypeId;
-    private String profilePictureLink;
 
     @Data
     public static class Address {
@@ -284,10 +210,6 @@ public class User {
         this.id = id;
       }
 
-      public String getCountryId() {
-        return countryId;
-      }
-
       public void setCountryId(String countryId) {
         this.countryId = countryId;
       }
@@ -298,10 +220,6 @@ public class User {
 
       public void setAddressLine1(String addressLine1) {
         this.addressLine1 = addressLine1;
-      }
-
-      public String getAddressLine2() {
-        return addressLine2;
       }
 
       public void setAddressLine2(String addressLine2) {
@@ -316,32 +234,16 @@ public class User {
         this.city = city;
       }
 
-      public String getRegion() {
-        return region;
-      }
-
       public void setRegion(String region) {
         this.region = region;
-      }
-
-      public String getPostalCode() {
-        return postalCode;
       }
 
       public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
       }
 
-      public String getAddressTypeId() {
-        return addressTypeId;
-      }
-
       public void setAddressTypeId(String addressTypeId) {
         this.addressTypeId = addressTypeId;
-      }
-
-      public Boolean getPrimaryAddress() {
-        return primaryAddress;
       }
 
       public void setPrimaryAddress(Boolean primaryAddress) {
