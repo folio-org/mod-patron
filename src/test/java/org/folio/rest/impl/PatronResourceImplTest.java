@@ -143,7 +143,7 @@ public class PatronResourceImplTest {
     moduleName = ModuleName.getModuleName().replaceAll("_", "-");
     moduleVersion = ModuleName.getModuleVersion();
     moduleId = moduleName + "-" + moduleVersion;
-    logger.info("Test setup starting for " + moduleId);
+    logger.info("Test setup starting for {}", moduleId);
 
     final JsonObject conf = new JsonObject();
     conf.put("http.port", okapiPort);
@@ -156,7 +156,7 @@ public class PatronResourceImplTest {
         context.succeeding(id -> verticleStarted.flag()));
     RestAssured.port = okapiPort;
     RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    logger.info("Patron Services Test Setup Done using port " + okapiPort);
+    logger.info("Patron Services Test Setup Done using port {}" , okapiPort);
 
     final String host = "localhost";
 
@@ -807,7 +807,13 @@ public class PatronResourceImplTest {
   @AfterEach
   public void tearDown(Vertx vertx, VertxTestContext context) {
     logger.info("Patron Services Testing Complete");
-    vertx.close(context.completing());
+    vertx.close(ar -> {
+      if (ar.succeeded()) {
+        context.completeNow();
+      } else {
+        context.failNow(ar.cause());
+      }
+    });
   }
 
   @Test
@@ -1051,7 +1057,6 @@ public class PatronResourceImplTest {
     logger.info("Test done");
   }
 
-  // TODO: Return 422 instead of 500
   @Test
   final void testGetPatronAccountWithInvalidRequestStatusById() {
     logger.info("Testing for 500 due to invalid hold request status");
@@ -1205,7 +1210,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testSuccessCreatePatron() {
+  final void testSuccessCreatePatron() {
     given()
       .log().all()
       .header(tenantHeader)
@@ -1220,7 +1225,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testCreateDuplicateUser() {
+  final void testCreateDuplicateUser() {
     final Response r = given()
       .log().all()
       .header(tenantHeader)
@@ -1240,66 +1245,95 @@ public class PatronResourceImplTest {
     logger.info("Test done");
   }
 
-  @Test
-  public final void testDuplicateInactiveUser() {
+//  @Test
+//  final void testDuplicateInactiveUser() {
+//    final Response r = given()
+//      .log().all()
+//      .header(tenantHeader)
+//      .header(urlHeader)
+//      .header(contentTypeHeader)
+//      .body(readMockFile(mockDataFolder + "/remote_patron3.json"))
+//      .when()
+//      .post(remotePatronAccountPath)
+//      .then()
+//      .contentType(TEXT)
+//      .statusCode(422)
+//      .extract()
+//      .response();
+//    final String body = r.getBody().asString();
+//    assertNotNull(body);
+//    assertEquals("User account is not active", body);
+//  }
+//
+//  @Test
+//  final void testCreatePatronWithRandomPatronGroup() {
+//    final Response r = given()
+//      .log().all()
+//      .header(tenantHeader)
+//      .header(urlHeader)
+//      .header(contentTypeHeader)
+//      .body(readMockFile(mockDataFolder + "/remote_patron4.json"))
+//      .when()
+//      .post(remotePatronAccountPath)
+//      .then()
+//      .contentType(TEXT)
+//      .statusCode(422)
+//      .extract()
+//      .response();
+//    final String body = r.getBody().asString();
+//    assertNotNull(body);
+//    assertEquals("User does not belong to the required patron group", body);
+//  }
+//
+//  @Test
+//  final void testCreateDuplicateUserWithDuplicateEmail() {
+//    final Response r = given()
+//      .log().all()
+//      .header(tenantHeader)
+//      .header(urlHeader)
+//      .header(contentTypeHeader)
+//      .body(readMockFile(mockDataFolder + "/remote_patron5.json"))
+//      .when()
+//      .post(remotePatronAccountPath)
+//      .then()
+//      .contentType(TEXT)
+//      .statusCode(400)
+//      .extract()
+//      .response();
+//    final String body = r.getBody().asString();
+//    assertNotNull(body);
+//    assertEquals("Multiple users found with the same email", body);
+//  }
+
+static Stream<Object[]> testData() {
+  return Stream.of(
+    new Object[]{"remote_patron3.json", 422, "User account is not active"},
+    new Object[]{"remote_patron4.json", 422, "User does not belong to the required patron group"},
+    new Object[]{"remote_patron5.json", 400, "Multiple users found with the same email"}
+  );
+}
+
+  @ParameterizedTest
+  @MethodSource("testData")
+  void patronPostApiTests(String fileName, int expectedStatusCode, String expectedErrorMessage) {
     final Response r = given()
       .log().all()
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
-      .body(readMockFile(mockDataFolder + "/remote_patron3.json"))
+      .body(readMockFile(mockDataFolder + "/" + fileName))
       .when()
       .post(remotePatronAccountPath)
       .then()
       .contentType(TEXT)
-      .statusCode(422)
+      .statusCode(expectedStatusCode)
       .extract()
       .response();
+
     final String body = r.getBody().asString();
     assertNotNull(body);
-    assertEquals("User account is not active", body);
+    assertEquals(expectedErrorMessage, body);
   }
-
-  @Test
-  public final void testCreatePatronWithRandomPatronGroup() {
-    final Response r = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(mockDataFolder + "/remote_patron4.json"))
-      .when()
-      .post(remotePatronAccountPath)
-      .then()
-      .contentType(TEXT)
-      .statusCode(422)
-      .extract()
-      .response();
-    final String body = r.getBody().asString();
-    assertNotNull(body);
-    assertEquals("User does not belong to the required patron group", body);
-  }
-
-  @Test
-  public final void testCreateDuplicateUserWithDuplicateEmail() {
-    final Response r = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(mockDataFolder + "/remote_patron5.json"))
-      .when()
-      .post(remotePatronAccountPath)
-      .then()
-      .contentType(TEXT)
-      .statusCode(400)
-      .extract()
-      .response();
-    final String body = r.getBody().asString();
-    assertNotNull(body);
-    assertEquals("Multiple users found with the same email", body);
-  }
-
   @Test
   public final void testCannotPostPatronAccountItemHoldByIdAndItemIdMissingField() {
     logger.info("Testing creating a hold on an item for the specified user");
