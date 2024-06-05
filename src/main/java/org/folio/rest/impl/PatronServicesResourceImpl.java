@@ -109,20 +109,54 @@ public class PatronServicesResourceImpl implements Patron {
     final var userRepository = new UserRepository(httpClient);
     String patronEmail = entity.getContactInfo().getEmail();
 
-    getRemotePatronGroupId(userRepository, okapiHeaders)
-      .thenCompose(remotePatronGroupId -> getAddressTypes(userRepository, okapiHeaders)
-        .thenCompose(addressTypes -> {
-          String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
-          String workAddressTypeId = addressTypes.getString(WORK_ADDRESS_TYPE);
-          return getUserByEmail(patronEmail, okapiHeaders, userRepository)
-            .thenCompose(totalRecords -> handleUserRecords(totalRecords, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId));
-        })
-      )
+    getUserByEmail(patronEmail, okapiHeaders, userRepository)
+      .thenCompose(userResponse -> handleUserResponse(userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
         asyncResultHandler.handle(Future.failedFuture(throwable));
         return null;
       });
+  }
+
+  private CompletableFuture<JsonObject> getUserByEmail(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
+    return userRepository.getUserByEmail(email, okapiHeaders);
+  }
+
+  private CompletableFuture<Response> handleUserResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
+    int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
+
+    if (totalRecords > 1) {
+      return CompletableFuture.completedFuture(
+        PostPatronAccountResponse.respond400WithTextPlain("Multiple users found with the same email")
+      );
+    } else if (totalRecords == 1) {
+      JsonObject userJson = userResponse.getJsonArray(USERS).getJsonObject(0);
+      return processSingleUser(userJson, userRepository, okapiHeaders);
+    } else {
+      return getRemotePatronGroupId(userRepository, okapiHeaders)
+        .thenCompose(remotePatronGroupId -> getAddressTypes(userRepository, okapiHeaders)
+          .thenCompose(addressTypes -> {
+            String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
+            String workAddressTypeId = addressTypes.getString(WORK_ADDRESS_TYPE);
+            return createUser(entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+          })
+        );
+    }
+  }
+
+  private CompletableFuture<Response> processSingleUser(JsonObject userJson, UserRepository userRepository, Map<String, String> okapiHeaders) {
+    boolean isActive = userJson.getBoolean(ACTIVE, false);
+    String patronGroup = userJson.getString(PATRON_GROUP, "");
+
+    return getRemotePatronGroupId(userRepository, okapiHeaders).thenApply(remotePatronGroupId -> {
+      if (!isActive) {
+        return PostPatronAccountResponse.respond422WithTextPlain("User account is not active");
+      } else if (remotePatronGroupId.equals(patronGroup)) {
+        return PostPatronAccountResponse.respond422WithTextPlain("User already exists");
+      } else {
+        return PostPatronAccountResponse.respond422WithTextPlain("User does not belong to the required patron group");
+      }
+    });
   }
 
   private CompletableFuture<String> getRemotePatronGroupId(UserRepository userRepository, Map<String, String> okapiHeaders) {
@@ -150,44 +184,6 @@ public class PatronServicesResourceImpl implements Patron {
         });
         return addressTypes;
       });
-  }
-
-  private CompletableFuture<Integer> getUserByEmail(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
-    return userRepository.getUserByEmail(email, okapiHeaders)
-      .thenApply(responseJson -> responseJson.getInteger(TOTAL_RECORDS));
-  }
-
-  private CompletableFuture<Response> handleUserRecords(int totalRecords, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId, String workAddressTypeId) {
-    if (totalRecords > 1) {
-      return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond400WithTextPlain("Multiple users found with the same email")
-      );
-    } else if (totalRecords == 1) {
-      return userRepository.getUserByEmail(entity.getContactInfo().getEmail(), okapiHeaders)
-        .thenApply(responseJson -> responseJson.getJsonArray(USERS).getJsonObject(0))
-        .thenCompose(userJson -> processSingleUser(userJson, remotePatronGroupId));
-    } else {
-      return createUser(entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
-    }
-  }
-
-  private CompletableFuture<Response> processSingleUser(JsonObject userJson, String remotePatronGroupId) {
-    boolean isActive = userJson.getBoolean(ACTIVE, false);
-    String patronGroup = userJson.getString(PATRON_GROUP, "");
-
-    if (!isActive) {
-      return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond422WithTextPlain("User account is not active")
-      );
-    } else if (remotePatronGroupId.equals(patronGroup)) {
-      return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond422WithTextPlain("User already exists")
-      );
-    } else {
-      return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond422WithTextPlain("User does not belong to the required patron group")
-      );
-    }
   }
 
   private CompletableFuture<Response> createUser(ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId, String workAddressTypeId) {

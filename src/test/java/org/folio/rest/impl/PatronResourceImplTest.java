@@ -141,7 +141,7 @@ public class PatronResourceImplTest {
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
-        "io.vertx.core.logging.Log4j2LogDelegateFactory");
+      "io.vertx.core.logging.Log4j2LogDelegateFactory");
   }
 
   @BeforeEach
