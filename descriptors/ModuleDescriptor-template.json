@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "5.1",
+      "version": "5.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -21,6 +21,14 @@
             "inventory.instances.item.get",
             "inventory.instances.collection.get",
             "feefines.item.get"
+          ]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/patron/account",
+          "permissionsRequired": ["patron.account.item.post"],
+          "modulePermissions": [
+            "users.item.get"
           ]
         },
         {
@@ -135,7 +143,8 @@
         "patron.hold.item.post",
         "patron.hold.instance.item.post",
         "patron.hold.cancel.item.post",
-        "patron.hold.allowed-service-points.get"
+        "patron.hold.allowed-service-points.get",
+        "patron.account.item.post"
       ]
     }
   ],
