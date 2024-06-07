@@ -974,6 +974,21 @@ public class PatronResourceImplTest {
   }
 
   @Test
+  public final void testGetPatronAccountByEmail() {
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(remotePatronAccountPath + "/adsfg")
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+  }
+
+  @Test
   public final void testGetPatronAccountByIdNoListsWhenLimitZero() {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
 
