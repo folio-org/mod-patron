@@ -33,7 +33,7 @@
         },
         {
           "methods": ["GET"],
-          "pathPattern": "/patron/account/{email}",
+          "pathPattern": "/patron/account/by-email/{email}",
           "permissionsRequired": ["patron.account.item.get"],
           "modulePermissions": [
             "users.item.get"

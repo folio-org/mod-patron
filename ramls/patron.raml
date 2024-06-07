@@ -83,11 +83,11 @@ traits:
           body:
             text/plain:
               example: internal server error, contact administrator
-    /{email}:
-      displayName: Manage Accounts By email
+    /by-email/{emailId}:
+      displayName: Get Accounts By email
       description: Service endpoints that manage accounts by an existing email
       uriParameters:
-        email:
+        emailId:
           description: The email of external patron
           type: string
       get:

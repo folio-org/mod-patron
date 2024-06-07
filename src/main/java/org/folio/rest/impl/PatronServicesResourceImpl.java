@@ -122,7 +122,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   @Override
-  public void getPatronAccountByEmail(String email, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getPatronAccountByEmailByEmailId(String email, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
     final var userRepository = new UserRepository(httpClient);
 
@@ -138,14 +138,14 @@ public class PatronServicesResourceImpl implements Patron {
     int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
 
     if (totalRecords > 1) {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailResponse.respond400WithTextPlain("Multiple users found with the same email")));
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain("Multiple users found with the same email")));
     } else if (totalRecords == 1) {
       JsonObject userJson = userResponse.getJsonArray(USERS).getJsonObject(0);
       User user = convertJsonToUser(userJson);
       ExternalPatron externalPatron = mapToExternalPatron(user);
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailResponse.respond200WithApplicationJson(externalPatron)));
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond200WithApplicationJson(externalPatron)));
     } else {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailResponse.respond404WithTextPlain("User not found")));
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond404WithTextPlain("User not found")));
     }
   }
 
