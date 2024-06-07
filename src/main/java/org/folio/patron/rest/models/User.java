@@ -206,6 +206,22 @@ public class User {
         return id;
       }
 
+      public String getCountryId() {
+        return countryId;
+      }
+
+      public String getAddressLine2() {
+        return addressLine2;
+      }
+
+      public String getRegion() {
+        return region;
+      }
+
+      public String getPostalCode() {
+        return postalCode;
+      }
+
       public void setId(String id) {
         this.id = id;
       }
