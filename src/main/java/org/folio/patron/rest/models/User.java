@@ -191,6 +191,10 @@ public class User {
 
     private String preferredContactTypeId;
 
+    public List<Address> getAddresses() {
+      return addresses;
+    }
+
     @Data
     public static class Address {
 
