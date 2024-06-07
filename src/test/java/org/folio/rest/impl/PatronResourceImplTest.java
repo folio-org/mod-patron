@@ -975,7 +975,7 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  public final void testGetPatronAccountByEmail() {
+  final void testGetPatronAccountByEmail() {
     given()
       .header(tenantHeader)
       .header(urlHeader)
