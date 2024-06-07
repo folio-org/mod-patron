@@ -155,7 +155,6 @@ public class PatronServicesResourceImpl implements Patron {
     try {
       return mapper.readValue(userJson.encode(), User.class);
     } catch (IOException e) {
-      e.printStackTrace();
       return null;
     }
   }
