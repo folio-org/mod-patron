@@ -100,7 +100,7 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String PATRON_GROUP = "patronGroup";
   private static final String ADDRESS_TYPES = "addressTypes";
   private static final String USER_GROUPS = "usergroups";
-  private static final String REMOTE_GROUP = "staff";
+  private static final String REMOTE_GROUP = "Remote Non-circulating";
   private static final String HOME = "home";
   private static final String WORK = "work";
   private static final String ADDRESS_TYPE = "addressType";
@@ -116,7 +116,7 @@ public class PatronServicesResourceImpl implements Patron {
       .thenCompose(userResponse -> handleUserResponse(userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
-        asyncResultHandler.handle(Future.failedFuture(throwable));
+        asyncResultHandler.handle(Future.failedFuture(throwable.getMessage()));
         return null;
       });
   }
@@ -129,7 +129,7 @@ public class PatronServicesResourceImpl implements Patron {
     getUserByEmail(email, okapiHeaders, userRepository)
       .thenAccept(userResponse -> handleGetUserResponse(userResponse, asyncResultHandler))
       .exceptionally(throwable -> {
-        asyncResultHandler.handle(Future.failedFuture(throwable));
+        asyncResultHandler.handle(Future.failedFuture(throwable.getMessage()));
         return null;
       });
   }
