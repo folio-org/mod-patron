@@ -32,6 +32,14 @@
           ]
         },
         {
+          "methods": ["GET"],
+          "pathPattern": "/patron/account/by-email/{email}",
+          "permissionsRequired": ["patron.account.item.get"],
+          "modulePermissions": [
+            "users.item.get"
+          ]
+        },
+        {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/renew",
           "permissionsRequired": ["patron.renew.item.post"],

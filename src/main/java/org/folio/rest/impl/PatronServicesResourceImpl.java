@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.patron.rest.utils.PatronUtils.mapToExternalPatron;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
@@ -30,6 +31,7 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -47,6 +49,8 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
@@ -108,14 +112,51 @@ public class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
     final var userRepository = new UserRepository(httpClient);
     String patronEmail = entity.getContactInfo().getEmail();
-
     getUserByEmail(patronEmail, okapiHeaders, userRepository)
       .thenCompose(userResponse -> handleUserResponse(userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
-        asyncResultHandler.handle(Future.failedFuture(throwable));
+        asyncResultHandler.handle(Future.failedFuture(throwable.getMessage()));
         return null;
       });
+  }
+
+  @Override
+  public void getPatronAccountByEmailByEmailId(String email, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    final var userRepository = new UserRepository(httpClient);
+
+    getUserByEmail(email, okapiHeaders, userRepository)
+      .thenAccept(userResponse -> handleGetUserResponse(userResponse, asyncResultHandler))
+      .exceptionally(throwable -> {
+        asyncResultHandler.handle(Future.failedFuture(throwable.getMessage()));
+        return null;
+      });
+  }
+
+  private void handleGetUserResponse(JsonObject userResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
+    int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
+
+    if (totalRecords > 1) {
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain("Multiple users found with the same email")));
+    } else if (totalRecords == 1) {
+      JsonObject userJson = userResponse.getJsonArray(USERS).getJsonObject(0);
+      User user = convertJsonToUser(userJson);
+      ExternalPatron externalPatron = mapToExternalPatron(user);
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond200WithApplicationJson(externalPatron)));
+    } else {
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond404WithTextPlain("User not found")));
+    }
+  }
+
+  private User convertJsonToUser(JsonObject userJson) {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    try {
+      return mapper.readValue(userJson.encode(), User.class);
+    } catch (IOException e) {
+      return null;
+    }
   }
 
   private CompletableFuture<JsonObject> getUserByEmail(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {

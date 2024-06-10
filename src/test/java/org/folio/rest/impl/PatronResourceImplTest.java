@@ -68,6 +68,7 @@ public class PatronResourceImplTest {
   private final String mockDataFolder = "PatronServicesResourceImpl";
   private final String accountPath = "/patron/account/{accountId}";
   private final String remotePatronAccountPath = "/patron/account";
+  private final String remotePatronAccountPathByEmail = "/patron/account/by-email";
   private final String itemPath = "/item/{itemId}";
   private final String instancePath = "/instance/{instanceId}";
   private final String holdPath = "/hold";
@@ -971,6 +972,21 @@ public class PatronResourceImplTest {
 
     // Test done
     logger.info("Test done");
+  }
+
+  @Test
+  final void testGetPatronAccountByEmail() {
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(remotePatronAccountPathByEmail + "/adsfg")
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
   }
 
   @Test

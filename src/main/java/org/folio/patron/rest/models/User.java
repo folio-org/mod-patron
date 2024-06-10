@@ -191,6 +191,10 @@ public class User {
 
     private String preferredContactTypeId;
 
+    public List<Address> getAddresses() {
+      return addresses;
+    }
+
     @Data
     public static class Address {
 
@@ -204,6 +208,22 @@ public class User {
 
       public String getId() {
         return id;
+      }
+
+      public String getCountryId() {
+        return countryId;
+      }
+
+      public String getAddressLine2() {
+        return addressLine2;
+      }
+
+      public String getRegion() {
+        return region;
+      }
+
+      public String getPostalCode() {
+        return postalCode;
       }
 
       public void setId(String id) {
