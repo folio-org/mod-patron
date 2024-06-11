@@ -794,8 +794,7 @@ public class PatronServicesResourceImpl implements Patron {
         result = succeededFuture(GetPatronAccountByIdResponse.respond404WithTextPlain(message));
         break;
       default:
-        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
-          Json.decodeValue(message, Errors.class)));
+        result = succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
       }
     } else {
       result = succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(throwable.getMessage()));
@@ -814,7 +813,7 @@ public class PatronServicesResourceImpl implements Patron {
     }
     if (t instanceof HttpException) {
       final int code = ((HttpException) t).getCode();
-      final String message = (t.getMessage());
+      final String message = t.getMessage();
       switch (code) {
       case 400:
         result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
