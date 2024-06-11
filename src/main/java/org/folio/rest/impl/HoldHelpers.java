@@ -38,6 +38,9 @@ import org.joda.time.DateTimeZone;
 import io.vertx.core.json.JsonObject;
 
 class HoldHelpers {
+
+  private static final String STATUS_FIELD = "status";
+
   private HoldHelpers() {}
 
   static JsonObject addCancellationFieldsToRequest(JsonObject request, Hold entity) {
@@ -48,7 +51,7 @@ class HoldHelpers {
     request.put("cancellationReasonId", entity.getCancellationReasonId());
     request.put("cancelledByUserId", entity.getCanceledByUserId());
     request.put("cancelledDate", formatter.format(entity.getCanceledDate()));
-    request.put("status", Hold.Status.CLOSED_CANCELLED.value());
+    request.put(STATUS_FIELD, Hold.Status.CLOSED_CANCELLED.value());
     return request;
   }
 
@@ -62,7 +65,7 @@ class HoldHelpers {
   }
 
   static Hold getHold(JsonObject holdJson, Item item) {
-    String status = holdJson.getString("status");
+    String status = holdJson.getString(STATUS_FIELD);
     if (Arrays.stream(Hold.Status.values())
       .noneMatch(enumStatus -> enumStatus.value().equals(status))) {
 
@@ -71,7 +74,7 @@ class HoldHelpers {
         .withCode("INVALID_STATUS_VALUE")
         .withParameters(
           singletonList(new Parameter()
-            .withKey("status")
+            .withKey(STATUS_FIELD)
             .withValue(status)));
       throw new ValidationException(new Errors().withErrors(singletonList(error)));
     }

@@ -106,6 +106,7 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String ADDRESS_TYPE = "addressType";
   private static final String ID = "id";
   private static final String USERS = "users";
+  private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
 
   @Override
   public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -766,13 +767,13 @@ public class PatronServicesResourceImpl implements Patron {
     Future<javax.ws.rs.core.Response> result;
 
     final Throwable t = throwable.getCause();
-    if (t instanceof ValidationException) {
+    if (t instanceof ValidationException validationException) {
       return succeededFuture(GetPatronAccountByIdResponse.respond422WithApplicationJson(
-        ((ValidationException) t).getErrors()));
+        validationException.getErrors()));
     }
-    if (t instanceof HttpException) {
-      final int code = ((HttpException) t).getCode();
-      final String message = t.getMessage();
+    if (t instanceof HttpException httpException) {
+      final int code = httpException.getCode();
+      final String message = httpException.getMessage();
       switch (code) {
       case 400:
         if (t instanceof ModuleGeneratedHttpException) {
@@ -781,7 +782,7 @@ public class PatronServicesResourceImpl implements Patron {
           result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
             new Errors().withErrors(List.of(new Error()
               .withMessage(message)
-              .withCode("BAD_REQUEST")))));
+              .withCode(BAD_REQUEST_CODE)))));
         }
         break;
       case 401:
@@ -819,7 +820,7 @@ public class PatronServicesResourceImpl implements Patron {
         result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
           new Errors().withErrors(List.of(new Error()
             .withMessage(message)
-            .withCode("BAD_REQUEST")))));
+            .withCode(BAD_REQUEST_CODE)))));
         break;
       case 401:
         result = succeededFuture(respond401WithTextPlain(message));
@@ -858,7 +859,7 @@ public class PatronServicesResourceImpl implements Patron {
         result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
           new Errors().withErrors(List.of(new Error()
             .withMessage(message)
-            .withCode("BAD_REQUEST")))));
+            .withCode(BAD_REQUEST_CODE)))));
         break;
       case 401:
         result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond401WithTextPlain(message));
