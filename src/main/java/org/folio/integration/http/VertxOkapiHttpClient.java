@@ -15,7 +15,7 @@ import io.vertx.ext.web.client.WebClient;
 
 public class VertxOkapiHttpClient {
   private final WebClient client;
-  
+
   public VertxOkapiHttpClient(WebClient client) {
     this.client = client;
   }

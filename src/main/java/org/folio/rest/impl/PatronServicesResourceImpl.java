@@ -271,7 +271,9 @@ public class PatronServicesResourceImpl implements Patron {
             if (holdJSON == null) {
               final Errors errors = new Errors()
                 .withErrors(Collections.singletonList(
-                  new Error().withMessage("Cannot find a valid request type for this item")
+                  new Error()
+                    .withMessage("Cannot find a valid request type for this item")
+                    .withCode("CANNOT_FIND_VALID_REQUEST_FOR_ITEM")
                     .withParameters(Collections.singletonList(
                       new Parameter().withKey("itemId")
                         .withValue(itemId)
@@ -289,7 +291,7 @@ public class PatronServicesResourceImpl implements Patron {
                 asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
               })
               .exceptionally(e -> {
-                
+
                 asyncResultHandler.handle(handleItemHoldPOSTError(e));
                 return null;
               });
@@ -612,23 +614,25 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private Future<javax.ws.rs.core.Response> handleError(Throwable throwable) {
-    final Future<javax.ws.rs.core.Response> result;
+    Future<javax.ws.rs.core.Response> result;
 
     final Throwable t = throwable.getCause();
+    if (t instanceof ValidationException) {
+      return succeededFuture(GetPatronAccountByIdResponse.respond422WithApplicationJson(
+        ((ValidationException) t).getErrors()));
+    }
     if (t instanceof HttpException) {
       final int code = ((HttpException) t).getCode();
-      final String message = ((HttpException) t).getMessage();
+      final String message = t.getMessage();
       switch (code) {
       case 400:
-        // This means that we screwed up something in the request to another
-        // module. This API only takes a UUID, so a client side 400 is not
-        // possible here, only server side, which the client won't be able to
-        // do anything about. If the error is module generated, we can do
-        // something about it or at least tell the user something.
         if (t instanceof ModuleGeneratedHttpException) {
           result = succeededFuture(GetPatronAccountByIdResponse.respond400WithTextPlain(message));
         } else {
-          result = succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
+          result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
+            new Errors().withErrors(List.of(new Error()
+              .withMessage(message)
+              .withCode("BAD_REQUEST")))));
         }
         break;
       case 401:
@@ -641,7 +645,8 @@ public class PatronServicesResourceImpl implements Patron {
         result = succeededFuture(GetPatronAccountByIdResponse.respond404WithTextPlain(message));
         break;
       default:
-        result = succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
+          Json.decodeValue(message, Errors.class)));
       }
     } else {
       result = succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(throwable.getMessage()));
@@ -654,16 +659,19 @@ public class PatronServicesResourceImpl implements Patron {
     final Future<javax.ws.rs.core.Response> result;
 
     final Throwable t = throwable.getCause();
+    if (t instanceof ValidationException) {
+      return succeededFuture(GetPatronAccountByIdResponse.respond422WithApplicationJson(
+        ((ValidationException) t).getErrors()));
+    }
     if (t instanceof HttpException) {
       final int code = ((HttpException) t).getCode();
-      final String message = ((HttpException) t).getMessage();
+      final String message = (t.getMessage());
       switch (code) {
       case 400:
-        // This means that we screwed up something in the request to another
-        // module. This API only takes a UUID, so a client side 400 is not
-        // possible here, only server side, which the client won't be able to
-        // do anything about.
-        result = succeededFuture(respond500WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
+          new Errors().withErrors(List.of(new Error()
+            .withMessage(message)
+            .withCode("BAD_REQUEST")))));
         break;
       case 401:
         result = succeededFuture(respond401WithTextPlain(message));
@@ -680,6 +688,8 @@ public class PatronServicesResourceImpl implements Patron {
         break;
       default:
         result = succeededFuture(respond500WithTextPlain(message));
+//        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
+//          Json.decodeValue(message, Errors.class)));
       }
     } else {
       result = succeededFuture(respond500WithTextPlain(throwable.getMessage()));
@@ -694,14 +704,13 @@ public class PatronServicesResourceImpl implements Patron {
     final Throwable t = throwable.getCause();
     if (t instanceof HttpException) {
       final int code = ((HttpException) t).getCode();
-      final String message = ((HttpException) t).getMessage();
+      final String message = t.getMessage();
       switch (code) {
       case 400:
-        // This means that we screwed up something in the request to another
-        // module. This API only takes a UUID, so a client side 400 is not
-        // possible here, only server side, which the client won't be able to
-        // do anything about.
-        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(message));
+        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
+          new Errors().withErrors(List.of(new Error()
+            .withMessage(message)
+            .withCode("BAD_REQUEST")))));
         break;
       case 401:
         result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond401WithTextPlain(message));
