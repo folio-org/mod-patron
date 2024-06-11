@@ -17,6 +17,7 @@ types:
   charge: !include charge.json
   money: !include money.json
   item: !include item.json
+  external_patron: !include external_patron.json
   allowedServicePoints: !include allowed-service-points-response.json
   errors: !include raml-util/schemas/errors.schema
   error: !include raml-util/schemas/error.schema
@@ -30,6 +31,100 @@ traits:
   description: |
     Services that allow patron empowerment from 3rd party discovery services
   /account:
+    post:
+      description: |
+        Creates external patron request
+      is: [validate]
+      body:
+        application/json:
+          type: external_patron
+          example: !include examples/external_patron.json
+      responses:
+        201:
+          description: |
+            Returns data for a new hold request on the selected item
+          body:
+            application/json:
+              type: external_patron
+              example: !include examples/external_patron.json
+        400:
+          description: Bad request
+          body:
+            text/plain:
+              example: unable to process request
+        401:
+          description: Not authorized to perform requested action
+          body:
+            text/plain:
+              example: unable to create request
+        404:
+          description: Instance with a given ID not found
+          body:
+            text/plain:
+              example: item not found
+        403:
+          description: Access Denied
+          body:
+            text/plain:
+              example: Access Denied
+        409:
+          description: Conflict
+          body:
+            text/plain:
+              example: Optimistic Locking Conflict
+        422:
+          description: Validation error
+          body:
+            text/plain:
+              example: Validation error
+        500:
+          description: |
+            Internal server error, e.g. due to misconfiguration
+          body:
+            text/plain:
+              example: internal server error, contact administrator
+    /by-email/{emailId}:
+      displayName: Get Accounts By email
+      description: Service endpoints that manage accounts by an existing email
+      uriParameters:
+        emailId:
+          description: The email of external patron
+          type: string
+      get:
+        description: Return account details for the specified external patron email
+        responses:
+          200:
+            description: Returns the external patron account info
+            body:
+              application/json:
+                type: external_patron
+                example: !include examples/external_patron.json
+          400:
+            description: Bad request
+            body:
+              text/plain:
+                example: unable to process request -- constraint violation
+          401:
+            description: Not authorized to perform requested action
+            body:
+              text/plain:
+                example: unable to get account -- unauthorized
+          404:
+            description: Item with a given EMAIL not found
+            body:
+              text/plain:
+                example: account not found
+          403:
+            description: Access Denied
+            body:
+              text/plain:
+                example: Access Denied
+          500:
+            description: Internal server error, e.g. due to misconfiguration
+            body:
+              text/plain:
+                example: internal server error, contact administrator
+
     /{id}:
       displayName: Manage Accounts By Id
       description: Service endpoints that manage accounts by an existing Id

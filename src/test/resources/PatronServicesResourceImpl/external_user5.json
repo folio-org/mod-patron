@@ -1,0 +1,120 @@
+{
+  "users": [
+    {
+      "id": "85970943-c066-4b45-83fd-73e65868a5d4",
+      "externalSystemId": "12346-abcde-67890-fhhik",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Doe",
+        "firstName": "Joh",
+        "middleName": "11",
+        "preferredFirstName": "J",
+        "email": "adsfg",
+        "phone": "555-1234",
+        "mobilePhone": "555-5678",
+        "addresses": [
+          {
+            "id": "158d16f4-648f-4bc7-b764-ea48251adadd",
+            "countryId": "USA",
+            "addressLine1": "123 Main St",
+            "addressLine2": "Apt 4B",
+            "city": "Springfield",
+            "region": "Illinois",
+            "postalCode": "62704",
+            "addressTypeId": "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "primaryAddress": true
+          },
+          {
+            "id": "0a63f1fb-6762-4513-8972-5d519cb8ad76",
+            "countryId": "USA",
+            "addressLine1": "456 Elm St",
+            "addressLine2": "Suite 5A",
+            "city": "Springfield",
+            "region": "Illinois",
+            "postalCode": "62705",
+            "addressTypeId": "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "primaryAddress": false
+          }
+        ]
+      },
+      "enrollmentDate": "2024-05-27T09:15:58.018+00:00",
+      "expirationDate": "2026-05-26T18:30:00.000+00:00",
+      "createdDate": "2024-05-27T09:15:58.225+00:00",
+      "updatedDate": "2024-05-27T09:15:58.225+00:00",
+      "metadata": {
+        "createdDate": "2024-05-27T09:15:58.174+00:00",
+        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
+        "updatedDate": "2024-05-27T09:15:58.174+00:00",
+        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
+      },
+      "preferredEmailCommunication": [
+        "Programs"
+      ]
+    },
+    {
+      "id": "89970943-c066-4b45-83fd-73e65868a5d4",
+      "externalSystemId": "12346-abcde-67890-fhhik",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Doe",
+        "firstName": "Joh",
+        "middleName": "11",
+        "preferredFirstName": "J",
+        "email": "adsfg",
+        "phone": "555-1234",
+        "mobilePhone": "555-5678",
+        "addresses": [
+          {
+            "id": "158d16f4-648f-4bc7-b764-ea48251adadd",
+            "countryId": "USA",
+            "addressLine1": "123 Main St",
+            "addressLine2": "Apt 4B",
+            "city": "Springfield",
+            "region": "Illinois",
+            "postalCode": "62704",
+            "addressTypeId": "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "primaryAddress": true
+          },
+          {
+            "id": "0a63f1fb-6762-4513-8972-5d519cb8ad76",
+            "countryId": "USA",
+            "addressLine1": "456 Elm St",
+            "addressLine2": "Suite 5A",
+            "city": "Springfield",
+            "region": "Illinois",
+            "postalCode": "62705",
+            "addressTypeId": "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "primaryAddress": false
+          }
+        ]
+      },
+      "enrollmentDate": "2024-05-27T09:15:58.018+00:00",
+      "expirationDate": "2026-05-26T18:30:00.000+00:00",
+      "createdDate": "2024-05-27T09:15:58.225+00:00",
+      "updatedDate": "2024-05-27T09:15:58.225+00:00",
+      "metadata": {
+        "createdDate": "2024-05-27T09:15:58.174+00:00",
+        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
+        "updatedDate": "2024-05-27T09:15:58.174+00:00",
+        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
+      },
+      "preferredEmailCommunication": [
+        "Programs"
+      ]
+    }
+  ],
+  "totalRecords": 2,
+  "resultInfo": {
+    "totalRecords": 2,
+    "facets": [],
+    "diagnostics": []
+  }
+}
