@@ -116,7 +116,7 @@ public class PatronServicesResourceImpl implements Patron {
       .thenCompose(userResponse -> handleUserResponse(userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
-        asyncResultHandler.handle(Future.failedFuture(throwable.getMessage()));
+        asyncResultHandler.handle(handleError(throwable));
         return null;
       });
   }
@@ -129,9 +129,55 @@ public class PatronServicesResourceImpl implements Patron {
     getUserByEmail(email, okapiHeaders, userRepository)
       .thenAccept(userResponse -> handleGetUserResponse(userResponse, asyncResultHandler))
       .exceptionally(throwable -> {
-        asyncResultHandler.handle(Future.failedFuture(throwable.getMessage()));
+        asyncResultHandler.handle(handleError(throwable));
         return null;
       });
+  }
+
+@Override
+public void putPatronAccountByEmailByEmailId(String emailId, ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+  final var userRepository = new UserRepository(httpClient);
+
+  getUserByEmail(emailId, okapiHeaders, userRepository)
+    .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository, asyncResultHandler))
+    .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+    .exceptionally(throwable -> {
+      asyncResultHandler.handle(handleError(throwable));
+      return null;
+    });
+}
+  private CompletableFuture<Response> handleUserUpdateResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, Handler<AsyncResult<Response>> asyncResultHandler) {
+    int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
+    if (totalRecords > 1) {
+      return CompletableFuture.completedFuture(
+        PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain("Multiple users found with the same email")
+      );
+    } else if (totalRecords == 1) {
+      JsonObject userJson = userResponse.getJsonArray(USERS).getJsonObject(0);
+      String userId = userJson.getString(ID);
+      String patronGroup = userJson.getString(PATRON_GROUP);
+
+      return getRemotePatronGroupId(userRepository, okapiHeaders)
+        .thenCompose(remotePatronGroupId ->
+          getAddressTypes(userRepository, okapiHeaders)
+            .thenCompose(addressTypes -> {
+              if (Objects.equals(patronGroup, remotePatronGroupId)) {
+              String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
+              String workAddressTypeId = addressTypes.getString(WORK_ADDRESS_TYPE);
+                return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+              } else {
+                return CompletableFuture.completedFuture(
+                  PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("Required Patron group not applicable for user")
+                );
+              }
+            })
+        );
+    } else {
+      return CompletableFuture.completedFuture(
+        PutPatronAccountByEmailByEmailIdResponse.respond404WithTextPlain("user does not exist")
+      );
+    }
   }
 
   private void handleGetUserResponse(JsonObject userResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
@@ -232,6 +278,15 @@ public class PatronServicesResourceImpl implements Patron {
     return userRepository.createUser(user, okapiHeaders)
       .thenApply(createdUserJson ->
         PostPatronAccountResponse.respond201WithApplicationJson(entity)
+      );
+  }
+
+  private CompletableFuture<Response> updateUser(String id, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId, String workAddressTypeId) {
+    User user = PatronUtils.mapToUser(entity, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+    user.setId(id);
+    return userRepository.updateUser(id, user, okapiHeaders)
+      .thenApply(updatedUserJson ->
+        PutPatronAccountByEmailByEmailIdResponse.respond204WithApplicationJson(entity)
       );
   }
 
