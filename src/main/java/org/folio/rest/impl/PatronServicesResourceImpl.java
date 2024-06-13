@@ -117,7 +117,7 @@ public class PatronServicesResourceImpl implements Patron {
       .thenCompose(userResponse -> handleUserResponse(userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
-        asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountResponse.respond500WithTextPlain(handleError(throwable))));
+        asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountResponse.respond500WithTextPlain(throwable)));
         return null;
       });
   }
