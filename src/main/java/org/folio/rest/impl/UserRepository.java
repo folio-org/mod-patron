@@ -34,9 +34,6 @@ public class UserRepository {
   }
 
   public CompletableFuture<JsonObject> updateUser(String id, User user, Map<String, String> okapiHeaders) {
-    System.out.println(user.getPersonal().getAddresses().get(0).getAddressTypeId());
-    JsonObject g = JsonObject.mapFrom(user);
-    System.out.println(g);
     return client.put("/users/"+ id, JsonObject.mapFrom(user), okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }

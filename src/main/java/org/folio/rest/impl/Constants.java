@@ -32,4 +32,5 @@ class Constants {
   static final String JSON_FIELD_REQUESTER = "requester";
   static final String JSON_FIELD_REQUESTER_ID = "requesterId";
   static final String JSON_FIELD_FULFILLMENT_PREFERENCE = "fulfillmentPreference";
+  static final String MULTIPLE_USER_ERROR = "Multiple users found with the same email";
 }

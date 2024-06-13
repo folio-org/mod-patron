@@ -4,22 +4,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.patron.rest.utils.PatronUtils.mapToExternalPatron;
-import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
-import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
-import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM;
-import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
-import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
-import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_TOTAL_RECORDS;
-import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
+import static org.folio.rest.impl.Constants.*;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
@@ -140,18 +125,18 @@ public void putPatronAccountByEmailByEmailId(String emailId, ExternalPatron enti
   final var userRepository = new UserRepository(httpClient);
 
   getUserByEmail(emailId, okapiHeaders, userRepository)
-    .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository, asyncResultHandler))
+    .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository))
     .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
     .exceptionally(throwable -> {
       asyncResultHandler.handle(handleError(throwable));
       return null;
     });
 }
-  private CompletableFuture<Response> handleUserUpdateResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, Handler<AsyncResult<Response>> asyncResultHandler) {
+  private CompletableFuture<Response> handleUserUpdateResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
     int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
     if (totalRecords > 1) {
       return CompletableFuture.completedFuture(
-        PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain("Multiple users found with the same email")
+        PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain(MULTIPLE_USER_ERROR)
       );
     } else if (totalRecords == 1) {
       JsonObject userJson = userResponse.getJsonArray(USERS).getJsonObject(0);
@@ -184,7 +169,7 @@ public void putPatronAccountByEmailByEmailId(String emailId, ExternalPatron enti
     int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
 
     if (totalRecords > 1) {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain("Multiple users found with the same email")));
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain(MULTIPLE_USER_ERROR)));
     } else if (totalRecords == 1) {
       JsonObject userJson = userResponse.getJsonArray(USERS).getJsonObject(0);
       User user = convertJsonToUser(userJson);
@@ -214,7 +199,7 @@ public void putPatronAccountByEmailByEmailId(String emailId, ExternalPatron enti
 
     if (totalRecords > 1) {
       return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond400WithTextPlain("Multiple users found with the same email")
+        PostPatronAccountResponse.respond400WithTextPlain(MULTIPLE_USER_ERROR)
       );
     } else if (totalRecords == 1) {
       JsonObject userJson = userResponse.getJsonArray(USERS).getJsonObject(0);
