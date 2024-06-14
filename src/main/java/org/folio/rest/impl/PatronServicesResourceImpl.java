@@ -130,7 +130,7 @@ public class PatronServicesResourceImpl implements Patron {
     getUserByEmail(email, okapiHeaders, userRepository)
       .thenAccept(userResponse -> handleGetUserResponse(userResponse, asyncResultHandler))
       .exceptionally(throwable -> {
-        asyncResultHandler.handle(handleError(throwable));
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
   }
