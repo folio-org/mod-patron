@@ -135,19 +135,20 @@ public class PatronServicesResourceImpl implements Patron {
       });
   }
 
-@Override
-public void putPatronAccountByEmailByEmailId(String emailId, ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-  var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
-  final var userRepository = new UserRepository(httpClient);
+  @Override
+  public void putPatronAccountByEmailByEmailId(String emailId, ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    final var userRepository = new UserRepository(httpClient);
 
-  getUserByEmail(emailId, okapiHeaders, userRepository)
-    .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository))
-    .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
-    .exceptionally(throwable -> {
-      asyncResultHandler.handle(handleError(throwable));
-      return null;
-    });
-}
+    getUserByEmail(emailId, okapiHeaders, userRepository)
+      .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository))
+      .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+      .exceptionally(throwable -> {
+        asyncResultHandler.handle(handleError(throwable));
+        return null;
+      });
+  }
+
   private CompletableFuture<Response> handleUserUpdateResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
     int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
     if (totalRecords > 1) {
