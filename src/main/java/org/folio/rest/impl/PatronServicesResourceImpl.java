@@ -288,7 +288,7 @@ public class PatronServicesResourceImpl implements Patron {
     user.setId(id);
     return userRepository.updateUser(id, user, okapiHeaders)
       .thenApply(updatedUserJson ->
-        PutPatronAccountByEmailByEmailIdResponse.respond204WithApplicationJson(entity)
+        PutPatronAccountByEmailByEmailIdResponse.respond204()
       );
   }
 

@@ -1020,7 +1020,7 @@ public class PatronResourceImplTest {
       .when()
       .put(remotePatronAccountPathByEmail + "/adsfg")
       .then()
-      .contentType(JSON)
+      .contentType("")
       .statusCode(204)
       .extract()
       .response();
