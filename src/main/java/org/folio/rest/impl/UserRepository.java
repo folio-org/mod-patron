@@ -40,6 +40,14 @@ public class UserRepository {
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
+  public CompletableFuture<JsonObject> getUsers(String patronGroup, Map<String, String> okapiHeaders) {
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.put(QUERY, "patronGroup="+patronGroup);
+    queryParameters.put("limit", "1000");
+    return client.get("/users", queryParameters, okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
+  }
+
   public CompletableFuture<JsonObject> getAddressByType(Map<String, String> okapiHeaders) {
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.put(QUERY, "(addressType=work OR addressType=home)");

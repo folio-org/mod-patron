@@ -1,10 +1,15 @@
 package org.folio.patron.rest.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.folio.patron.rest.models.User;
+import org.folio.patron.rest.models.UsersCollection;
 import org.folio.rest.jaxrs.model.Address0;
 import org.folio.rest.jaxrs.model.Address1;
 import org.folio.rest.jaxrs.model.ContactInfo;
 import org.folio.rest.jaxrs.model.ExternalPatron;
+import org.folio.rest.jaxrs.model.ExternalPatronCollection;
 import org.folio.rest.jaxrs.model.GeneralInfo;
 import org.folio.rest.jaxrs.model.PreferredEmailCommunication;
 
@@ -132,5 +137,27 @@ public class PatronUtils {
     user.setEnrollmentDate(new Date());
     user.setType(USER_TYPE);
     return user;
+  }
+
+  public static ExternalPatronCollection mapToExternalPatronCollection(String json) {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    try {
+      UsersCollection usersCollection = mapper.readValue(json, UsersCollection.class);
+
+
+      List<ExternalPatron> externalPatrons = new ArrayList<>();
+      for (User user : usersCollection.getUsers()){
+        ExternalPatron externalPatron = PatronUtils.mapToExternalPatron(user);
+        externalPatrons.add(externalPatron);
+      }
+
+      ExternalPatronCollection collection = new ExternalPatronCollection();
+      collection.setExternalPatrons(externalPatrons);
+      collection.setTotalRecords(usersCollection.getTotalRecords());
+      return collection;
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
