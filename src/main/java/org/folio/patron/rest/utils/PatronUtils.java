@@ -157,7 +157,7 @@ public class PatronUtils {
       collection.setTotalRecords(usersCollection.getTotalRecords());
       return collection;
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      throw new IllegalArgumentException(e);
     }
   }
 }
