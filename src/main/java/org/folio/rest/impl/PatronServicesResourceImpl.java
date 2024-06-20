@@ -808,9 +808,9 @@ public class PatronServicesResourceImpl implements Patron {
     final Future<javax.ws.rs.core.Response> result;
 
     final Throwable t = throwable.getCause();
-    if (t instanceof ValidationException) {
+    if (t instanceof ValidationException validationException) {
       return succeededFuture(GetPatronAccountByIdResponse.respond422WithApplicationJson(
-        ((ValidationException) t).getErrors()));
+        validationException.getErrors()));
     }
     if (t instanceof HttpException) {
       final int code = ((HttpException) t).getCode();
@@ -837,8 +837,6 @@ public class PatronServicesResourceImpl implements Patron {
         break;
       default:
         result = succeededFuture(respond500WithTextPlain(message));
-//        result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
-//          Json.decodeValue(message, Errors.class)));
       }
     } else {
       result = succeededFuture(respond500WithTextPlain(throwable.getMessage()));
