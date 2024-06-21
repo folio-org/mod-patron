@@ -161,7 +161,53 @@ traits:
             body:
               text/plain:
                 example: internal server error, contact administrator
-
+      put:
+        description: |
+          Updates external patron request
+        is: [validate]
+        body:
+          application/json:
+            type: external_patron
+            example: !include examples/external_patron.json
+        responses:
+          204:
+            description: updates external patron
+          400:
+            description: Bad request
+            body:
+              text/plain:
+                example: unable to process request
+          401:
+            description: Not authorized to perform requested action
+            body:
+              text/plain:
+                example: unable to create request
+          404:
+            description: Item with a given ID not found
+            body:
+              text/plain:
+                example: item not found
+          403:
+            description: Access Denied
+            body:
+              text/plain:
+                example: Access Denied
+          409:
+            description: Conflict
+            body:
+              text/plain:
+                example: Optimistic Locking Conflict
+          422:
+            description: Validation error
+            body:
+              text/plain:
+                example: Validation error
+          500:
+            description: |
+              Internal server error, e.g. due to misconfiguration
+            body:
+              text/plain:
+                example: internal server error, contact administrator
     /{id}:
       displayName: Manage Accounts By Id
       description: Service endpoints that manage accounts by an existing Id

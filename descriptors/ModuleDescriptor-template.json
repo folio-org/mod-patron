@@ -48,6 +48,14 @@
           ]
         },
         {
+          "methods": ["PUT"],
+          "pathPattern": "/patron/account/by-email/{email}",
+          "permissionsRequired": ["patron.account.item.put"],
+          "modulePermissions": [
+            "users.item.put"
+          ]
+        },
+        {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/renew",
           "permissionsRequired": ["patron.renew.item.post"],
@@ -150,6 +158,11 @@
       "description": "Get a list of allowed service points for a hold"
     },
     {
+      "permissionName": "patron.account.item.put",
+      "displayName": "update external_patron",
+      "description": "Update external_patron based on emailId"
+    },
+    {
       "permissionName": "patron.all",
       "displayName": "patron - all permissions",
       "description": "Entire set of permissions needed to use patron",
@@ -160,7 +173,8 @@
         "patron.hold.instance.item.post",
         "patron.hold.cancel.item.post",
         "patron.hold.allowed-service-points.get",
-        "patron.account.item.post"
+        "patron.account.item.post",
+        "patron.account.item.put"
       ]
     }
   ],

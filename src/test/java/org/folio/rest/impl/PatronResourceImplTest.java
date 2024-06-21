@@ -176,6 +176,11 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/user_active.json"));
+      } else if (req.method()==HttpMethod.PUT && req.path().equals("/users/84970943-c066-4b45-83fd-73e65868a5d4")) {
+        req.response()
+          .setStatusCode(204)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/user_active.json"));
       } else if (req.path().equals(String.format("/users/%s", inactiveUserId))) {
         req.response()
           .setStatusCode(200)
@@ -193,6 +198,21 @@ public class PatronResourceImplTest {
           .end(readMockFile(mockDataFolder + "/addressTypes.json"));
       } else if (req.path().equals("/users")) {
         if (req.uri().equals("/users?query=%28personal.email%3D%3Dads%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dadsfg%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user2.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dad%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user6.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Da%29")) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -1020,6 +1040,57 @@ public class PatronResourceImplTest {
       .contentType(ContentType.JSON)
       .statusCode(200)
       .extract().response();
+  }
+
+  @Test
+  final void testUpdatePatronAccountByEmail() {
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron2.json"))
+      .when()
+      .put(remotePatronAccountPathByEmail + "/adsfg")
+      .then()
+      .contentType("")
+      .statusCode(204)
+      .extract()
+      .response();
+  }
+
+  @Test
+  final void testNotFoundWhenUpdatePatronAccountByEmail() {
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron2.json"))
+      .when()
+      .put(remotePatronAccountPathByEmail + "/a")
+      .then()
+      .contentType(TEXT)
+      .statusCode(404)
+      .extract()
+      .response();
+  }
+
+  @Test
+  final void testIncorrectPatronWhenUpdatePatronAccountByEmail() {
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron2.json"))
+      .when()
+      .put(remotePatronAccountPathByEmail + "/ad")
+      .then()
+      .contentType(TEXT)
+      .statusCode(500)
+      .extract()
+      .response();
   }
 
   @Test

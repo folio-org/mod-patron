@@ -34,6 +34,11 @@ public class UserRepository {
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
+  public CompletableFuture<JsonObject> updateUser(String id, User user, Map<String, String> okapiHeaders) {
+    return client.put("/users/"+ id, JsonObject.mapFrom(user), okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
+  }
+
   public CompletableFuture<JsonObject> getGroupByGroupName(String groupName, Map<String, String> okapiHeaders) {
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.put(QUERY, "(group=="+groupName+")");
