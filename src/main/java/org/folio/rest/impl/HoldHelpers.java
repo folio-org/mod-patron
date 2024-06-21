@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static java.util.Collections.singletonList;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_ADDITIONAL_INFO;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_DATE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_REASON_ID;
@@ -22,15 +23,24 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_TYPE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
 
-import io.vertx.core.json.JsonObject;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+
+import org.folio.patron.rest.exceptions.ValidationException;
+import org.folio.rest.jaxrs.model.Error;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Parameter;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.text.SimpleDateFormat;
+import io.vertx.core.json.JsonObject;
 
 class HoldHelpers {
+
+  private static final String STATUS_FIELD = "status";
+
   private HoldHelpers() {}
 
   static JsonObject addCancellationFieldsToRequest(JsonObject request, Hold entity) {
@@ -41,7 +51,7 @@ class HoldHelpers {
     request.put("cancellationReasonId", entity.getCancellationReasonId());
     request.put("cancelledByUserId", entity.getCanceledByUserId());
     request.put("cancelledDate", formatter.format(entity.getCanceledDate()));
-    request.put("status", Hold.Status.CLOSED_CANCELLED.value());
+    request.put(STATUS_FIELD, Hold.Status.CLOSED_CANCELLED.value());
     return request;
   }
 
@@ -55,6 +65,20 @@ class HoldHelpers {
   }
 
   static Hold getHold(JsonObject holdJson, Item item) {
+    String status = holdJson.getString(STATUS_FIELD);
+    if (Arrays.stream(Hold.Status.values())
+      .noneMatch(enumStatus -> enumStatus.value().equals(status))) {
+
+      Error error = new Error()
+        .withMessage("Invalid value of status")
+        .withCode("INVALID_STATUS_VALUE")
+        .withParameters(
+          singletonList(new Parameter()
+            .withKey(STATUS_FIELD)
+            .withValue(status)));
+      throw new ValidationException(new Errors().withErrors(singletonList(error)));
+    }
+
     Hold hold = new Hold()
       .withItem(item)
       .withExpirationDate(holdJson.getString(JSON_FIELD_REQUEST_EXPIRATION_DATE) == null
@@ -64,7 +88,7 @@ class HoldHelpers {
       .withPickupLocationId(holdJson.getString(JSON_FIELD_PICKUP_SERVICE_POINT_ID))
       .withRequestDate(new DateTime(holdJson.getString(JSON_FIELD_REQUEST_DATE), DateTimeZone.UTC).toDate())
       .withQueuePosition(holdJson.getInteger(JSON_FIELD_POSITION))
-      .withStatus(Hold.Status.fromValue(holdJson.getString("status")))
+      .withStatus(Hold.Status.fromValue(status))
       .withCancellationAdditionalInformation(holdJson.getString(
         JSON_FIELD_CANCELLATION_ADDITIONAL_INFO))
       .withCancellationReasonId(holdJson.getString(JSON_FIELD_CANCELLATION_REASON_ID))
