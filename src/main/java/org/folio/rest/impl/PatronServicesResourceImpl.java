@@ -776,6 +776,11 @@ public class PatronServicesResourceImpl implements Patron {
       final String message = httpException.getMessage();
       switch (code) {
       case 400:
+        // This means that we screwed up something in the request to another
+        // module. This API only takes a UUID, so a client side 400 is not
+        // possible here, only server side, which the client won't be able to
+        // do anything about. If the error is module generated, we can do
+        // something about it or at least tell the user something.
         if (t instanceof ModuleGeneratedHttpException) {
           result = succeededFuture(GetPatronAccountByIdResponse.respond400WithTextPlain(message));
         } else {
@@ -817,6 +822,10 @@ public class PatronServicesResourceImpl implements Patron {
       final String message = t.getMessage();
       switch (code) {
       case 400:
+        // This means that we screwed up something in the request to another
+        // module. This API only takes a UUID, so a client side 400 is not
+        // possible here, only server side, which the client won't be able to
+        // do anything about.
         result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
           new Errors().withErrors(List.of(new Error()
             .withMessage(message)
@@ -854,6 +863,10 @@ public class PatronServicesResourceImpl implements Patron {
       final String message = t.getMessage();
       switch (code) {
       case 400:
+        // This means that we screwed up something in the request to another
+        // module. This API only takes a UUID, so a client side 400 is not
+        // possible here, only server side, which the client won't be able to
+        // do anything about.
         result = succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond422WithApplicationJson(
           new Errors().withErrors(List.of(new Error()
             .withMessage(message)
