@@ -284,6 +284,11 @@ traits:
             body:
               text/plain:
                 example: account not found
+          422:
+            description: Validation error
+            body:
+              application/json:
+                type: errors
           403:
             description: Access Denied
             body:

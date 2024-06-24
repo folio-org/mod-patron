@@ -5,6 +5,7 @@ import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.utils.Utils.readMockFile;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -1186,8 +1187,8 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  final void testGetPatronAccountWithInvalidRequestStatusById() {
-    logger.info("Testing for 500 due to invalid hold request status");
+  final void testGetPatronAccountWithInvalidRequestStatusByIdShouldReturn422Status() {
+    logger.info("Testing for 422 due to invalid hold request status");
 
     given()
       .header(tenantHeader)
@@ -1201,8 +1202,8 @@ public class PatronResourceImplTest {
       .get(accountPath)
     .then()
       .log().all()
-      .contentType(TEXT)
-      .statusCode(500);
+      .contentType(JSON)
+      .statusCode(422);
 
     // Test done
     logger.info("Test done");
@@ -1496,10 +1497,12 @@ public class PatronResourceImplTest {
     final Errors errors = Json.decodeValue(body, Errors.class);
 
     final String expectedMessage = "Cannot find a valid request type for this item";
+    final String expectedCode = "CANNOT_FIND_VALID_REQUEST_FOR_ITEM";
     assertNotNull(errors);
     assertNotNull(errors.getErrors());
     assertEquals(1, errors.getErrors().size());
     assertEquals(expectedMessage, errors.getErrors().get(0).getMessage());
+    assertEquals(expectedCode, errors.getErrors().get(0).getCode());
 
     assertNotNull(errors.getErrors().get(0).getParameters());
     assertEquals(1, errors.getErrors().get(0).getParameters().size());
@@ -1692,7 +1695,7 @@ public class PatronResourceImplTest {
   @ParameterizedTest
   @MethodSource("instanceHoldsFailureCodes")
   public final void testPostPatronAccountByIdInstanceByInstanceIdHoldWithErrors(
-      String codeString, int expectedCode) {
+      String codeString, int expectedCode, ContentType contentType) {
     logger.info("Testing creating a hold on an instance for the specified user with a {} error",
         codeString);
 
@@ -1707,8 +1710,8 @@ public class PatronResourceImplTest {
     .then()
       .log().all()
       .and().assertThat().statusCode(expectedCode)
-      .and().assertThat().contentType(ContentType.TEXT)
-      .and().assertThat().body(startsWith(codeString));
+      .and().assertThat().contentType(contentType)
+      .and().assertThat().body(containsString(codeString));
 
     // Test done
     logger.info("Test done");
@@ -1778,7 +1781,7 @@ public class PatronResourceImplTest {
   @ParameterizedTest
   @MethodSource("itemHoldsFailureCodes")
   public final void testPostPatronAccountByIdItemByItemIdHoldWithErrors(
-      String codeString, int expectedCode) {
+      String codeString, int expectedCode, ContentType contentType) {
     logger.info("Testing creating a hold on an item for the specified user with a {} error",
         codeString);
 
@@ -1793,8 +1796,8 @@ public class PatronResourceImplTest {
     .then()
       .log().all()
       .and().assertThat().statusCode(expectedCode)
-      .and().assertThat().contentType(ContentType.TEXT)
-      .and().assertThat().body(startsWith(codeString));
+      .and().assertThat().contentType(contentType)
+      .and().assertThat().body(containsString(codeString));
 
     // Test done
     logger.info("Test done");
@@ -1940,27 +1943,23 @@ public class PatronResourceImplTest {
 
   static Stream<Arguments> instanceHoldsFailureCodes() {
     return Stream.of(
-        // Even though we receive a 400, we need to return a 500 since there is nothing the client
-        // can do to correct the 400. We'd have to correct it in the code.
-        Arguments.of("400", 500),
-        Arguments.of("401", 401),
-        Arguments.of("403", 403),
-        Arguments.of("404", 404),
-        Arguments.of("500", 500),
-        Arguments.of("java.lang.NullPointerException", 500)
+        Arguments.of("400", 422, JSON),
+        Arguments.of("401", 401, TEXT),
+        Arguments.of("403", 403, TEXT),
+        Arguments.of("404", 404, TEXT),
+        Arguments.of("500", 500, TEXT),
+        Arguments.of("java.lang.NullPointerException", 500, TEXT)
       );
   }
 
   static Stream<Arguments> itemHoldsFailureCodes() {
     return Stream.of(
-        // Even though we receive a 400, we need to return a 500 since there is nothing the client
-        // can do to correct the 400. We'd have to correct it in the code.
-        Arguments.of("400", 500),
-        Arguments.of("401", 401),
-        Arguments.of("403", 403),
-        Arguments.of("404", 404),
-        Arguments.of("500", 500),
-        Arguments.of("java.lang.NullPointerException", 500)
+        Arguments.of("400", 422, JSON),
+        Arguments.of("401", 401, TEXT),
+        Arguments.of("403", 403, TEXT),
+        Arguments.of("404", 404, TEXT),
+        Arguments.of("500", 500, TEXT),
+        Arguments.of("java.lang.NullPointerException", 500, TEXT)
       );
   }
 
