@@ -13,6 +13,7 @@ import org.folio.patron.rest.models.User;
 public class UserRepository {
   private final VertxOkapiHttpClient client;
   private static final String QUERY = "query";
+  private static final String USERS = "/users";
   public UserRepository(VertxOkapiHttpClient client) {
     this.client = client;
   }
@@ -24,12 +25,12 @@ public class UserRepository {
   public CompletableFuture<JsonObject> getUserByEmail(String email, Map<String, String> okapiHeaders) {
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.put(QUERY, "(personal.email=="+email+")");
-    return client.get("/users", queryParameters, okapiHeaders)
+    return client.get(USERS, queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
   public CompletableFuture<JsonObject> createUser(User user, Map<String, String> okapiHeaders) {
-    return client.post("/users", JsonObject.mapFrom(user), okapiHeaders)
+    return client.post(USERS, JsonObject.mapFrom(user), okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
@@ -42,6 +43,14 @@ public class UserRepository {
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.put(QUERY, "(group=="+groupName+")");
     return client.get("/groups", queryParameters, okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
+  }
+
+  public CompletableFuture<JsonObject> getUsers(String patronGroup, Map<String, String> okapiHeaders) {
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.put(QUERY, "patronGroup="+patronGroup);
+    queryParameters.put("limit", "1000");
+    return client.get(USERS, queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 

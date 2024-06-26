@@ -1,0 +1,327 @@
+{
+  "users": [
+    {
+      "username": "jaylon",
+      "id": "e63273e7-48f5-4c43-ab4e-1751ecacaa21",
+      "barcode": "721408137069396",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Jast",
+        "firstName": "Perry",
+        "middleName": "Drake",
+        "email": "lilla@wiza-llc.ie",
+        "phone": "1-893-787-1494 x537",
+        "mobilePhone": "545.437.3834",
+        "dateOfBirth": "2004-03-19T00:00:00.000+00:00",
+        "addresses": [
+          {
+            "countryId": "US",
+            "addressLine1": "00120 Suite G",
+            "city": "Eureka",
+            "region": "OR",
+            "postalCode": "58267-5504",
+            "addressTypeId": "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "primaryAddress": true
+          }
+        ],
+        "preferredContactTypeId": "002"
+      },
+      "enrollmentDate": "2018-08-11T00:00:00.000+00:00",
+      "expirationDate": "2020-06-29T00:00:00.000+00:00",
+      "createdDate": "2024-04-18T04:59:29.892+00:00",
+      "updatedDate": "2024-04-18T04:59:29.892+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T04:59:29.824+00:00",
+        "updatedDate": "2024-04-18T04:59:29.824+00:00"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "guiseppe",
+      "id": "66fe5bd9-1129-4b40-b54d-05b4c358463c",
+      "barcode": "623317241177726",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Koss",
+        "firstName": "Jazlyn",
+        "middleName": "Kaya",
+        "email": "petra@herzog-group.mu",
+        "phone": "705.954.0099 x5114",
+        "mobilePhone": "362.131.9602 x6297",
+        "dateOfBirth": "2006-10-25T00:00:00.000+00:00",
+        "addresses": [
+          {
+            "countryId": "US",
+            "addressLine1": "14567 Smitham Path",
+            "city": "Montgomery",
+            "region": "MO",
+            "postalCode": "06036",
+            "addressTypeId": "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "primaryAddress": true
+          }
+        ],
+        "preferredContactTypeId": "002"
+      },
+      "enrollmentDate": "2018-10-10T00:00:00.000+00:00",
+      "expirationDate": "2020-05-14T00:00:00.000+00:00",
+      "createdDate": "2024-04-18T04:59:29.952+00:00",
+      "updatedDate": "2024-04-18T04:59:29.952+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T04:59:29.901+00:00",
+        "updatedDate": "2024-04-18T04:59:29.901+00:00"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "maxine",
+      "id": "0a246f61-d85f-42b6-8dcc-48d25a46690b",
+      "barcode": "855788620413307",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Schamberger",
+        "firstName": "Roxane",
+        "middleName": "Suzanne",
+        "email": "sasha@langworth-group.nm.us",
+        "phone": "759.749.2624 x5524",
+        "mobilePhone": "(826)811-6221 x8553",
+        "dateOfBirth": "1976-01-10T00:00:00.000+00:00",
+        "addresses": [
+          {
+            "countryId": "US",
+            "addressLine1": "86731 Conroy Walk #607",
+            "city": "La Palma",
+            "region": "NH",
+            "postalCode": "93045",
+            "addressTypeId": "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "primaryAddress": true
+          }
+        ],
+        "preferredContactTypeId": "004"
+      },
+      "enrollmentDate": "2015-04-08T00:00:00.000+00:00",
+      "expirationDate": "2019-08-20T00:00:00.000+00:00",
+      "createdDate": "2024-04-18T04:59:29.975+00:00",
+      "updatedDate": "2024-04-18T04:59:29.975+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T04:59:29.918+00:00",
+        "updatedDate": "2024-04-18T04:59:29.918+00:00"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "diku_admin",
+      "id": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
+      "active": true,
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "ADMINISTRATOR",
+        "firstName": "DIKU",
+        "email": "admin@diku.example.org",
+        "addresses": []
+      },
+      "createdDate": "2024-04-18T05:12:40.836+00:00",
+      "updatedDate": "2024-04-18T05:12:40.836+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T05:04:15.282+00:00",
+        "updatedDate": "2024-04-18T05:12:40.829+00:00",
+        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "zula",
+      "id": "5cf0c0d9-17cc-42f1-87c1-10ec6476fc3a",
+      "barcode": "266239838351268",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Grant",
+        "firstName": "Emerson",
+        "middleName": "Amira",
+        "email": "marion@pollich-wyman.an",
+        "phone": "505-141-3379 x346",
+        "mobilePhone": "(504)649-6115 x156",
+        "dateOfBirth": "1981-01-09T00:00:00.000+00:00",
+        "addresses": [
+          {
+            "countryId": "US",
+            "addressLine1": "70292 Collins Isle Suite 950",
+            "city": "Avalon",
+            "region": "AK",
+            "postalCode": "68145",
+            "addressTypeId": "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "primaryAddress": true
+          }
+        ],
+        "preferredContactTypeId": "005"
+      },
+      "enrollmentDate": "2015-07-31T00:00:00.000+00:00",
+      "expirationDate": "2020-11-22T00:00:00.000+00:00",
+      "createdDate": "2024-04-18T04:59:30.225+00:00",
+      "updatedDate": "2024-04-18T04:59:30.225+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T04:59:30.203+00:00",
+        "updatedDate": "2024-04-18T04:59:30.203+00:00"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "fanny",
+      "id": "a2468e40-fb7c-453c-a217-8388801e2407",
+      "barcode": "599322056324332",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Schowalter",
+        "firstName": "Caterina",
+        "email": "christiana@hahn-collins-and-bruen.pf",
+        "phone": "1-591-386-1824 x61080",
+        "mobilePhone": "248-408-7381",
+        "dateOfBirth": "1954-08-07T00:00:00.000+00:00",
+        "addresses": [
+          {
+            "countryId": "US",
+            "addressLine1": "65046 Floor 50",
+            "city": "San Fernando",
+            "region": "DE",
+            "postalCode": "82798-0326",
+            "addressTypeId": "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "primaryAddress": true
+          }
+        ],
+        "preferredContactTypeId": "002"
+      },
+      "enrollmentDate": "2016-12-20T00:00:00.000+00:00",
+      "expirationDate": "2020-02-15T00:00:00.000+00:00",
+      "createdDate": "2024-04-18T04:59:30.139+00:00",
+      "updatedDate": "2024-04-18T04:59:30.139+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T04:59:30.122+00:00",
+        "updatedDate": "2024-04-18T04:59:30.122+00:00"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "acq-admin",
+      "id": "1f3277ff-4000-4863-8930-ed9b2661f080",
+      "barcode": "1713417350177223240",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Admin",
+        "firstName": "acq-admin",
+        "addresses": []
+      },
+      "createdDate": "2024-04-18T05:15:50.300+00:00",
+      "updatedDate": "2024-04-18T05:15:50.300+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T05:15:50.298+00:00",
+        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
+        "updatedDate": "2024-04-18T05:15:50.298+00:00",
+        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "acq-manager",
+      "id": "cc0c6fdd-8635-4532-be61-f2a121bcd9a1",
+      "barcode": "1713417352104471989",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Admin",
+        "firstName": "acq-manager",
+        "addresses": []
+      },
+      "createdDate": "2024-04-18T05:15:52.115+00:00",
+      "updatedDate": "2024-04-18T05:15:52.115+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T05:15:52.112+00:00",
+        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
+        "updatedDate": "2024-04-18T05:15:52.112+00:00",
+        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "acq-observer",
+      "id": "d9bf1d1a-54f1-4f2e-aacf-1b4cc69902e9",
+      "barcode": "1713417352619843188",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Admin",
+        "firstName": "acq-observer",
+        "addresses": []
+      },
+      "createdDate": "2024-04-18T05:15:52.624+00:00",
+      "updatedDate": "2024-04-18T05:15:52.624+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T05:15:52.622+00:00",
+        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
+        "updatedDate": "2024-04-18T05:15:52.622+00:00",
+        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
+      },
+      "preferredEmailCommunication": []
+    },
+    {
+      "username": "acq-staff",
+      "id": "7c86c730-620f-49da-a9cb-131a3da0c513",
+      "barcode": "1713417352987241760",
+      "active": true,
+      "type": "patron",
+      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "Admin",
+        "firstName": "acq-staff",
+        "addresses": []
+      },
+      "createdDate": "2024-04-18T05:15:53.010+00:00",
+      "updatedDate": "2024-04-18T05:15:53.010+00:00",
+      "metadata": {
+        "createdDate": "2024-04-18T05:15:52.989+00:00",
+        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
+        "updatedDate": "2024-04-18T05:15:52.989+00:00",
+        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
+      },
+      "preferredEmailCommunication": []
+    }
+  ],
+  "totalRecords": 10,
+  "resultInfo": {
+    "totalRecords": 10,
+    "facets": [],
+    "diagnostics": []
+  }
+}

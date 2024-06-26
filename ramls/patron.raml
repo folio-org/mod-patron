@@ -18,6 +18,7 @@ types:
   money: !include money.json
   item: !include item.json
   external_patron: !include external_patron.json
+  external_patron_collection: !include external_patron_collection.json
   allowedServicePoints: !include allowed-service-points-response.json
   errors: !include raml-util/schemas/errors.schema
   error: !include raml-util/schemas/error.schema
@@ -80,6 +81,42 @@ traits:
         500:
           description: |
             Internal server error, e.g. due to misconfiguration
+          body:
+            text/plain:
+              example: internal server error, contact administrator
+    get:
+      description: Return external_patrons detail
+      queryParameters:
+        expired:
+          description: |
+            Indicates to return only expired patron
+          required: false
+          type: boolean
+          default: false
+      responses:
+        200:
+          description: Returns the external patron accounts collection
+          body:
+            application/json:
+              type: external_patron_collection
+              example: !include examples/external_patron_collection.json
+        400:
+          description: Bad request
+          body:
+            text/plain:
+              example: unable to process request -- constraint violation
+        401:
+          description: Not authorized to perform requested action
+          body:
+            text/plain:
+              example: unable to get account -- unauthorized
+        403:
+          description: Access Denied
+          body:
+            text/plain:
+              example: Access Denied
+        500:
+          description: Internal server error, e.g. due to misconfiguration
           body:
             text/plain:
               example: internal server error, contact administrator

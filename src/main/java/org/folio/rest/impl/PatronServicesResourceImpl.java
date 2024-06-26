@@ -4,6 +4,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.patron.rest.utils.PatronUtils.mapToExternalPatron;
+import static org.folio.patron.rest.utils.PatronUtils.mapToExternalPatronCollection;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
@@ -33,6 +34,7 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -146,6 +148,43 @@ public class PatronServicesResourceImpl implements Patron {
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
         asyncResultHandler.handle(handleError(throwable));
+        return null;
+      });
+  }
+
+  @Override
+  public void getPatronAccount(boolean expired, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    final var userRepository = new UserRepository(httpClient);
+
+    getRemotePatronGroupId(userRepository, okapiHeaders)
+      .thenCompose(remotePatronGroupId -> userRepository.getUsers(remotePatronGroupId, okapiHeaders))
+      .thenAccept(usersResponse -> {
+        JsonArray users = usersResponse.getJsonArray(USERS);
+        if (expired) {
+          var now = Instant.now();
+          users = users.stream()
+            .map(JsonObject.class::cast)
+            .filter(user -> {
+              var expirationDateStr = user.getString("expirationDate");
+              if (expirationDateStr == null) {
+                return false;
+              }
+              var expirationDate = Instant.parse(expirationDateStr);
+              return expirationDate.isBefore(now);
+            })
+            .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
+        }
+        var responseJson = new JsonObject()
+          .put(USERS, users)
+          .put(TOTAL_RECORDS, users.size());
+        asyncResultHandler.handle(Future.succeededFuture(
+          GetPatronAccountResponse.respond200WithApplicationJson(mapToExternalPatronCollection(responseJson.encode()))
+        ));
+      })
+      .exceptionally(throwable -> {
+        asyncResultHandler.handle(Future.succeededFuture(
+          GetPatronAccountResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
   }

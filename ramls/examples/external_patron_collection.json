@@ -1,0 +1,50 @@
+{
+  "externalPatrons": [
+    {
+      "generalInfo": {
+        "externalSystemId": "ext123",
+        "firstName": "John",
+        "preferredFirstName": "Johnny",
+        "middleName": "Michael",
+        "lastName": "Doe"
+      },
+      "address0": {
+        "addressLine0": "123 Main St",
+        "addressLine1": "",
+        "city": "Anytown",
+        "province": "California",
+        "zip": "12345",
+        "country": "USA"
+      },
+      "contactInfo": {
+        "phone": "123-456-7890",
+        "mobilePhone": "987-654-3210",
+        "email": "john.doe@example.com"
+      },
+      "preferredEmailCommunication": ["Support", "Programs"]
+    },
+    {
+      "generalInfo": {
+        "externalSystemId": "ext456",
+        "firstName": "Jane",
+        "preferredFirstName": "Janey",
+        "lastName": "Smith"
+      },
+      "address0": {
+        "addressLine0": "456 Oak Ave",
+        "addressLine1": "Apt 2B",
+        "city": "Smallville",
+        "province": "Kansas",
+        "zip": "54321",
+        "country": "USA"
+      },
+      "contactInfo": {
+        "phone": "987-654-3210",
+        "mobilePhone": "123-456-7890",
+        "email": "jane.smith@example.com"
+      },
+      "preferredEmailCommunication": ["Programs", "Service"]
+    }
+  ],
+  "totalRecords": 2
+}

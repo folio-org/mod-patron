@@ -233,6 +233,11 @@ public class PatronResourceImplTest {
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/external_user5.json"));
+        } else if (req.uri().equals("/users?query=patronGroup%3D3684a786-6671-4268-8ed0-9db82ebca60b&limit=1000")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user7.json"));
         } else {
           req.response()
             .setStatusCode(200)
@@ -993,6 +998,34 @@ public class PatronResourceImplTest {
 
     // Test done
     logger.info("Test done");
+  }
+
+  @Test
+  final void testSuccessGetPatronCollection() {
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(remotePatronAccountPath)
+      .then()
+      .contentType(JSON)
+      .statusCode(200);
+  }
+
+  @Test
+  final void testSuccessGetExpiredPatronCollection() {
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(remotePatronAccountPath + "?expired=true")
+      .then()
+      .contentType(JSON)
+      .statusCode(200);
   }
 
   @Test
