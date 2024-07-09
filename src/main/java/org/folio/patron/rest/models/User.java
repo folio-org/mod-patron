@@ -1,7 +1,6 @@
 package org.folio.patron.rest.models;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 import lombok.Data;
@@ -180,19 +179,19 @@ public class User {
       this.mobilePhone = mobilePhone;
     }
 
-    public void setAddresses(List<Address> addresses) {
-      this.addresses = addresses;
+    public void setAddress(Address address) {
+      this.address = address;
     }
 
     private Date dateOfBirth;
 
     @Valid
-    private List<Address> addresses;
+    private Address address;
 
     private String preferredContactTypeId;
 
-    public List<Address> getAddresses() {
-      return addresses;
+    public Address getAddress() {
+      return address;
     }
 
     @Data

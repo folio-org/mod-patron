@@ -93,7 +93,6 @@ import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
   private static final String HOME_ADDRESS_TYPE = "home";
-  private static final String WORK_ADDRESS_TYPE = "work";
   private static final String TOTAL_RECORDS = "totalRecords";
   private static final String QUERY = "query";
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
@@ -206,8 +205,7 @@ public class PatronServicesResourceImpl implements Patron {
             .thenCompose(addressTypes -> {
               if (Objects.equals(patronGroup, remotePatronGroupId)) {
               String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
-              String workAddressTypeId = addressTypes.getString(WORK_ADDRESS_TYPE);
-                return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+                return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
               } else {
                 return CompletableFuture.completedFuture(
                   PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("Required Patron group not applicable for user")
@@ -266,8 +264,7 @@ public class PatronServicesResourceImpl implements Patron {
         .thenCompose(remotePatronGroupId -> getAddressTypes(userRepository, okapiHeaders)
           .thenCompose(addressTypes -> {
             String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
-            String workAddressTypeId = addressTypes.getString(WORK_ADDRESS_TYPE);
-            return createUser(entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+            return createUser(entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
           })
         );
     }
@@ -315,16 +312,16 @@ public class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private CompletableFuture<Response> createUser(ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId, String workAddressTypeId) {
-    User user = PatronUtils.mapToUser(entity, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+  private CompletableFuture<Response> createUser(ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId) {
+    User user = PatronUtils.mapToUser(entity, remotePatronGroupId, homeAddressTypeId);
     return userRepository.createUser(user, okapiHeaders)
       .thenApply(createdUserJson ->
         PostPatronAccountResponse.respond201WithApplicationJson(entity)
       );
   }
 
-  private CompletableFuture<Response> updateUser(String id, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId, String workAddressTypeId) {
-    User user = PatronUtils.mapToUser(entity, remotePatronGroupId, homeAddressTypeId, workAddressTypeId);
+  private CompletableFuture<Response> updateUser(String id, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId) {
+    User user = PatronUtils.mapToUser(entity, remotePatronGroupId, homeAddressTypeId);
     user.setId(id);
     return userRepository.updateUser(id, user, okapiHeaders)
       .thenApply(updatedUserJson ->

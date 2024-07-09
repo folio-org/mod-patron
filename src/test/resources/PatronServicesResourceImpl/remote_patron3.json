@@ -6,20 +6,12 @@
     "middleName": "11",
     "lastName": "Doe"
   },
-  "address0": {
+  "address": {
     "addressLine0": "123 Main St",
     "addressLine1": "Apt 4B",
     "city": "Springfield",
     "province": "Illinois",
     "zip": "62704",
-    "country": "USA"
-  },
-  "address1": {
-    "addressLine0": "456 Elm St",
-    "addressLine1": "Suite 5A",
-    "city": "Springfield",
-    "province": "Illinois",
-    "zip": "62705",
     "country": "USA"
   },
   "contactInfo": {
