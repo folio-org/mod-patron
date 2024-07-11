@@ -14,7 +14,13 @@ import org.folio.rest.jaxrs.model.PreferredEmailCommunication;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class PatronUtils {
   private PatronUtils() {
