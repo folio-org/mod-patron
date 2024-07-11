@@ -6,7 +6,7 @@
     "middleName": "M",
     "lastName": "Doe"
   },
-  "address": {
+  "addressInfo": {
     "addressLine0": "456 Side St",
     "addressLine1": "Suite 500",
     "city": "Metropolis",

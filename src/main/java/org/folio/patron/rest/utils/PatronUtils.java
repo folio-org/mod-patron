@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.folio.patron.rest.models.User;
 import org.folio.patron.rest.models.UsersCollection;
-import org.folio.rest.jaxrs.model.Address;
+import org.folio.rest.jaxrs.model.AddressInfo;
 import org.folio.rest.jaxrs.model.ContactInfo;
 import org.folio.rest.jaxrs.model.ExternalPatron;
 import org.folio.rest.jaxrs.model.ExternalPatronCollection;
@@ -14,12 +14,7 @@ import org.folio.rest.jaxrs.model.PreferredEmailCommunication;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class PatronUtils {
   private PatronUtils() {
@@ -50,16 +45,16 @@ public class PatronUtils {
     Set<PreferredEmailCommunication> preferredEmailCommunication = new LinkedHashSet<>(user.getPreferredEmailCommunication());
     externalPatron.setPreferredEmailCommunication(preferredEmailCommunication);
 
-    User.Personal.Address userAddress = user.getPersonal().getAddress();
+    User.Personal.Address userAddress = user.getPersonal().getAddresses().get(0);
     if (userAddress != null) {
-          Address address = new Address();
+          AddressInfo address = new AddressInfo();
           address.setCountry(userAddress.getCountryId());
           address.setAddressLine0(userAddress.getAddressLine1());
           address.setAddressLine1(userAddress.getAddressLine2());
           address.setCity(userAddress.getCity());
           address.setProvince(userAddress.getRegion());
           address.setZip(userAddress.getPostalCode());
-          externalPatron.setAddress(address);
+          externalPatron.setAddressInfo(address);
         }
     return externalPatron;
   }
@@ -87,19 +82,19 @@ public class PatronUtils {
     personal.setMiddleName(externalPatron.getGeneralInfo().getMiddleName());
     personal.setPreferredFirstName(externalPatron.getGeneralInfo().getPreferredFirstName());
 
-    if (externalPatron.getAddress() != null) {
+    if (externalPatron.getAddressInfo() != null) {
       User.Personal.Address userAddress = new User.Personal.Address();
       userAddress.setId(UUID.randomUUID().toString());
-      userAddress.setCountryId(externalPatron.getAddress().getCountry());
-      userAddress.setAddressLine1(externalPatron.getAddress().getAddressLine0());
-      userAddress.setAddressLine2(externalPatron.getAddress().getAddressLine1());
-      userAddress.setCity(externalPatron.getAddress().getCity());
-      userAddress.setRegion(externalPatron.getAddress().getProvince());
-      userAddress.setPostalCode(externalPatron.getAddress().getZip());
+      userAddress.setCountryId(externalPatron.getAddressInfo().getCountry());
+      userAddress.setAddressLine1(externalPatron.getAddressInfo().getAddressLine0());
+      userAddress.setAddressLine2(externalPatron.getAddressInfo().getAddressLine1());
+      userAddress.setCity(externalPatron.getAddressInfo().getCity());
+      userAddress.setRegion(externalPatron.getAddressInfo().getProvince());
+      userAddress.setPostalCode(externalPatron.getAddressInfo().getZip());
       userAddress.setAddressTypeId(homeAddressTypeId);
       userAddress.setPrimaryAddress(false);
 
-      personal.setAddress(userAddress);
+      personal.setAddresses(Collections.singletonList(userAddress));
     }
 
     user.setPersonal(personal);

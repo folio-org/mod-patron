@@ -6,7 +6,7 @@
     "middleName": "11",
     "lastName": "Doe"
   },
-  "address": {
+  "addressInfo": {
     "addressLine0": "123 Main St",
     "addressLine1": "Apt 4B",
     "city": "Springfield",

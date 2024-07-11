@@ -121,28 +121,6 @@
       "preferredEmailCommunication": []
     },
     {
-      "username": "diku_admin",
-      "id": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
-      "active": true,
-      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
-      "departments": [],
-      "proxyFor": [],
-      "personal": {
-        "lastName": "ADMINISTRATOR",
-        "firstName": "DIKU",
-        "email": "admin@diku.example.org",
-        "addresses": []
-      },
-      "createdDate": "2024-04-18T05:12:40.836+00:00",
-      "updatedDate": "2024-04-18T05:12:40.836+00:00",
-      "metadata": {
-        "createdDate": "2024-04-18T05:04:15.282+00:00",
-        "updatedDate": "2024-04-18T05:12:40.829+00:00",
-        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
-      },
-      "preferredEmailCommunication": []
-    },
-    {
       "username": "zula",
       "id": "5cf0c0d9-17cc-42f1-87c1-10ec6476fc3a",
       "barcode": "266239838351268",
@@ -218,102 +196,6 @@
       "metadata": {
         "createdDate": "2024-04-18T04:59:30.122+00:00",
         "updatedDate": "2024-04-18T04:59:30.122+00:00"
-      },
-      "preferredEmailCommunication": []
-    },
-    {
-      "username": "acq-admin",
-      "id": "1f3277ff-4000-4863-8930-ed9b2661f080",
-      "barcode": "1713417350177223240",
-      "active": true,
-      "type": "patron",
-      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
-      "departments": [],
-      "proxyFor": [],
-      "personal": {
-        "lastName": "Admin",
-        "firstName": "acq-admin",
-        "addresses": []
-      },
-      "createdDate": "2024-04-18T05:15:50.300+00:00",
-      "updatedDate": "2024-04-18T05:15:50.300+00:00",
-      "metadata": {
-        "createdDate": "2024-04-18T05:15:50.298+00:00",
-        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
-        "updatedDate": "2024-04-18T05:15:50.298+00:00",
-        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
-      },
-      "preferredEmailCommunication": []
-    },
-    {
-      "username": "acq-manager",
-      "id": "cc0c6fdd-8635-4532-be61-f2a121bcd9a1",
-      "barcode": "1713417352104471989",
-      "active": true,
-      "type": "patron",
-      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
-      "departments": [],
-      "proxyFor": [],
-      "personal": {
-        "lastName": "Admin",
-        "firstName": "acq-manager",
-        "addresses": []
-      },
-      "createdDate": "2024-04-18T05:15:52.115+00:00",
-      "updatedDate": "2024-04-18T05:15:52.115+00:00",
-      "metadata": {
-        "createdDate": "2024-04-18T05:15:52.112+00:00",
-        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
-        "updatedDate": "2024-04-18T05:15:52.112+00:00",
-        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
-      },
-      "preferredEmailCommunication": []
-    },
-    {
-      "username": "acq-observer",
-      "id": "d9bf1d1a-54f1-4f2e-aacf-1b4cc69902e9",
-      "barcode": "1713417352619843188",
-      "active": true,
-      "type": "patron",
-      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
-      "departments": [],
-      "proxyFor": [],
-      "personal": {
-        "lastName": "Admin",
-        "firstName": "acq-observer",
-        "addresses": []
-      },
-      "createdDate": "2024-04-18T05:15:52.624+00:00",
-      "updatedDate": "2024-04-18T05:15:52.624+00:00",
-      "metadata": {
-        "createdDate": "2024-04-18T05:15:52.622+00:00",
-        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
-        "updatedDate": "2024-04-18T05:15:52.622+00:00",
-        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
-      },
-      "preferredEmailCommunication": []
-    },
-    {
-      "username": "acq-staff",
-      "id": "7c86c730-620f-49da-a9cb-131a3da0c513",
-      "barcode": "1713417352987241760",
-      "active": true,
-      "type": "patron",
-      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b",
-      "departments": [],
-      "proxyFor": [],
-      "personal": {
-        "lastName": "Admin",
-        "firstName": "acq-staff",
-        "addresses": []
-      },
-      "createdDate": "2024-04-18T05:15:53.010+00:00",
-      "updatedDate": "2024-04-18T05:15:53.010+00:00",
-      "metadata": {
-        "createdDate": "2024-04-18T05:15:52.989+00:00",
-        "createdByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165",
-        "updatedDate": "2024-04-18T05:15:52.989+00:00",
-        "updatedByUserId": "0b9e36cf-21ef-5251-9c50-507cc4b2b165"
       },
       "preferredEmailCommunication": []
     }
