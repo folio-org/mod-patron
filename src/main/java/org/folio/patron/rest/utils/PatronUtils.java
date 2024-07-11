@@ -92,7 +92,7 @@ public class PatronUtils {
       userAddress.setRegion(externalPatron.getAddressInfo().getProvince());
       userAddress.setPostalCode(externalPatron.getAddressInfo().getZip());
       userAddress.setAddressTypeId(homeAddressTypeId);
-      userAddress.setPrimaryAddress(false);
+      userAddress.setPrimaryAddress(true);
 
       personal.setAddresses(Collections.singletonList(userAddress));
     }
