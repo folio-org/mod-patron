@@ -8,7 +8,7 @@
         "middleName": "Michael",
         "lastName": "Doe"
       },
-      "address0": {
+      "addressInfo": {
         "addressLine0": "123 Main St",
         "addressLine1": "",
         "city": "Anytown",
@@ -30,7 +30,7 @@
         "preferredFirstName": "Janey",
         "lastName": "Smith"
       },
-      "address0": {
+      "addressInfo": {
         "addressLine0": "456 Oak Ave",
         "addressLine1": "Apt 2B",
         "city": "Smallville",

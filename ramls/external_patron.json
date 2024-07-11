@@ -32,41 +32,9 @@
       "required": ["externalSystemId", "firstName", "lastName"],
       "additionalProperties": false
     },
-    "address0": {
+    "addressInfo": {
       "type": "object",
       "description": "Primary address info of external patron",
-      "properties": {
-        "addressLine0": {
-          "type": "string",
-          "description": "Address, Line 0"
-        },
-        "addressLine1": {
-          "type": "string",
-          "description": "Address, Line 1"
-        },
-        "city": {
-          "type": "string",
-          "description": "City name"
-        },
-        "province": {
-          "type": "string",
-          "description": "Province"
-        },
-        "zip": {
-          "type": "string",
-          "description": "Zip Code"
-        },
-        "country": {
-          "type": "string",
-          "description": "Country"
-        }
-      },
-      "required": ["addressLine0", "city", "province", "zip", "country"],
-      "additionalProperties": false
-    },
-    "address1": {
-      "type": "object",
-      "description": "Secondary address info of external patron",
       "properties": {
         "addressLine0": {
           "type": "string",
@@ -124,12 +92,10 @@
         "type": "string",
         "enum": ["Support", "Programs", "Service"]
       },
-      "minItems": 1,
       "maxItems": 3,
-      "uniqueItems": true,
-      "description": "Preferred email communication types"
+      "uniqueItems": true
     }
   },
-  "required": ["generalInfo", "address0", "contactInfo", "preferredEmailCommunication"],
+  "required": ["generalInfo", "addressInfo", "contactInfo"],
   "additionalProperties": false
 }

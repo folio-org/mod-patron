@@ -6,15 +6,7 @@
     "middleName": "M",
     "lastName": "Doe"
   },
-  "address0": {
-    "addressLine0": "123 Main St",
-    "addressLine1": "Apt 4B",
-    "city": "Metropolis",
-    "province": "NY",
-    "zip": "12345",
-    "country": "USA"
-  },
-  "address1": {
+  "addressInfo": {
     "addressLine0": "456 Side St",
     "addressLine1": "Suite 500",
     "city": "Metropolis",
