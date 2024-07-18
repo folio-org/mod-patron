@@ -16,6 +16,7 @@ public class User {
   private String externalSystemId;
   private Boolean active;
   private String type;
+  private String preferredContactTypeId;
   @Valid
   private Set<PreferredEmailCommunication> preferredEmailCommunication;
 

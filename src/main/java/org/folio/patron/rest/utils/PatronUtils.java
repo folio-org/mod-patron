@@ -30,6 +30,7 @@ public class PatronUtils {
   private static final Logger logger = LogManager.getLogger();
   private static final String USER_TYPE = "patron";
   private static final Integer TWO_YEARS = 2;
+  private static final String CONTACT_TYPE_EMAIL_ID = "002";
 
   public static ExternalPatron mapUserToExternalPatron(User user) {
     logger.info("mapUserToExternalPatron:: Mapping user object to external patron");
@@ -53,7 +54,8 @@ public class PatronUtils {
     contactInfo.setMobilePhone(user.getPersonal().getMobilePhone());
     externalPatron.setContactInfo(contactInfo);
 
-    Set<PreferredEmailCommunication> preferredEmailCommunication = new LinkedHashSet<>(user.getPreferredEmailCommunication());
+    Set<PreferredEmailCommunication> preferredEmailCommunication =
+      new LinkedHashSet<>(user.getPreferredEmailCommunication());
     externalPatron.setPreferredEmailCommunication(preferredEmailCommunication);
 
     User.Personal.Address userAddress = user.getPersonal().getAddresses().get(0);
@@ -70,7 +72,8 @@ public class PatronUtils {
     return externalPatron;
   }
 
-  public static User mapExternalPatronToUser(ExternalPatron externalPatron, String remotePatronGroupId, String homeAddressTypeId) {
+  public static User mapExternalPatronToUser(ExternalPatron externalPatron,
+                                             String remotePatronGroupId, String homeAddressTypeId) {
     logger.info("mapExternalPatronToUser:: Mapping external Patron to user");
     if (externalPatron == null) {
       logger.warn("mapExternalPatronToUser:: External patron object is null");
@@ -114,11 +117,14 @@ public class PatronUtils {
     user.setActive(true);
     user.setEnrollmentDate(new Date());
     user.setType(USER_TYPE);
+    //For contact type email
+    user.setPreferredContactTypeId(CONTACT_TYPE_EMAIL_ID);
     return user;
   }
 
   public static ExternalPatronCollection mapUserCollectionToExternalPatronCollection(String json) {
-    logger.info("mapUserCollectionToExternalPatronCollection:: Mapping user collection to external patron collection");
+    logger.info("mapUserCollectionToExternalPatronCollection::" +
+      " Mapping user collection to external patron collection");
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     try {

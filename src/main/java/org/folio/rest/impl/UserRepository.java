@@ -31,7 +31,7 @@ public class UserRepository {
   }
 
   public CompletableFuture<JsonObject> getUserByEmail(String email, Map<String, String> okapiHeaders) {
-    logger.info("getUserByEmail::Retrieving user by email: {}", email);
+    logger.info("getUserByEmail::Retrieving user by email");
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.put(QUERY, "(personal.email==" + email + ")");
     return client.get(USERS, queryParameters, okapiHeaders)

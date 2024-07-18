@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.patron.rest.utils.PatronUtils.mapUserToExternalPatron;
 import static org.folio.patron.rest.utils.PatronUtils.mapUserCollectionToExternalPatronCollection;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
@@ -123,7 +124,7 @@ public class PatronServicesResourceImpl implements Patron {
       .thenCompose(userResponse -> handleUserResponse(userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
-        logger.error("postPatronAccount:: Failed to create external patron.. {}", throwable.getMessage());
+        logger.error("postPatronAccount:: Failed to create external patron", throwable);
         asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
@@ -137,7 +138,7 @@ public class PatronServicesResourceImpl implements Patron {
     getUserByEmail(email, okapiHeaders, userRepository)
       .thenAccept(userResponse -> handleGetUserResponse(userResponse, asyncResultHandler))
       .exceptionally(throwable -> {
-        logger.error("getPatronAccountByEmailByEmailId:: Failed to get external patron by email.. {}", throwable.getMessage());
+        logger.error("getPatronAccountByEmailByEmailId:: Failed to get external patron by email", throwable);
         asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
@@ -152,7 +153,7 @@ public class PatronServicesResourceImpl implements Patron {
       .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
-        logger.error("putPatronAccountByEmailByEmailId:: Failed to update external patron by email.. {}", throwable.getMessage());
+        logger.error("putPatronAccountByEmailByEmailId:: Failed to update external patron by email", throwable);
         asyncResultHandler.handle(handleError(throwable));
         return null;
       });
@@ -189,7 +190,7 @@ public class PatronServicesResourceImpl implements Patron {
         ));
       })
       .exceptionally(throwable -> {
-        logger.error("getPatronAccount:: Failed to get external patrons.. {}", throwable.getMessage());
+        logger.error("getPatronAccount:: Failed to get external patrons", throwable);
         asyncResultHandler.handle(Future.succeededFuture(
           GetPatronAccountResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
@@ -254,7 +255,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getUserByEmail(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
-    logger.info("getUserByEmail:: Trying to get user by email {}", email);
+    logger.info("getUserByEmail:: Trying to get user by email");
     return userRepository.getUserByEmail(email, okapiHeaders);
   }
 
@@ -262,7 +263,7 @@ public class PatronServicesResourceImpl implements Patron {
     final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
 
     if (totalRecords > 1) {
-      logger.info("handleUserResponse:: More than 1 record found");
+      logger.error("handleUserResponse:: More than 1 record found");
       return CompletableFuture.completedFuture(
         PostPatronAccountResponse.respond400WithTextPlain(MULTIPLE_USER_ERROR)
       );
@@ -286,20 +287,20 @@ public class PatronServicesResourceImpl implements Patron {
     final boolean isActive = userJson.getBoolean(ACTIVE, false);
     final String patronGroup = userJson.getString(PATRON_GROUP, "");
 
-    logger.info("processSingleUser::Processing user with patron group: {} and active status: {}", patronGroup, isActive);
+    logger.info("processSingleUser:: Processing user with patron group: {} and active status: {}", patronGroup, isActive);
 
     return getRemotePatronGroupId(userRepository, okapiHeaders).thenApply(remotePatronGroupId -> {
       logger.info("processSingleUser::Retrieved remote patron group ID: {}", remotePatronGroupId);
 
       if (!isActive) {
         logger.warn("processSingleUser::User account is not active");
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User account is not active", BAD_REQUEST_CODE));
+        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User account is not active", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       } else if (remotePatronGroupId.equals(patronGroup)) {
         logger.warn("processSingleUser::User already exists in the remote patron group");
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User already exists", BAD_REQUEST_CODE));
+        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User already exists", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       } else {
         logger.warn("processSingleUser::User does not belong to the required patron group");
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User does not belong to the required patron group", BAD_REQUEST_CODE));
+        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User does not belong to the required patron group", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       }
     });
   }
@@ -335,7 +336,8 @@ public class PatronServicesResourceImpl implements Patron {
         final JsonObject addressTypes = new JsonObject();
         responseJson.getJsonArray(ADDRESS_TYPES).forEach(item -> {
           final JsonObject addressType = (JsonObject) item;
-          if (HOME_FIELD.equalsIgnoreCase(addressType.getString(ADDRESS_TYPE_FIELD))) {
+          String address = addressType.getString(ADDRESS_TYPE_FIELD);
+          if (HOME_FIELD.equalsIgnoreCase(address)) {
             addressTypes.put(HOME_FIELD, addressType.getString(ID_FILED));
             logger.info("getAddressTypes::Found home address type: {}", addressType.getString(ID_FILED));
           }
