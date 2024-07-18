@@ -118,7 +118,7 @@ public class PatronUtils {
     user.setEnrollmentDate(new Date());
     user.setType(USER_TYPE);
     //For contact type email
-    user.setPreferredContactTypeId(CONTACT_TYPE_EMAIL_ID);
+    user.getPersonal().setPreferredContactTypeId(CONTACT_TYPE_EMAIL_ID);
     return user;
   }
 

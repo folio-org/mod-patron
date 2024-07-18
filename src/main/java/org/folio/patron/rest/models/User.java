@@ -16,7 +16,6 @@ public class User {
   private String externalSystemId;
   private Boolean active;
   private String type;
-  private String preferredContactTypeId;
   @Valid
   private Set<PreferredEmailCommunication> preferredEmailCommunication;
 
@@ -30,14 +29,6 @@ public class User {
   private Date expirationDate;
   private Date createdDate;
   private Date updatedDate;
-
-  public String getPreferredContactTypeId() {
-    return preferredContactTypeId;
-  }
-
-  public void setPreferredContactTypeId(String preferredContactTypeId) {
-    this.preferredContactTypeId = preferredContactTypeId;
-  }
 
   public Set<PreferredEmailCommunication> getPreferredEmailCommunication() {
     return preferredEmailCommunication;
