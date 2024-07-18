@@ -31,6 +31,14 @@ public class User {
   private Date createdDate;
   private Date updatedDate;
 
+  public String getPreferredContactTypeId() {
+    return preferredContactTypeId;
+  }
+
+  public void setPreferredContactTypeId(String preferredContactTypeId) {
+    this.preferredContactTypeId = preferredContactTypeId;
+  }
+
   public Set<PreferredEmailCommunication> getPreferredEmailCommunication() {
     return preferredEmailCommunication;
   }
