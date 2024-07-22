@@ -3,6 +3,8 @@ package org.folio.patron.rest.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.patron.rest.models.User;
 import org.folio.patron.rest.models.UsersCollection;
 import org.folio.rest.jaxrs.model.AddressInfo;
@@ -25,11 +27,15 @@ import java.util.UUID;
 public class PatronUtils {
   private PatronUtils() {
   }
-
+  private static final Logger logger = LogManager.getLogger();
   private static final String USER_TYPE = "patron";
+  private static final Integer TWO_YEARS = 2;
+  private static final String CONTACT_TYPE_EMAIL_ID = "002";
 
-  public static ExternalPatron mapToExternalPatron(User user) {
+  public static ExternalPatron mapUserToExternalPatron(User user) {
+    logger.info("mapUserToExternalPatron:: Mapping user object to external patron");
     if (user == null) {
+      logger.warn("mapUserToExternalPatron:: user is null");
       return null;
     }
     ExternalPatron externalPatron = new ExternalPatron();
@@ -48,7 +54,8 @@ public class PatronUtils {
     contactInfo.setMobilePhone(user.getPersonal().getMobilePhone());
     externalPatron.setContactInfo(contactInfo);
 
-    Set<PreferredEmailCommunication> preferredEmailCommunication = new LinkedHashSet<>(user.getPreferredEmailCommunication());
+    Set<PreferredEmailCommunication> preferredEmailCommunication =
+      new LinkedHashSet<>(user.getPreferredEmailCommunication());
     externalPatron.setPreferredEmailCommunication(preferredEmailCommunication);
 
     User.Personal.Address userAddress = user.getPersonal().getAddresses().get(0);
@@ -65,14 +72,17 @@ public class PatronUtils {
     return externalPatron;
   }
 
-  public static User mapToUser(ExternalPatron externalPatron, String remotePatronGroupId, String homeAddressTypeId) {
+  public static User mapExternalPatronToUser(ExternalPatron externalPatron,
+                                             String remotePatronGroupId, String homeAddressTypeId) {
+    logger.info("mapExternalPatronToUser:: Mapping external Patron to user");
     if (externalPatron == null) {
+      logger.warn("mapExternalPatronToUser:: External patron object is null");
       return null;
     }
 
     User user = new User();
     LocalDate currentDate = LocalDate.now();
-    LocalDate expirationLocalDate = currentDate.plusYears(2);
+    LocalDate expirationLocalDate = currentDate.plusYears(TWO_YEARS);
     Date expirationDate = Date.from(expirationLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     user.setExpirationDate(expirationDate);
 
@@ -107,10 +117,14 @@ public class PatronUtils {
     user.setActive(true);
     user.setEnrollmentDate(new Date());
     user.setType(USER_TYPE);
+    //For contact type email
+    user.getPersonal().setPreferredContactTypeId(CONTACT_TYPE_EMAIL_ID);
     return user;
   }
 
-  public static ExternalPatronCollection mapToExternalPatronCollection(String json) {
+  public static ExternalPatronCollection mapUserCollectionToExternalPatronCollection(String json) {
+    logger.info("mapUserCollectionToExternalPatronCollection::" +
+      " Mapping user collection to external patron collection");
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     try {
@@ -119,7 +133,7 @@ public class PatronUtils {
 
       List<ExternalPatron> externalPatrons = new ArrayList<>();
       for (User user : usersCollection.getUsers()){
-        ExternalPatron externalPatron = PatronUtils.mapToExternalPatron(user);
+        ExternalPatron externalPatron = PatronUtils.mapUserToExternalPatron(user);
         externalPatrons.add(externalPatron);
       }
 

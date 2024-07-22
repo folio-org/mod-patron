@@ -189,6 +189,14 @@ public class User {
     @Valid
     private List<Address> addresses;
 
+    public String getPreferredContactTypeId() {
+      return preferredContactTypeId;
+    }
+
+    public void setPreferredContactTypeId(String preferredContactTypeId) {
+      this.preferredContactTypeId = preferredContactTypeId;
+    }
+
     private String preferredContactTypeId;
 
     public List<Address> getAddresses() {

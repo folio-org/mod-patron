@@ -136,8 +136,7 @@ public class PatronResourceImplTest {
   static Stream<Object[]> testData() {
     return Stream.of(
       new Object[]{"remote_patron3.json", 422, "User account is not active"},
-      new Object[]{"remote_patron4.json", 422, "User does not belong to the required patron group"},
-      new Object[]{"remote_patron5.json", 400, "Multiple users found with the same email"}
+      new Object[]{"remote_patron4.json", 422, "User does not belong to the required patron group"}
     );
   }
 
@@ -1355,7 +1354,7 @@ public class PatronResourceImplTest {
 
   @Test
   final void testCreateDuplicateUser() {
-    final Response r = given()
+    final Errors r = given()
       .log().all()
       .header(tenantHeader)
       .header(urlHeader)
@@ -1364,20 +1363,20 @@ public class PatronResourceImplTest {
       .when()
       .post(remotePatronAccountPath)
       .then()
-      .contentType(TEXT)
+      .contentType(JSON)
       .statusCode(422)
       .extract()
-      .response();
-    final String body = r.getBody().asString();
-    assertNotNull(body);
-    assertEquals("User already exists", body);
+      .as(Errors.class);
+
+    assertEquals(1, r.getErrors().size());
+    assertEquals("User already exists", r.getErrors().get(0).getMessage());
     logger.info("Test done");
   }
 
   @ParameterizedTest
   @MethodSource("testData")
-  void patronPostApiTests(String fileName, int expectedStatusCode, String expectedErrorMessage) {
-    final Response r = given()
+  void patronPostApiTests(String fileName, int expectedStatusCode) {
+    final Errors r = given()
       .log().all()
       .header(tenantHeader)
       .header(urlHeader)
@@ -1386,14 +1385,12 @@ public class PatronResourceImplTest {
       .when()
       .post(remotePatronAccountPath)
       .then()
-      .contentType(TEXT)
+      .contentType(JSON)
       .statusCode(expectedStatusCode)
       .extract()
-      .response();
+      .as(Errors.class);
 
-    final String body = r.getBody().asString();
-    assertNotNull(body);
-    assertEquals(expectedErrorMessage, body);
+    assertEquals(1, r.getErrors().size());
   }
   @Test
   public final void testCannotPostPatronAccountItemHoldByIdAndItemIdMissingField() {

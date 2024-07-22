@@ -28,7 +28,8 @@
           "pathPattern": "/patron/account",
           "permissionsRequired": ["patron.account.item.post"],
           "modulePermissions": [
-            "users.item.get"
+            "users.item.get",
+            "users.collection.get"
           ]
         },
         {
@@ -44,7 +45,8 @@
           "pathPattern": "/patron/account/by-email/{email}",
           "permissionsRequired": ["patron.account.item.get"],
           "modulePermissions": [
-            "users.item.get"
+            "users.item.get",
+            "users.collection.get"
           ]
         },
         {
