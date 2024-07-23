@@ -181,11 +181,11 @@ public class PatronServicesResourceImpl implements Patron {
     var yesterdayStr = yesterday.toString();
 
     userRepository.getUsersByExpDate(yesterdayStr, okapiHeaders)
-      .thenAccept(usersResponse -> {
+      .thenAccept(usersResponse ->
         asyncResultHandler.handle(Future.succeededFuture(
           GetPatronAccountResponse.respond200WithApplicationJson(mapUserCollectionToExternalPatronCollection(usersResponse.encode()))
-        ));
-      })
+        ))
+      )
       .exceptionally(throwable -> {
         logger.error("getPatronAccount:: Failed to get external patrons", throwable);
         asyncResultHandler.handle(Future.succeededFuture(
