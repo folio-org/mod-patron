@@ -202,14 +202,12 @@ public class PatronResourceImplTest {
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/external_user.json"));
-        } else if (req.path().equals("/users")) {
-          if (req.uri().equals("/users?query=%28personal.email%3D%3Dads100%29")) {
-            req.response()
-              .setStatusCode(200)
-              .putHeader("content-type", "application/json")
-              .end(readMockFile(mockDataFolder + "/external_user2.json"));
-          }
         } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dadsfg%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(mockDataFolder + "/external_user2.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3john%29")) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
@@ -1091,7 +1089,7 @@ public class PatronResourceImplTest {
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
-      .body(readMockFile(mockDataFolder + "/remote_patron2.json"))
+      .body(readMockFile(mockDataFolder + "/remote_patron6.json"))
       .when()
       .put(remotePatronAccountPathByEmail + "/a")
       .then()
