@@ -150,20 +150,9 @@ public class PatronServicesResourceImpl implements Patron {
   public void putPatronAccountByEmailByEmailId(String emailId, ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
     final var userRepository = new UserRepository(httpClient);
-    final String entityEmail = entity.getContactInfo().getEmail();
-    if (!emailId.equals(entityEmail)) {
-      getUserByEmail(entityEmail, okapiHeaders, userRepository)
-        .thenAccept(userResponse -> {
-          final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
-          if (totalRecords >= 1) {
-            logger.error("putPatronAccountByEmailByEmailId:: User already exist with email provided in payload");
-            asyncResultHandler.handle(Future.succeededFuture(
-              PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("User already exist with email provided in payload")));
-          }
-        });
-    }
+
     getUserByEmail(emailId, okapiHeaders, userRepository)
-      .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository))
+      .thenCompose(userResponse -> handleUserUpdateResponse(emailId, userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
         logger.error("putPatronAccountByEmailByEmailId:: Failed to update external patron by email", throwable);
@@ -205,7 +194,7 @@ public class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private CompletableFuture<Response> handleUserUpdateResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
+  private CompletableFuture<Response> handleUserUpdateResponse(String emailId, JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
     final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
     if (totalRecords > 1) {
       return CompletableFuture.completedFuture(
@@ -222,7 +211,22 @@ public class PatronServicesResourceImpl implements Patron {
             .thenCompose(addressTypes -> {
               if (Objects.equals(patronGroup, remotePatronGroupId)) {
               final String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
-                return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
+                final String entityEmail = entity.getContactInfo().getEmail();
+                if (!emailId.equals(entityEmail)) {
+                  return getUserByEmail(entityEmail, okapiHeaders, userRepository)
+                    .thenCompose(userEmailResponse -> {
+                      final int records = userEmailResponse.getInteger(TOTAL_RECORDS);
+                      if (records > 0) {
+                        logger.error("putPatronAccountByEmailByEmailId:: User already exist with email provided in payload");
+                        return CompletableFuture.completedFuture(
+                          PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("User already exist with email provided in payload"));
+                      } else {
+                        return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
+                      }
+                    });
+                } else {
+                  return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
+                }
               } else {
                 return CompletableFuture.completedFuture(
                   PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("Required Patron group not applicable for user")
