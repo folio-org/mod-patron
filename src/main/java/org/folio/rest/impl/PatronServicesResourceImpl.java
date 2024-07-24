@@ -150,7 +150,18 @@ public class PatronServicesResourceImpl implements Patron {
   public void putPatronAccountByEmailByEmailId(String emailId, ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
     final var userRepository = new UserRepository(httpClient);
-
+    final String entityEmail = entity.getContactInfo().getEmail();
+    if (!emailId.equals(entityEmail)) {
+      getUserByEmail(entityEmail, okapiHeaders, userRepository)
+        .thenAccept(userResponse -> {
+          final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
+          if (totalRecords >= 1) {
+            logger.error("putPatronAccountByEmailByEmailId:: User already exist with email provided in payload");
+            asyncResultHandler.handle(Future.succeededFuture(
+              PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("User already exist with email provided in payload")));
+          }
+        });
+    }
     getUserByEmail(emailId, okapiHeaders, userRepository)
       .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))

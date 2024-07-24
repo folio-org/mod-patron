@@ -202,6 +202,13 @@ public class PatronResourceImplTest {
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(mockDataFolder + "/external_user.json"));
+        } else if (req.path().equals("/users")) {
+          if (req.uri().equals("/users?query=%28personal.email%3D%3Dads100%29")) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/external_user2.json"));
+          }
         } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dadsfg%29")) {
           req.response()
             .setStatusCode(200)
@@ -1055,6 +1062,24 @@ public class PatronResourceImplTest {
       .then()
       .contentType("")
       .statusCode(204)
+      .extract()
+      .response();
+  }
+
+  @Test
+  final void testUpdatePatronAccountByEmailWithEmailAlreadyExistInPayload() {
+
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron7.json"))
+      .when()
+      .put(remotePatronAccountPathByEmail + "/adsfg")
+      .then()
+      .contentType("")
+      .statusCode(500)
       .extract()
       .response();
   }
