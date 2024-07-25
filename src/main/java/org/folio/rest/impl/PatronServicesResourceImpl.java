@@ -219,7 +219,7 @@ public class PatronServicesResourceImpl implements Patron {
                       if (records > 0) {
                         logger.error("putPatronAccountByEmailByEmailId:: User already exist with email provided in payload");
                         return CompletableFuture.completedFuture(
-                          PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("User already exist with email provided in payload"));
+                          PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain("User already exist with email provided in payload"));
                       } else {
                         return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
                       }
