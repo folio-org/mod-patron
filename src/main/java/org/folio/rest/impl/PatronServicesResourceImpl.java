@@ -36,6 +36,8 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -150,7 +152,7 @@ public class PatronServicesResourceImpl implements Patron {
     final var userRepository = new UserRepository(httpClient);
 
     getUserByEmail(emailId, okapiHeaders, userRepository)
-      .thenCompose(userResponse -> handleUserUpdateResponse(userResponse, entity, okapiHeaders, userRepository))
+      .thenCompose(userResponse -> handleUserUpdateResponse(emailId, userResponse, entity, okapiHeaders, userRepository))
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
         logger.error("putPatronAccountByEmailByEmailId:: Failed to update external patron by email", throwable);
@@ -164,31 +166,26 @@ public class PatronServicesResourceImpl implements Patron {
     final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
     final var userRepository = new UserRepository(httpClient);
 
-    getRemotePatronGroupId(userRepository, okapiHeaders)
-      .thenCompose(remotePatronGroupId -> userRepository.getUsers(remotePatronGroupId, okapiHeaders))
-      .thenAccept(usersResponse -> {
-        JsonArray users = usersResponse.getJsonArray(USERS_FILED);
-        if (expired) {
-          var now = Instant.now();
-          users = users.stream()
-            .map(JsonObject.class::cast)
-            .filter(user -> {
-              var expirationDateStr = user.getString("expirationDate");
-              if (expirationDateStr == null) {
-                return false;
-              }
-              var expirationDate = Instant.parse(expirationDateStr);
-              return expirationDate.isBefore(now);
-            })
-            .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
-        }
-        final var responseJson = new JsonObject()
-          .put(USERS_FILED, users)
-          .put(TOTAL_RECORDS, users.size());
+    if (!expired) {
+      JsonObject emptyResponse = new JsonObject()
+        .put(USERS_FILED, new JsonArray())
+        .put(TOTAL_RECORDS, 0);
+      asyncResultHandler.handle(Future.succeededFuture(
+        GetPatronAccountResponse.respond200WithApplicationJson(mapUserCollectionToExternalPatronCollection(emptyResponse.encode()))
+      ));
+      return;
+    }
+
+    var now = Instant.now();
+    var yesterday = now.minus(1, ChronoUnit.DAYS).atZone(ZoneId.systemDefault()).toLocalDate();
+    var yesterdayStr = yesterday.toString();
+
+    userRepository.getUsersByExpDate(yesterdayStr, okapiHeaders)
+      .thenAccept(usersResponse ->
         asyncResultHandler.handle(Future.succeededFuture(
-          GetPatronAccountResponse.respond200WithApplicationJson(mapUserCollectionToExternalPatronCollection(responseJson.encode()))
-        ));
-      })
+          GetPatronAccountResponse.respond200WithApplicationJson(mapUserCollectionToExternalPatronCollection(usersResponse.encode()))
+        ))
+      )
       .exceptionally(throwable -> {
         logger.error("getPatronAccount:: Failed to get external patrons", throwable);
         asyncResultHandler.handle(Future.succeededFuture(
@@ -197,7 +194,7 @@ public class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private CompletableFuture<Response> handleUserUpdateResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
+  private CompletableFuture<Response> handleUserUpdateResponse(String emailId, JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
     final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
     if (totalRecords > 1) {
       return CompletableFuture.completedFuture(
@@ -214,7 +211,22 @@ public class PatronServicesResourceImpl implements Patron {
             .thenCompose(addressTypes -> {
               if (Objects.equals(patronGroup, remotePatronGroupId)) {
               final String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
-                return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
+                final String entityEmail = entity.getContactInfo().getEmail();
+                if (!emailId.equals(entityEmail)) {
+                  return getUserByEmail(entityEmail, okapiHeaders, userRepository)
+                    .thenCompose(userEmailResponse -> {
+                      final int records = userEmailResponse.getInteger(TOTAL_RECORDS);
+                      if (records > 0) {
+                        logger.error("putPatronAccountByEmailByEmailId:: User already exist with email provided in payload");
+                        return CompletableFuture.completedFuture(
+                          PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain("User already exist with email provided in payload"));
+                      } else {
+                        return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
+                      }
+                    });
+                } else {
+                  return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
+                }
               } else {
                 return CompletableFuture.completedFuture(
                   PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("Required Patron group not applicable for user")
@@ -290,16 +302,16 @@ public class PatronServicesResourceImpl implements Patron {
     logger.info("processSingleUser:: Processing user with patron group: {} and active status: {}", patronGroup, isActive);
 
     return getRemotePatronGroupId(userRepository, okapiHeaders).thenApply(remotePatronGroupId -> {
-      logger.info("processSingleUser::Retrieved remote patron group ID: {}", remotePatronGroupId);
+      logger.info("processSingleUser:: Retrieved remote patron group ID: {}", remotePatronGroupId);
 
       if (!isActive) {
-        logger.warn("processSingleUser::User account is not active");
+        logger.warn("processSingleUser:: User account is not active");
         return PostPatronAccountResponse.respond422WithApplicationJson(createError("User account is not active", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       } else if (remotePatronGroupId.equals(patronGroup)) {
-        logger.warn("processSingleUser::User already exists in the remote patron group");
+        logger.warn("processSingleUser:: User already exists in the remote patron group");
         return PostPatronAccountResponse.respond422WithApplicationJson(createError("User already exists", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       } else {
-        logger.warn("processSingleUser::User does not belong to the required patron group");
+        logger.warn("processSingleUser:: User does not belong to the required patron group");
         return PostPatronAccountResponse.respond422WithApplicationJson(createError("User does not belong to the required patron group", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       }
     });

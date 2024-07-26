@@ -129,8 +129,6 @@ public class PatronUtils {
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     try {
       UsersCollection usersCollection = mapper.readValue(json, UsersCollection.class);
-
-
       List<ExternalPatron> externalPatrons = new ArrayList<>();
       for (User user : usersCollection.getUsers()){
         ExternalPatron externalPatron = PatronUtils.mapUserToExternalPatron(user);

@@ -70,14 +70,14 @@ public class UserRepository {
       });
   }
 
-  public CompletableFuture<JsonObject> getUsers(String patronGroup, Map<String, String> okapiHeaders) {
-    logger.info("getUsers::Retrieving users with patron group: {}", patronGroup);
+  public CompletableFuture<JsonObject> getUsersByExpDate(String date, Map<String, String> okapiHeaders) {
+    logger.info("getUsers::Retrieving users");
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
-    queryParameters.put(QUERY, "patronGroup=" + patronGroup);
-    queryParameters.put("limit", "1000");
+    queryParameters.put(QUERY, "(expirationDate="+date+" AND type==patron)");
+    queryParameters.put("limit", "100000");
     return client.get(USERS, queryParameters, okapiHeaders)
       .thenApply(response -> {
-        logger.info("getUsers::Successfully retrieved users with patron group: {}", patronGroup);
+        logger.info("getUsers::Successfully retrieved users");
         return ResponseInterpreter.verifyAndExtractBody(response);
       });
   }
