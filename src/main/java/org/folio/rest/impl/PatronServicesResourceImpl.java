@@ -3,7 +3,13 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.EMAIL_ALREADY_EXIST;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.INVALID_PATRON_GROUP;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.PATRON_GROUP_NOT_APPLICABLE;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ALREADY_EXIST;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.rest.utils.PatronUtils.mapUserToExternalPatron;
 import static org.folio.patron.rest.utils.PatronUtils.mapUserCollectionToExternalPatronCollection;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
@@ -22,7 +28,6 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_TOTAL_RECORDS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
-import static org.folio.rest.impl.Constants.MULTIPLE_USER_ERROR;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
@@ -198,7 +203,9 @@ public class PatronServicesResourceImpl implements Patron {
     final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
     if (totalRecords > 1) {
       return CompletableFuture.completedFuture(
-        PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain(MULTIPLE_USER_ERROR)
+        PutPatronAccountByEmailByEmailIdResponse
+          .respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.value(),
+          MULTIPLE_USER_WITH_EMAIL.name()))
       );
     } else if (totalRecords == 1) {
       final JsonObject userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
@@ -217,9 +224,11 @@ public class PatronServicesResourceImpl implements Patron {
                     .thenCompose(userEmailResponse -> {
                       final int records = userEmailResponse.getInteger(TOTAL_RECORDS);
                       if (records > 0) {
-                        logger.error("putPatronAccountByEmailByEmailId:: User already exist with email provided in payload");
+                        logger.error("putPatronAccountByEmailByEmailId:: {}", EMAIL_ALREADY_EXIST.value());
                         return CompletableFuture.completedFuture(
-                          PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain("User already exist with email provided in payload"));
+                          PutPatronAccountByEmailByEmailIdResponse.respond400WithApplicationJson(
+                            createError(EMAIL_ALREADY_EXIST.value(), EMAIL_ALREADY_EXIST.name()))
+                        );
                       } else {
                         return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
                       }
@@ -229,14 +238,16 @@ public class PatronServicesResourceImpl implements Patron {
                 }
               } else {
                 return CompletableFuture.completedFuture(
-                  PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain("Required Patron group not applicable for user")
+                  PutPatronAccountByEmailByEmailIdResponse
+                    .respond500WithApplicationJson(createError(PATRON_GROUP_NOT_APPLICABLE.value(), PATRON_GROUP_NOT_APPLICABLE.name()))
                 );
               }
             })
         );
     } else {
       return CompletableFuture.completedFuture(
-        PutPatronAccountByEmailByEmailIdResponse.respond404WithTextPlain("user does not exist")
+        PutPatronAccountByEmailByEmailIdResponse.respond404WithApplicationJson(createError(USER_NOT_FOUND.value(),
+          USER_NOT_FOUND.name()))
       );
     }
   }
@@ -245,14 +256,18 @@ public class PatronServicesResourceImpl implements Patron {
     final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
 
     if (totalRecords > 1) {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain(MULTIPLE_USER_ERROR)));
+      asyncResultHandler.handle(Future.succeededFuture(
+        GetPatronAccountByEmailByEmailIdResponse
+          .respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.value(),
+            MULTIPLE_USER_WITH_EMAIL.name()))));
     } else if (totalRecords == 1) {
       final JsonObject userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
       final User user = convertJsonToUser(userJson);
       final ExternalPatron externalPatron = mapUserToExternalPatron(user);
       asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond200WithApplicationJson(externalPatron)));
     } else {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond404WithTextPlain("User not found")));
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse
+        .respond404WithApplicationJson(createError(USER_NOT_FOUND.value(), USER_NOT_FOUND.name()))));
     }
   }
 
@@ -276,9 +291,9 @@ public class PatronServicesResourceImpl implements Patron {
 
     if (totalRecords > 1) {
       logger.error("handleUserResponse:: More than 1 record found");
-      return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond400WithTextPlain(MULTIPLE_USER_ERROR)
-      );
+      return CompletableFuture.completedFuture(PostPatronAccountResponse
+        .respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.value(),
+          MULTIPLE_USER_WITH_EMAIL.name())));
     } else if (totalRecords == 1) {
       logger.info("handleUserResponse:: 1 record found");
       final JsonObject userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
@@ -306,13 +321,16 @@ public class PatronServicesResourceImpl implements Patron {
 
       if (!isActive) {
         logger.warn("processSingleUser:: User account is not active");
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User account is not active", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
+        return PostPatronAccountResponse.respond422WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.value(),
+          USER_ACCOUNT_INACTIVE.name()));
       } else if (remotePatronGroupId.equals(patronGroup)) {
         logger.warn("processSingleUser:: User already exists in the remote patron group");
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User already exists", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
+        return PostPatronAccountResponse.respond422WithApplicationJson(createError(USER_ALREADY_EXIST.value(),
+          USER_ALREADY_EXIST.name()));
       } else {
         logger.warn("processSingleUser:: User does not belong to the required patron group");
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError("User does not belong to the required patron group", String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
+        return PostPatronAccountResponse.respond422WithApplicationJson(createError(INVALID_PATRON_GROUP.value(),
+          INVALID_PATRON_GROUP.name()));
       }
     });
   }

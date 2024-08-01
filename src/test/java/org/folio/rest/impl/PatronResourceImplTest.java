@@ -1093,7 +1093,7 @@ public class PatronResourceImplTest {
       .when()
       .put(remotePatronAccountPathByEmail + "/a")
       .then()
-      .contentType(TEXT)
+      .contentType(JSON)
       .statusCode(404)
       .extract()
       .response();
@@ -1110,7 +1110,7 @@ public class PatronResourceImplTest {
       .when()
       .put(remotePatronAccountPathByEmail + "/ad")
       .then()
-      .contentType(TEXT)
+      .contentType(JSON)
       .statusCode(500)
       .extract()
       .response();
