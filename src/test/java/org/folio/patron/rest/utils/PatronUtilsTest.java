@@ -144,7 +144,6 @@ class PatronUtilsTest {
 
   @Test
   void testMapUserCollectionToExternalPatronCollection_InvalidJson() {
-    ObjectMapper mapper = new ObjectMapper();
     assertThrows(IllegalArgumentException.class, () -> {
       PatronUtils.mapUserCollectionToExternalPatronCollection("invalidJson");
     });

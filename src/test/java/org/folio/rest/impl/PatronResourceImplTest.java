@@ -3,6 +3,8 @@ package org.folio.rest.impl;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.hamcrest.Matchers.containsString;
@@ -1048,6 +1050,44 @@ public class PatronResourceImplTest {
   }
 
   @Test
+  final void testGetPatronAccountByEmailMultipleError() {
+    final Errors errors = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(remotePatronAccountPathByEmail + "/tst123")
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(400)
+      .extract().response().as(Errors.class);
+
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(MULTIPLE_USER_WITH_EMAIL.value(), errors.getErrors().get(0).getMessage());
+    assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errors.getErrors().get(0).getCode());
+  }
+
+  @Test
+  final void testGetPatronAccountByEmailUserNotFoundError() {
+    final Errors errors = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(remotePatronAccountPathByEmail + "/a")
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(404)
+      .extract().response().as(Errors.class);
+
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(USER_NOT_FOUND.value(), errors.getErrors().get(0).getMessage());
+    assertEquals(USER_NOT_FOUND.name(), errors.getErrors().get(0).getCode());
+  }
+
+  @Test
   final void testUpdatePatronAccountByEmail() {
     given()
       .log().all()
@@ -1373,6 +1413,25 @@ public class PatronResourceImplTest {
       .then()
       .contentType(JSON)
       .statusCode(201);
+  }
+
+  @Test
+  final void testSuccessCreatePatronMultipleUserError() {
+    final Errors errors = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(mockDataFolder + "/remote_patron_multiple_users.json"))
+      .when()
+      .post(remotePatronAccountPath)
+      .then()
+      .contentType(JSON)
+      .statusCode(400)
+      .extract().response().as(Errors.class);
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(MULTIPLE_USER_WITH_EMAIL.value(), errors.getErrors().get(0).getMessage());
+    assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errors.getErrors().get(0).getCode());
   }
 
   @Test
