@@ -43,7 +43,7 @@
         "mobilePhone": "123-456-7890",
         "email": "jane.smith@example.com"
       },
-      "preferredEmailCommunication": ["Programs", "Service"]
+      "preferredEmailCommunication": ["Programs", "Services"]
     }
   ],
   "totalRecords": 2

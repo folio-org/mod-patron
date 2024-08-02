@@ -90,7 +90,7 @@
       "description": "Email communication info of external patron",
       "items": {
         "type": "string",
-        "enum": ["Support", "Programs", "Service"]
+        "enum": ["Support", "Programs", "Services"]
       },
       "maxItems": 3,
       "uniqueItems": true
