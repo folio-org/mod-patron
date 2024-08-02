@@ -1,10 +1,6 @@
 package org.folio.patron.rest.models;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.folio.rest.jaxrs.model.Error;
-import org.folio.rest.jaxrs.model.Errors;
-
-import java.util.Collections;
 
 public enum ExternalPatronErrorCode {
   MULTIPLE_USER_WITH_EMAIL("Multiple users found with the same email"),
@@ -23,15 +19,5 @@ public enum ExternalPatronErrorCode {
   @JsonValue
   public String value() {
     return value;
-  }
-
-  @Override
-  public String toString() {
-    return this.value;
-  }
-
-  public static Errors getErrors(ExternalPatronErrorCode mInstance) {
-    return new Errors()
-      .withErrors(Collections.singletonList(new Error().withMessage(mInstance.value()).withCode(mInstance.name())));
   }
 }
