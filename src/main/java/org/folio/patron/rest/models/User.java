@@ -286,6 +286,10 @@ public class User {
       }
 
       private Boolean primaryAddress;
+
+      public Boolean getPrimaryAddress() {
+        return primaryAddress;
+      }
     }
   }
 }
