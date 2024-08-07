@@ -251,7 +251,7 @@ public class PatronServicesResourceImpl implements Patron {
     final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
 
     if (totalRecords > 1) {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain(MULTIPLE_USER_WITH_EMAIL.name())));
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond422WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)))));
     } else if (totalRecords == 1) {
       final JsonObject userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
       final User user = convertJsonToUser(userJson);

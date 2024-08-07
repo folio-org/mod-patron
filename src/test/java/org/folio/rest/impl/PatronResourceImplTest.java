@@ -1054,7 +1054,7 @@ public class PatronResourceImplTest {
 
   @Test
   final void testGetPatronAccountByEmailMultipleError() {
-    final String errorRes = given()
+    final Errors errors = given()
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
@@ -1062,11 +1062,12 @@ public class PatronResourceImplTest {
       .get(remotePatronAccountPathByEmail + "/tst123")
       .then()
       .log().all()
-      .contentType(TEXT)
-      .statusCode(400)
-      .extract().response().asString();
+      .contentType(JSON)
+      .statusCode(422)
+      .extract().response().as(Errors.class);
 
-    assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errorRes);
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errors.getErrors().get(0).getMessage());
   }
 
   @Test
