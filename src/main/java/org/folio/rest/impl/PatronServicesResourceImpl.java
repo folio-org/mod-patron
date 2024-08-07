@@ -235,7 +235,7 @@ public class PatronServicesResourceImpl implements Patron {
                 }
               } else {
                 return CompletableFuture.completedFuture(
-                  PutPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain(PATRON_GROUP_NOT_APPLICABLE.name())
+                  PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain(PATRON_GROUP_NOT_APPLICABLE.name())
                 );
               }
             })

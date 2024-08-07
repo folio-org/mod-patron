@@ -1148,7 +1148,7 @@ public class PatronResourceImplTest {
       .put(remotePatronAccountPathByEmail + "/ad")
       .then()
       .contentType(TEXT)
-      .statusCode(500)
+      .statusCode(400)
       .extract()
       .response();
   }
