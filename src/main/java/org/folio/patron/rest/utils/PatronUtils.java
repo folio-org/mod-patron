@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -58,7 +59,13 @@ public class PatronUtils {
       new LinkedHashSet<>(user.getPreferredEmailCommunication());
     externalPatron.setPreferredEmailCommunication(preferredEmailCommunication);
 
-    User.Personal.Address userAddress = user.getPersonal().getAddresses().get(0);
+    User.Personal.Address userAddress =
+      Optional.ofNullable(user.getPersonal())
+        .map(User.Personal::getAddresses)
+        .filter(addressList->!addressList.isEmpty())
+        .map(addressList->addressList.get(0))
+        .orElse(null);
+
     if (userAddress != null) {
           AddressInfo address = new AddressInfo();
           address.setCountry(userAddress.getCountryId());
