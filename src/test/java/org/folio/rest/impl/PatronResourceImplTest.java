@@ -3,7 +3,9 @@ package org.folio.rest.impl;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.EMAIL_ALREADY_EXIST;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.PATRON_GROUP_NOT_APPLICABLE;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ALREADY_EXIST;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
@@ -1104,7 +1106,7 @@ public class PatronResourceImplTest {
   @Test
   final void testUpdatePatronAccountByEmailWithEmailAlreadyExistInPayload() {
 
-    given()
+    final Errors errors = given()
       .log().all()
       .header(tenantHeader)
       .header(urlHeader)
@@ -1113,15 +1115,18 @@ public class PatronResourceImplTest {
       .when()
       .put(remotePatronAccountPathByEmail + "/adsfg")
       .then()
-      .contentType("")
-      .statusCode(400)
+      .contentType(JSON)
+      .statusCode(422)
       .extract()
-      .response();
+      .response().as(Errors.class);
+
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(EMAIL_ALREADY_EXIST.name(), errors.getErrors().get(0).getMessage());
   }
 
   @Test
   final void testNotFoundWhenUpdatePatronAccountByEmail() {
-    given()
+    final String res = given()
       .log().all()
       .header(tenantHeader)
       .header(urlHeader)
@@ -1133,12 +1138,14 @@ public class PatronResourceImplTest {
       .contentType(TEXT)
       .statusCode(404)
       .extract()
-      .response();
+      .response().asString();
+
+    assertEquals(USER_NOT_FOUND.name(), res);
   }
 
   @Test
   final void testIncorrectPatronWhenUpdatePatronAccountByEmail() {
-    given()
+    final Errors errors = given()
       .log().all()
       .header(tenantHeader)
       .header(urlHeader)
@@ -1147,10 +1154,13 @@ public class PatronResourceImplTest {
       .when()
       .put(remotePatronAccountPathByEmail + "/ad")
       .then()
-      .contentType(TEXT)
-      .statusCode(400)
+      .contentType(JSON)
+      .statusCode(422)
       .extract()
-      .response();
+      .response().as(Errors.class);
+
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(PATRON_GROUP_NOT_APPLICABLE.name(), errors.getErrors().get(0).getMessage());
   }
 
   @Test
@@ -1414,7 +1424,7 @@ public class PatronResourceImplTest {
 
   @Test
   final void testSuccessCreatePatronMultipleUserError() {
-    final String errorsRes = given()
+    final Errors errors = given()
       .log().all()
       .header(tenantHeader)
       .header(urlHeader)
@@ -1423,11 +1433,12 @@ public class PatronResourceImplTest {
       .when()
       .post(remotePatronAccountPath)
       .then()
-      .contentType(TEXT)
-      .statusCode(400)
-      .extract().response().asString();
+      .contentType(JSON)
+      .statusCode(422)
+      .extract().response().as(Errors.class);
 
-    assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errorsRes);
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errors.getErrors().get(0).getMessage());
   }
 
   @Test

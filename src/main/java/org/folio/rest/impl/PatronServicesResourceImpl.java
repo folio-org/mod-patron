@@ -204,7 +204,7 @@ public class PatronServicesResourceImpl implements Patron {
     final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
     if (totalRecords > 1) {
       return CompletableFuture.completedFuture(
-        PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain( MULTIPLE_USER_WITH_EMAIL.name())
+        PutPatronAccountByEmailByEmailIdResponse.respond422WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)))
       );
     } else if (totalRecords == 1) {
       final JsonObject userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
@@ -225,7 +225,7 @@ public class PatronServicesResourceImpl implements Patron {
                       if (records > 0) {
                         logger.error("putPatronAccountByEmailByEmailId:: {}", EMAIL_ALREADY_EXIST.value());
                         return CompletableFuture.completedFuture(
-                          PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain(EMAIL_ALREADY_EXIST.name()));
+                          PutPatronAccountByEmailByEmailIdResponse.respond422WithApplicationJson(createError(EMAIL_ALREADY_EXIST.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY))));
                       } else {
                         return updateUser(userId, entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
                       }
@@ -235,7 +235,7 @@ public class PatronServicesResourceImpl implements Patron {
                 }
               } else {
                 return CompletableFuture.completedFuture(
-                  PutPatronAccountByEmailByEmailIdResponse.respond400WithTextPlain(PATRON_GROUP_NOT_APPLICABLE.name())
+                  PutPatronAccountByEmailByEmailIdResponse.respond422WithApplicationJson(createError(PATRON_GROUP_NOT_APPLICABLE.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)))
                 );
               }
             })
@@ -283,7 +283,7 @@ public class PatronServicesResourceImpl implements Patron {
     if (totalRecords > 1) {
       logger.error("handleUserResponse:: More than 1 record found");
       return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond400WithTextPlain(MULTIPLE_USER_WITH_EMAIL.name())
+        PostPatronAccountResponse.respond422WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)))
       );
     } else if (totalRecords == 1) {
       logger.info("handleUserResponse:: 1 record found");
