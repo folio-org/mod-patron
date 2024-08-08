@@ -120,6 +120,7 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String ID_FILED = "id";
   private static final String USERS_FILED = "users";
   private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
+  private static final String PROCESS_SINGLE_USER = "processSingleUser";
 
   @Override
   public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -305,19 +306,19 @@ public class PatronServicesResourceImpl implements Patron {
     final boolean isActive = userJson.getBoolean(ACTIVE, false);
     final String patronGroup = userJson.getString(PATRON_GROUP, "");
 
-    logger.info("processSingleUser:: Processing user with patron group: {} and active status: {}", patronGroup, isActive);
+    logger.info(PROCESS_SINGLE_USER + ":: Processing user with patron group: {} and active status: {}", patronGroup, isActive);
 
     return getRemotePatronGroupId(userRepository, okapiHeaders).thenApply(remotePatronGroupId -> {
-      logger.info("processSingleUser:: Retrieved remote patron group ID: {}", remotePatronGroupId);
+      logger.info(PROCESS_SINGLE_USER + ":: Retrieved remote patron group ID: {}", remotePatronGroupId);
 
       if (!isActive) {
-        logger.warn("processSingleUser:: {}", USER_ACCOUNT_INACTIVE.value());
+        logger.warn(PROCESS_SINGLE_USER + ":: {}", USER_ACCOUNT_INACTIVE.value());
         return PostPatronAccountResponse.respond422WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       } else if (remotePatronGroupId.equals(patronGroup)) {
-        logger.warn("processSingleUser:: {}", USER_ALREADY_EXIST.value());
+        logger.warn(PROCESS_SINGLE_USER + ":: {}", USER_ALREADY_EXIST.value());
         return PostPatronAccountResponse.respond422WithApplicationJson(createError(USER_ALREADY_EXIST.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       } else {
-        logger.warn("processSingleUser:: {}", INVALID_PATRON_GROUP.value());
+        logger.warn(PROCESS_SINGLE_USER + ":: {}", INVALID_PATRON_GROUP.value());
         return PostPatronAccountResponse.respond422WithApplicationJson(createError(INVALID_PATRON_GROUP.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
       }
     });
