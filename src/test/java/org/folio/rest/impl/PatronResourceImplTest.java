@@ -1068,6 +1068,7 @@ public class PatronResourceImplTest {
 
     assertEquals(1, errors.getErrors().size());
     assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errors.getErrors().get(0).getMessage());
+    logger.info("Test done");
   }
 
   @Test
