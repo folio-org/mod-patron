@@ -42,7 +42,7 @@ public class UserRepository {
   }
 
   public CompletableFuture<JsonObject> createUser(User user, Map<String, String> okapiHeaders) {
-    logger.info("createUser::Creating user: {}", JsonObject.mapFrom(user));
+    logger.info("createUser::Creating user: {}", user);
     return client.post(USERS, JsonObject.mapFrom(user), okapiHeaders)
       .thenApply(response -> {
         logger.info("createUser::Successfully created user: {}", user);
