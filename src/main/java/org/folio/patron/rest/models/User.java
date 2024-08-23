@@ -85,6 +85,11 @@ public class User {
   public void setPersonal(Personal personal) {
     this.personal = personal;
   }
+
+  public Date getEnrollmentDate() {
+    return enrollmentDate;
+  }
+
   public void setEnrollmentDate(Date enrollmentDate) {
     this.enrollmentDate = enrollmentDate;
   }
