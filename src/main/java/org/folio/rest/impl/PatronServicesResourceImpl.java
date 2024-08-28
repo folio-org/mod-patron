@@ -48,6 +48,8 @@ import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -82,6 +84,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class PatronServicesResourceImpl implements Patron {
+  private static final Logger logger = LogManager.getLogger();
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
     "/circulation/requests/allowed-service-points";
@@ -95,6 +98,9 @@ public class PatronServicesResourceImpl implements Patron {
       int limit,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
+
+    logger.debug("getPatronAccountById:: Trying to get PatronAccount with parameters:  id: {}, includeLoans: {}, " +
+      "includeCharges: {}, includeHolds: {}", id, includeLoans, includeCharges, includeHolds);
 
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
@@ -142,6 +148,7 @@ public class PatronServicesResourceImpl implements Patron {
             return CompletableFuture.allOf(cf1, cf2, cf3)
                 .thenApply(result -> account);
           } catch (Exception e) {
+            logger.warn("getPatronAccountById:: Exception in first thenCompose block while fetching PatronAccount ", e);
             throw new CompletionException(e);
           }
         })
@@ -149,10 +156,14 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
         })
         .exceptionally(throwable -> {
+          logger.warn("getPatronAccountById:: Exception in exceptionally block for fetching PatronAccount " +
+            "while handling result ", throwable);
           asyncResultHandler.handle(handleError(throwable));
           return null;
         });
     } catch (Exception e) {
+      logger.warn("getPatronAccountById:: Exception in outer try-catch block while initiating the process during " +
+        "fetching PatronAccount", e);
       asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
@@ -289,7 +300,7 @@ public class PatronServicesResourceImpl implements Patron {
                 asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
               })
               .exceptionally(e -> {
-                
+
                 asyncResultHandler.handle(handleItemHoldPOSTError(e));
                 return null;
               });
