@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
@@ -14,6 +17,8 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class VertxOkapiHttpClient {
+  private static final Logger logger = LogManager.getLogger();
+
   private final WebClient client;
   
   public VertxOkapiHttpClient(WebClient client) {
@@ -26,6 +31,8 @@ public class VertxOkapiHttpClient {
 
   public CompletableFuture<Response> get(String path,
     Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
+
+    okapiHeaders.forEach((key, value) -> logger.info(String.format("%s %s", key, value)));
 
     URL url = buildUrl(path, okapiHeaders);
 
@@ -45,6 +52,8 @@ public class VertxOkapiHttpClient {
   public CompletableFuture<Response> post(String path, JsonObject body,
     Map<String, String> okapiHeaders) {
 
+    okapiHeaders.forEach((key, value) -> logger.info(String.format("%s %s", key, value)));
+
     URL url = buildUrl(path, okapiHeaders);
 
     final var request = client
@@ -57,6 +66,8 @@ public class VertxOkapiHttpClient {
 
   public CompletableFuture<Response> put(String path, JsonObject body,
     Map<String, String> okapiHeaders) {
+
+    okapiHeaders.forEach((key, value) -> logger.info(String.format("%s %s", key, value)));
 
     URL url = buildUrl(path, okapiHeaders);
 
