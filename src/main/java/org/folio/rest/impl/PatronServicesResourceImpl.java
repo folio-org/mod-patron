@@ -396,7 +396,8 @@ public class PatronServicesResourceImpl implements Patron {
       int limit,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
-
+    logger.debug("getPatronAccountById:: Trying to get PatronAccount with parameters:  id: {}, includeLoans: {}, " +
+      "includeCharges: {}, includeHolds: {}", id, includeLoans, includeCharges, includeHolds);
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final var userRepository = new UserRepository(httpClient);
@@ -443,6 +444,7 @@ public class PatronServicesResourceImpl implements Patron {
             return CompletableFuture.allOf(cf1, cf2, cf3)
                 .thenApply(result -> account);
           } catch (Exception e) {
+            logger.error("getPatronAccountById:: Exception in first thenCompose block while fetching PatronAccount ", e);
             throw new CompletionException(e);
           }
         })
@@ -450,10 +452,14 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
         })
         .exceptionally(throwable -> {
+          logger.error("getPatronAccountById:: Exception in exceptionally block for fetching PatronAccount " +
+            "while handling result ", throwable);
           asyncResultHandler.handle(handleError(throwable));
           return null;
         });
     } catch (Exception e) {
+      logger.error("getPatronAccountById:: Exception in outer try-catch block while initiating the process during " +
+        "fetching PatronAccount", e);
       asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
