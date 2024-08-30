@@ -444,7 +444,7 @@ public class PatronServicesResourceImpl implements Patron {
             return CompletableFuture.allOf(cf1, cf2, cf3)
                 .thenApply(result -> account);
           } catch (Exception e) {
-            logger.warn("getPatronAccountById:: Exception in first thenCompose block while fetching PatronAccount ", e);
+            logger.error("getPatronAccountById:: Exception in first thenCompose block while fetching PatronAccount ", e);
             throw new CompletionException(e);
           }
         })
@@ -452,13 +452,13 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond200WithApplicationJson(account)));
         })
         .exceptionally(throwable -> {
-          logger.warn("getPatronAccountById:: Exception in exceptionally block for fetching PatronAccount " +
+          logger.error("getPatronAccountById:: Exception in exceptionally block for fetching PatronAccount " +
             "while handling result ", throwable);
           asyncResultHandler.handle(handleError(throwable));
           return null;
         });
     } catch (Exception e) {
-      logger.warn("getPatronAccountById:: Exception in outer try-catch block while initiating the process during " +
+      logger.error("getPatronAccountById:: Exception in outer try-catch block while initiating the process during " +
         "fetching PatronAccount", e);
       asyncResultHandler.handle(succeededFuture(GetPatronAccountByIdResponse.respond500WithTextPlain(e.getMessage())));
     }
