@@ -358,6 +358,32 @@ traits:
                   description: The UUID of a FOLIO hold request
                   type: string
                   pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+          /allowed-service-points:
+            displayName: Allowed service points
+            description: Services that provides a list of allowed pickup service points
+            get:
+              description: |
+                Returns a list of pickup service points allowed for a particular patron and item
+              is: [ validate ]
+              responses:
+                200:
+                  description: |
+                    Successfully returns a list of allowed service points
+                  body:
+                    application/json:
+                      type: allowedServicePoints
+                      example: !include examples/allowed-service-points-response.json
+                422:
+                  description: Validation error
+                  body:
+                    application/json:
+                      type: errors
+                500:
+                  description: |
+                    Internal server error, e.g. due to misconfiguration
+                  body:
+                    text/plain:
+                      example: internal server error, contact administrator
       /instance:
         /{instanceId}:
           uriParameters:

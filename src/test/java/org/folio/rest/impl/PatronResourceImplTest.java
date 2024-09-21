@@ -751,6 +751,13 @@ public class PatronResourceImplTest {
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(mockDataFolder + "/allowed_sp_mod_circulation_response.json"));
+          }else if ("create".equals(req.getParam("operation"))
+            && goodUserId.equals(req.getParam("requesterId"))
+            && goodItemId.equals(req.getParam("itemId"))){
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(mockDataFolder + "/allowed_sp_mod_circulation_response.json"));
           } else {
             req.response()
               .setStatusCode(400)
@@ -1942,8 +1949,8 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  final void allowedServicePointsShouldSucceed() {
-    logger.info("Testing allowed service points");
+  final void allowedServicePointsForInstanceShouldSucceed() {
+    logger.info("Testing allowed service points for instance");
 
     var response = given()
       .header(tenantHeader)
@@ -1969,8 +1976,8 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  final void allowedServicePointsShouldFailWhenModCirculationFails() {
-    logger.info("Testing allowed service points");
+  final void allowedServicePointsForInstanceShouldFailWhenModCirculationFails() {
+    logger.info("Testing allowed service points for instance");
 
     given()
       .header(tenantHeader)
@@ -1994,8 +2001,8 @@ public class PatronResourceImplTest {
   }
 
   @Test
-  final void allowedServicePointsShouldProxyModCirculationErrors() {
-    logger.info("Testing allowed service points");
+  final void allowedServicePointsForInstanceShouldProxyModCirculationErrors() {
+    logger.info("Testing allowed service points for instance");
 
     var response = given()
       .header(tenantHeader)
@@ -2008,6 +2015,87 @@ public class PatronResourceImplTest {
       .when()
       .contentType(ContentType.JSON)
       .get(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(JSON)
+      .and().assertThat().statusCode(422)
+      .extract()
+      .asString();
+
+    final var expected = readMockFile(mockDataFolder +
+      "/allowed_service_points_instance_not_found.json");
+    assertEquals(new JsonObject(expected), new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsForItemShouldSucceed() {
+    logger.info("Testing allowed service points for instance");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + itemPath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(mockDataFolder +
+      "/allowed_sp_mod_patron_expected_response.json"));
+    verifyAllowedServicePoints(expectedJson, new JsonObject(response));
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsForItemShouldFailWhenModCirculationFails() {
+    logger.info("Testing allowed service points for instance");
+
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .header(new Header(okapiBadDataHeader, "500"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + itemPath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(TEXT)
+      .and().assertThat().statusCode(500)
+      .extract()
+      .asString();
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsForItemShouldProxyModCirculationErrors() {
+    logger.info("Testing allowed service points for instance");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .header(new Header(okapiBadDataHeader, "422"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + itemPath + allowedServicePointsPath)
       .then()
       .log().all()
       .and().assertThat().contentType(JSON)
