@@ -23,4 +23,8 @@ public class ResponseInterpreter {
     }
     return new JsonObject(response.body);
   }
+
+  public static JsonObject extractResponseBody(Response response) {
+    return isBlank(response.body) ? null : new JsonObject(response.body);
+  }
 }

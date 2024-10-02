@@ -2215,7 +2215,7 @@ public class PatronResourceImplTest {
     return false;
   }
 
-  private void verifyAllowedServicePoints(JsonObject expectedAllowedServicePoints,
+  public static void verifyAllowedServicePoints(JsonObject expectedAllowedServicePoints,
     JsonObject actualAllowedServicePoints) {
 
     JsonArray expectedAllowedServicePointsArray = expectedAllowedServicePoints

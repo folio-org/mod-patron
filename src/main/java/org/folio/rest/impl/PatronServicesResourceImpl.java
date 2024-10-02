@@ -108,8 +108,10 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String TOTAL_RECORDS = "totalRecords";
   private static final String QUERY = "query";
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
-  private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
+  private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH =
     "/circulation/requests/allowed-service-points";
+  private static final String CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH =
+    "/circulation-bff/allowed-service-points";
   private static final String ACTIVE = "active";
   private static final String PATRON_GROUP = "patronGroup";
   private static final String ADDRESS_TYPES = "addressTypes";
@@ -121,6 +123,14 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String USERS_FILED = "users";
   private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
   private static final String PROCESS_SINGLE_USER = "processSingleUser:: {}";
+  private static final String ECS_TLR_SETTINGS_PATH = "/tlr/settings";
+  private static final String ECS_TLR_FEATURE_KEY = "ecsTlrFeatureEnabled";
+  private static final String CIRCULATION_SETTINGS_KEY = "circulationSettings";
+  private static final int FIRST_POSITION_INDEX = 0;
+  private static final String VALUE_KEY = "value";
+  private static final String ENABLED_KEY = "enabled";
+  private static final String CIRCULATION_SETTINGS_STORAGE_PATH =
+    "/circulation-settings-storage/circulation-settings";
 
   @Override
   public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -681,7 +691,7 @@ public class PatronServicesResourceImpl implements Patron {
     var queryParameters = Map.of("operation", "create",
       "requesterId", requesterId, "instanceId", instanceId);
 
-    completedFuture(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS)
+    getPathByEcsTlrFeatureEnabled(isEcsTlrFeatureEnabled(httpClient, okapiHeaders))
       .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getAllowedServicePoints)
@@ -1167,4 +1177,45 @@ public class PatronServicesResourceImpl implements Patron {
     return format("(requesterId==%s and status==Open*)", requesterId);
   }
 
+  private CompletableFuture<Boolean> isEcsTlrFeatureEnabled(VertxOkapiHttpClient httpClient,
+    Map<String, String> okapiHeaders) {
+
+    return completedFuture(ECS_TLR_SETTINGS_PATH)
+      .thenCompose(path -> httpClient.get(path, Map.of(), okapiHeaders))
+      .thenApply(ResponseInterpreter::extractResponseBody)
+      .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
+
+  }
+
+  private CompletableFuture<Boolean> getEcsTlrFeatureValue(JsonObject body,
+    VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
+
+    return Objects.nonNull(body)
+      ? completedFuture(body.getBoolean(ECS_TLR_FEATURE_KEY))
+      : getCirculationStorageEcsTlrFeatureValue(client, okapiHeaders);
+  }
+
+  private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(
+    VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
+
+    return completedFuture(CIRCULATION_SETTINGS_STORAGE_PATH)
+      .thenCompose(path -> client.get(path, Map.of(), okapiHeaders))
+      .thenApply(ResponseInterpreter::extractResponseBody)
+      .thenCompose(this::getCirculationStorageEcsTlrFeatureValue);
+  }
+
+  private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(JsonObject body) {
+    return completedFuture(Objects.nonNull(body) && getEcsTlrFeatureValue(body));
+  }
+
+  private static Boolean getEcsTlrFeatureValue(JsonObject body) {
+    return body.getJsonArray(CIRCULATION_SETTINGS_KEY).getJsonObject(FIRST_POSITION_INDEX)
+      .getJsonObject(VALUE_KEY).getBoolean(ENABLED_KEY);
+  }
+
+  private CompletableFuture<String> getPathByEcsTlrFeatureEnabled(CompletableFuture<Boolean> result) {
+    return result.thenApply(value -> value
+      ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH
+      : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH);
+  }
 }
