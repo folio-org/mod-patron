@@ -729,7 +729,29 @@ public class PatronResourceImplTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(mockDataFolder + "/localization_settings.json"));
-      } else if (req.path().equals("/circulation/requests/allowed-service-points")) {
+      }
+
+      else  if (req.path().equals("/circulation/requests/allowed-service-points")
+      && req.getHeader(okapiBadDataHeader) == null) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/allowed_sp_mod_patron_expected.json"));
+      }
+
+      else if (req.path().equals("/tlr/settings")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/ecs_tlr_module_feature_disabled.json"));
+      } else if (req.path().equals("/circulation-settings-storage/circulation-settings")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(mockDataFolder + "/circulation_storage_module_feature_enabled.json"));
+      }
+
+      else if (req.path().equals("/circulation/requests/allowed-service-points")) {
         final String errorStatusCode = req.getHeader(okapiBadDataHeader);
         if (errorStatusCode != null) {
           if ("422".equals(errorStatusCode)) {
