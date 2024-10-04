@@ -32,10 +32,10 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
-import static org.folio.rest.impl.Path.CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH;
-import static org.folio.rest.impl.Path.CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH;
-import static org.folio.rest.impl.Path.CIRCULATION_SETTINGS_STORAGE_PATH;
-import static org.folio.rest.impl.Path.ECS_TLR_SETTINGS_PATH;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_SETTINGS_STORAGE_PATH;
+import static org.folio.rest.impl.UrlPath.ECS_TLR_SETTINGS_PATH;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
@@ -690,7 +690,8 @@ public class PatronServicesResourceImpl implements Patron {
     var queryParameters = Map.of("operation", "create",
       "requesterId", requesterId, "instanceId", instanceId);
 
-    getPathByEcsTlrFeatureEnabled(isEcsTlrFeatureEnabled(httpClient, okapiHeaders))
+    isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
+      .thenApply(this::getPathByEcsTlrFeatureEnabled)
       .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getAllowedServicePoints)
@@ -1212,13 +1213,9 @@ public class PatronServicesResourceImpl implements Patron {
       .getJsonObject(VALUE_KEY).getBoolean(ENABLED_KEY);
   }
 
-  private CompletableFuture<String> getPathByEcsTlrFeatureEnabled(CompletableFuture<Boolean> result) {
-    return result.thenApply(value -> {
-      if (Objects.isNull(value) || BooleanUtils.isFalse(value)) {
-        return CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH.getValue();
-      } else {
-        return CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH.getValue();
-      }
-    });
+  private String getPathByEcsTlrFeatureEnabled(Boolean value) {
+        return BooleanUtils.isTrue(value)
+          ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH.getValue()
+          : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH.getValue();
   }
 }
