@@ -6,13 +6,13 @@ public enum Path {
   CIRCULATION_SETTINGS_STORAGE_PATH("/circulation-settings-storage/circulation-settings"),
   ECS_TLR_SETTINGS_PATH("/tlr/settings");
 
-  Path(String path) {
-    this.path = path;
+  Path(String value) {
+    this.value = value;
   }
 
-  private final String path;
+  private final String value;
 
-  public String getPath() {
-    return path;
+  public String getValue() {
+    return value;
   }
 }

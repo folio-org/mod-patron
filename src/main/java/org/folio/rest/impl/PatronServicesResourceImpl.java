@@ -114,10 +114,6 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String TOTAL_RECORDS = "totalRecords";
   private static final String QUERY = "query";
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
-//  private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH =
-//    "/circulation/requests/allowed-service-points";
-//  private static final String CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH =
-//    "/circulation-bff/allowed-service-points";
   private static final String ACTIVE = "active";
   private static final String PATRON_GROUP = "patronGroup";
   private static final String ADDRESS_TYPES = "addressTypes";
@@ -134,8 +130,6 @@ public class PatronServicesResourceImpl implements Patron {
   private static final int FIRST_POSITION_INDEX = 0;
   private static final String VALUE_KEY = "value";
   private static final String ENABLED_KEY = "enabled";
-//  private static final String CIRCULATION_SETTINGS_STORAGE_PATH =
-//    "/circulation-settings-storage/circulation-settings";
 
   @Override
   public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -1185,7 +1179,7 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<Boolean> isEcsTlrFeatureEnabled(VertxOkapiHttpClient httpClient,
     Map<String, String> okapiHeaders) {
 
-    return completedFuture(ECS_TLR_SETTINGS_PATH.getPath())
+    return completedFuture(ECS_TLR_SETTINGS_PATH.getValue())
       .thenCompose(path -> httpClient.get(path, Map.of(), okapiHeaders))
       .thenApply(ResponseInterpreter::extractResponseBody)
       .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
@@ -1203,7 +1197,7 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(
     VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
 
-    return completedFuture(CIRCULATION_SETTINGS_STORAGE_PATH.getPath())
+    return completedFuture(CIRCULATION_SETTINGS_STORAGE_PATH.getValue())
       .thenCompose(path -> client.get(path, Map.of(), okapiHeaders))
       .thenApply(ResponseInterpreter::extractResponseBody)
       .thenCompose(this::getCirculationStorageEcsTlrFeatureValue);
@@ -1221,9 +1215,9 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<String> getPathByEcsTlrFeatureEnabled(CompletableFuture<Boolean> result) {
     return result.thenApply(value -> {
       if (Objects.isNull(value) || BooleanUtils.isFalse(value)) {
-        return CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH.getPath();
+        return CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH.getValue();
       } else {
-        return CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH.getPath();
+        return CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH.getValue();
       }
     });
   }
