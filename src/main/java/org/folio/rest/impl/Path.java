@@ -1,8 +1,5 @@
 package org.folio.rest.impl;
 
-import lombok.Getter;
-
-@Getter
 public enum Path {
 
   CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH ("/circulation/requests/allowed-service-points"),
@@ -15,4 +12,9 @@ public enum Path {
   }
 
   private final String path;
+
+  public String getPath() {
+    return path;
+  }
+
 }
