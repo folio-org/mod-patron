@@ -32,10 +32,10 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
-import static org.folio.rest.impl.UrlPath.CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH;
-import static org.folio.rest.impl.UrlPath.CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH;
-import static org.folio.rest.impl.UrlPath.CIRCULATION_SETTINGS_STORAGE_PATH;
-import static org.folio.rest.impl.UrlPath.ECS_TLR_SETTINGS_PATH;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_SETTINGS_STORAGE_URL_PATH;
+import static org.folio.rest.impl.UrlPath.ECS_TLR_SETTINGS_URL_PATH;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
@@ -1180,11 +1180,9 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<Boolean> isEcsTlrFeatureEnabled(VertxOkapiHttpClient httpClient,
     Map<String, String> okapiHeaders) {
 
-    return completedFuture(ECS_TLR_SETTINGS_PATH.getValue())
-      .thenCompose(path -> httpClient.get(path, Map.of(), okapiHeaders))
+    return httpClient.get(ECS_TLR_SETTINGS_URL_PATH.getValue(), Map.of(), okapiHeaders)
       .thenApply(ResponseInterpreter::extractResponseBody)
       .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
-
   }
 
   private CompletableFuture<Boolean> getEcsTlrFeatureValue(JsonObject body,
@@ -1198,8 +1196,7 @@ public class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(
     VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
 
-    return completedFuture(CIRCULATION_SETTINGS_STORAGE_PATH.getValue())
-      .thenCompose(path -> client.get(path, Map.of(), okapiHeaders))
+    return client.get(CIRCULATION_SETTINGS_STORAGE_URL_PATH.getValue(), Map.of(), okapiHeaders)
       .thenApply(ResponseInterpreter::extractResponseBody)
       .thenCompose(this::getCirculationStorageEcsTlrFeatureValue);
   }
@@ -1215,7 +1212,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   private String getPathByEcsTlrFeatureEnabled(Boolean value) {
         return BooleanUtils.isTrue(value)
-          ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH.getValue()
-          : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH.getValue();
+          ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH.getValue()
+          : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH.getValue();
   }
 }
