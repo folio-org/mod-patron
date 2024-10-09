@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static io.restassured.RestAssured.given;
 import static org.folio.patron.utils.Utils.readMockFile;
 import static org.folio.rest.impl.PatronResourceImplTest.verifyAllowedServicePoints;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.stream.Stream;
 
@@ -14,6 +15,7 @@ import org.folio.rest.RestVerticle;
 import org.folio.rest.tools.utils.ModuleName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -82,6 +84,13 @@ public class AllowedServicePointPathTest {
   private final String instancePath = "/instance/{instanceId}";
   private final String allowedServicePointsPath = "/allowed-service-points";
 
+  private static final String INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE = "status 500";
+  private static final String INTERNAL_SERVER_ERROR_STATUS_LINE = "HTTP/1.1 500 Internal Server Error";
+  private static final String RESPONSE_WITH_ERROR_EXPECTED = "java.lang.RuntimeException: " +
+    "java.util.concurrent.CompletionException: io.vertx.core.impl.NoStackTraceTimeoutException: " +
+    "The timeout period of 5000ms has been exceeded while executing GET /tlr/settings " +
+    "for server null";
+
   private String moduleName;
   private String moduleVersion;
   private String moduleId;
@@ -125,7 +134,11 @@ public class AllowedServicePointPathTest {
           .end(readMockFile(mockDataFolder +
             ALLOWED_SERVICE_POINTS_CIRCULATION_BFF_JSON_FILE_PATH));
       } else if (req.path().equals(ECS_TLR_SETTINGS_PATH)) {
-        if (req.getHeader(ECS_TLR_HEADER_NAME).isEmpty()) {
+        if(req.getHeader(ECS_TLR_HEADER_NAME).equals(INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE)) {
+          req.response()
+            .setStatusCode(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt())
+            .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER);
+        } else if (req.getHeader(ECS_TLR_HEADER_NAME).isEmpty()) {
           req.response()
             .setStatusCode(HttpStatus.HTTP_OK.toInt())
             .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
@@ -203,6 +216,28 @@ public class AllowedServicePointPathTest {
 
     verifyAllowedServicePoints(expectedJson, new JsonObject(response));
   }
+
+  @Test
+  void shouldThrowRuntimeExceptionIfBaseExceptionIsNotHttpException() {
+    String responseWithErrorActual  =  given()
+      .header(new Header(ECS_TLR_HEADER_NAME, INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE))
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam(ACCOUNT_ID_PATH_PARAM_KEY, goodUserId)
+      .pathParam(INSTANCE_ID_PATH_PARAM_KEY, goodInstanceId)
+      .log().all()
+      .when()
+      .get(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .and().assertThat().statusCode(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt())
+      .and().assertThat().statusLine(INTERNAL_SERVER_ERROR_STATUS_LINE)
+      .extract()
+      .asString();
+
+    assertEquals(RESPONSE_WITH_ERROR_EXPECTED, responseWithErrorActual);
+  }
+
 
   private static Stream<Arguments> headerValueToFileName() {
     return Stream.of(
