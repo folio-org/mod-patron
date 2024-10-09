@@ -34,8 +34,6 @@ import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
 import static org.folio.rest.impl.UrlPath.CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH;
 import static org.folio.rest.impl.UrlPath.CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
-import static org.folio.rest.impl.UrlPath.CIRCULATION_SETTINGS_STORAGE_URL_PATH;
-import static org.folio.rest.impl.UrlPath.ECS_TLR_SETTINGS_URL_PATH;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
@@ -125,11 +123,7 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String USERS_FILED = "users";
   private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
   private static final String PROCESS_SINGLE_USER = "processSingleUser:: {}";
-  private static final String ECS_TLR_FEATURE_KEY = "ecsTlrFeatureEnabled";
-  private static final String CIRCULATION_SETTINGS_KEY = "circulationSettings";
-  private static final int FIRST_POSITION_INDEX = 0;
   private static final String VALUE_KEY = "value";
-  private static final String ENABLED_KEY = "enabled";
 
   @Override
   public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -690,7 +684,8 @@ public class PatronServicesResourceImpl implements Patron {
     var queryParameters = Map.of("operation", "create",
       "requesterId", requesterId, "instanceId", instanceId);
 
-    isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
+    new EcsTlrSettingsService()
+      .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
       .thenApply(this::getPathByEcsTlrFeatureEnabled)
       .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
@@ -1177,42 +1172,9 @@ public class PatronServicesResourceImpl implements Patron {
     return format("(requesterId==%s and status==Open*)", requesterId);
   }
 
-  private CompletableFuture<Boolean> isEcsTlrFeatureEnabled(VertxOkapiHttpClient httpClient,
-    Map<String, String> okapiHeaders) {
-
-    return httpClient.get(ECS_TLR_SETTINGS_URL_PATH.getValue(), Map.of(), okapiHeaders)
-      .thenApply(ResponseInterpreter::extractResponseBody)
-      .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
-  }
-
-  private CompletableFuture<Boolean> getEcsTlrFeatureValue(JsonObject body,
-    VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
-
-    return Objects.nonNull(body)
-      ? completedFuture(body.getBoolean(ECS_TLR_FEATURE_KEY))
-      : getCirculationStorageEcsTlrFeatureValue(client, okapiHeaders);
-  }
-
-  private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(
-    VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
-
-    return client.get(CIRCULATION_SETTINGS_STORAGE_URL_PATH.getValue(), Map.of(), okapiHeaders)
-      .thenApply(ResponseInterpreter::extractResponseBody)
-      .thenCompose(this::getCirculationStorageEcsTlrFeatureValue);
-  }
-
-  private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(JsonObject body) {
-    return completedFuture(Objects.nonNull(body) && getEcsTlrFeatureValue(body));
-  }
-
-  private static Boolean getEcsTlrFeatureValue(JsonObject body) {
-    return body.getJsonArray(CIRCULATION_SETTINGS_KEY).getJsonObject(FIRST_POSITION_INDEX)
-      .getJsonObject(VALUE_KEY).getBoolean(ENABLED_KEY);
-  }
-
   private String getPathByEcsTlrFeatureEnabled(Boolean value) {
         return BooleanUtils.isTrue(value)
-          ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH.getValue()
-          : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH.getValue();
+          ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH
+          : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
   }
 }
