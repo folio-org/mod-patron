@@ -1172,8 +1172,8 @@ public class PatronServicesResourceImpl implements Patron {
     return format("(requesterId==%s and status==Open*)", requesterId);
   }
 
-  private String getPathByEcsTlrFeatureEnabled(Boolean value) {
-        return BooleanUtils.isTrue(value)
+  private String getPathByEcsTlrFeatureEnabled(Boolean isEcsTlrFeatureEnabled) {
+        return BooleanUtils.isTrue(isEcsTlrFeatureEnabled)
           ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH
           : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
   }

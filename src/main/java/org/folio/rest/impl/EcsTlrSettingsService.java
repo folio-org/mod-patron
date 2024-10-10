@@ -34,13 +34,12 @@ public class EcsTlrSettingsService {
     return httpClient.get(ECS_TLR_SETTINGS_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .exceptionally(throwable -> {
-        if(throwable instanceof HttpException) {
-          logger.warn("isEcsTlrFeatureEnabled:: Exception in exceptionally block for " +
-            "fetching \"ecs-tlr-feature-enabled\" from module \"%s\" while handling result ",
+        if (throwable instanceof HttpException) {
+          logger.warn("isEcsTlrFeatureEnabled:: failed to fetch ECS TLR settings from mod-tlr",
             throwable);
           return null;
         }
-        logger.error(throwable.getMessage(), throwable);
+        logger.error(throwable);
         throw new RuntimeException(throwable);
       })
       .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
