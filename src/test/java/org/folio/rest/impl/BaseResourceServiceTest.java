@@ -31,9 +31,10 @@ public abstract class BaseResourceServiceTest {
   protected final String instancePath = "/instance/{instanceId}";
   protected final String allowedServicePointsPath = "/allowed-service-points";
   private final Logger logger = LogManager.getLogger();
+
   protected abstract void mockData(HttpServerRequest req);
 
-  protected void setUp(Vertx vertx, VertxTestContext context) {
+  protected void setUpConnectionForTest(Vertx vertx, VertxTestContext context) {
     vertx.exceptionHandler(context::failNow);
 
     String moduleName = ModuleName.getModuleName().replaceAll("_", "-");
@@ -47,7 +48,6 @@ public abstract class BaseResourceServiceTest {
 
     final Checkpoint verticleStarted = context.checkpoint(1);
 
-
     final DeploymentOptions opt = new DeploymentOptions().setConfig(conf);
     vertx.deployVerticle(RestVerticle.class.getName(), opt,
       context.succeeding(id -> verticleStarted.flag()));
@@ -56,7 +56,7 @@ public abstract class BaseResourceServiceTest {
     logger.info("Patron Services Test Setup Done using port {}", okapiPort);
   }
 
-  protected void tearDown(Vertx vertx, VertxTestContext context) {
+  protected void closeConnectionForTest(Vertx vertx, VertxTestContext context) {
     logger.info("Patron Services Testing Complete");
     vertx.close(ar -> {
       if (ar.succeeded()) {

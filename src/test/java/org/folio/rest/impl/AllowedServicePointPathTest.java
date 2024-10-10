@@ -26,7 +26,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
-public class AllowedServicePointPathTest extends BaseResourceServiceTest{
+public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   public static final String CONTENT_TYPE_HEADER_NAME = "content-type";
   private static final String CONTENT_TYPE_APPLICATION_JSON_HEADER = "application/json";
   private static final String CIRCULATION_STORAGE_HEADER_NAME = "x-okapi-bad-user-id";
@@ -70,9 +70,8 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest{
     "for server null";
 
   @BeforeEach
-  @Override
   public void setUp(Vertx vertx, VertxTestContext context) {
-    super.setUp(vertx, context);
+    setUpConnectionForTest(vertx, context);
     final Checkpoint mockOkapiStarted = context.checkpoint(1);
     final String host = "localhost";
     final HttpServer server = vertx.createHttpServer();
@@ -81,9 +80,8 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest{
   }
 
   @AfterEach
-  @Override
   public void tearDown(Vertx vertx, VertxTestContext context) {
-    super.tearDown(vertx, context);
+    super.closeConnectionForTest(vertx, context);
   }
 
   @ParameterizedTest

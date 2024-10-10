@@ -686,7 +686,7 @@ public class PatronServicesResourceImpl implements Patron {
 
     new EcsTlrSettingsService()
       .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
-      .thenApply(this::getPathByEcsTlrFeatureEnabled)
+      .thenApply(this::getAllowedServicePointsUrl)
       .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getAllowedServicePoints)
@@ -1172,7 +1172,7 @@ public class PatronServicesResourceImpl implements Patron {
     return format("(requesterId==%s and status==Open*)", requesterId);
   }
 
-  private String getPathByEcsTlrFeatureEnabled(Boolean isEcsTlrFeatureEnabled) {
+  private String getAllowedServicePointsUrl(Boolean isEcsTlrFeatureEnabled) {
         return BooleanUtils.isTrue(isEcsTlrFeatureEnabled)
           ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH
           : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;

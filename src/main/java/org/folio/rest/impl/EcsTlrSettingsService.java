@@ -33,16 +33,18 @@ public class EcsTlrSettingsService {
 
     return httpClient.get(ECS_TLR_SETTINGS_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
-      .exceptionally(throwable -> {
-        if (throwable instanceof HttpException) {
-          logger.warn("isEcsTlrFeatureEnabled:: failed to fetch ECS TLR settings from mod-tlr",
-            throwable);
-          return null;
-        }
-        logger.error(throwable);
-        throw new RuntimeException(throwable);
-      })
+      .exceptionally(this::handleErrorFromModEtsTlr)
       .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
+  }
+
+  private JsonObject handleErrorFromModEtsTlr(Throwable throwable) {
+    if (throwable instanceof HttpException) {
+      logger.warn("isEcsTlrFeatureEnabled:: failed to fetch ECS TLR settings from mod-tlr",
+        throwable);
+      return null;
+    }
+    logger.error(throwable);
+    throw new RuntimeException(throwable);
   }
 
   private CompletableFuture<Boolean> getEcsTlrFeatureValue(JsonObject body,
