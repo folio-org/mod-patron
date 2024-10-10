@@ -17,10 +17,8 @@ import io.vertx.junit5.VertxTestContext;
 
 public abstract class BaseResourceServiceTest {
   protected static final String MOCK_DATA_FOLDER = "PatronServicesResourceImpl";
-
   protected final int serverPort = Utils.getRandomPort();
   private final int okapiPort = Utils.getRandomPort();
-
   protected final Header urlHeader = new Header("X-Okapi-Url", "http://localhost:" +
     serverPort);
   protected final Header contentTypeHeader =
@@ -32,11 +30,8 @@ public abstract class BaseResourceServiceTest {
   protected final String accountPath = "/patron/account/{accountId}";
   protected final String instancePath = "/instance/{instanceId}";
   protected final String allowedServicePointsPath = "/allowed-service-points";
-
   private final Logger logger = LogManager.getLogger();
-
   protected abstract void mockData(HttpServerRequest req);
-
 
   protected void setUp(Vertx vertx, VertxTestContext context) {
     vertx.exceptionHandler(context::failNow);

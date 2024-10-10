@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.stream.Stream;
 
 import org.folio.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -79,6 +80,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest{
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
   }
 
+  @AfterEach
   @Override
   public void tearDown(Vertx vertx, VertxTestContext context) {
     super.tearDown(vertx, context);
