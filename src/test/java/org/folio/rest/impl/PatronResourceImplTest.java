@@ -126,7 +126,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
 
   @BeforeEach
   public void setUp(Vertx vertx, VertxTestContext context) {
-    super.setUpConnectionForTest(vertx, context);
+    setUpConnectionForTest(vertx, context);
     final Checkpoint mockOkapiStarted = context.checkpoint(1);
     final String host = "localhost";
     final HttpServer server = vertx.createHttpServer();
@@ -136,7 +136,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
 
   @AfterEach
   public void tearDown(Vertx vertx, VertxTestContext context) {
-    super.closeConnectionForTest(vertx, context);
+    closeConnectionForTest(vertx, context);
   }
 
   private boolean accountParametersMatchForInvalidStatusRequest(HttpServerRequest request) {

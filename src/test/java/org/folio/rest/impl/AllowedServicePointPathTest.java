@@ -81,7 +81,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
 
   @AfterEach
   public void tearDown(Vertx vertx, VertxTestContext context) {
-    super.closeConnectionForTest(vertx, context);
+    closeConnectionForTest(vertx, context);
   }
 
   @ParameterizedTest
