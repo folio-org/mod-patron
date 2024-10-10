@@ -1,0 +1,16 @@
+{
+  "circulationSettings" : [ {
+    "id" : "d98da624-ac89-4505-92f4-8c9e3eca7c35",
+    "name" : "ecsTlrFeature",
+    "value" : {
+      "enabled" : false
+    },
+    "metadata" : {
+      "createdDate" : "2024-10-02T15:41:58.579+00:00",
+      "createdByUserId" : "be057d16-afe9-4737-b393-1e4b702d700e",
+      "updatedDate" : "2024-10-02T15:41:58.579+00:00",
+      "updatedByUserId" : "be057d16-afe9-4737-b393-1e4b702d700e"
+    }
+  } ],
+  "totalRecords" : 1
+}

@@ -1,0 +1,9 @@
+{
+  "allowedServicePoints" : [ {
+    "id" : "3a40852d-49fd-4df2-a1f9-6e2641a66666",
+    "name" : "Circ Desk 1"
+  }, {
+    "id" : "7c5abc9f-f3d7-4856-b8d7-6712462c7777",
+    "name" : "Online"
+  } ]
+}
