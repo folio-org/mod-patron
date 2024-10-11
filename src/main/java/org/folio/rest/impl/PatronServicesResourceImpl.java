@@ -1173,8 +1173,8 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private String getAllowedServicePointsUrl(Boolean isEcsTlrFeatureEnabled) {
-        return BooleanUtils.isTrue(isEcsTlrFeatureEnabled)
-          ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH
-          : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
+    return BooleanUtils.isTrue(isEcsTlrFeatureEnabled)
+            ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH
+            : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
   }
 }

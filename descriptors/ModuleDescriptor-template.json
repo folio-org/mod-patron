@@ -130,7 +130,7 @@
   ],
   "optional": [
     {
-      "id": "ecs-tlr",
+      "id": "tlr-settings",
       "version": "1.0"
     },
     {

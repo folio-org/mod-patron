@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.ResponseInterpreter;
@@ -27,19 +26,18 @@ public class EcsTlrSettingsService {
   private static final String VALUE_KEY = "value";
   private static final String ENABLED_KEY = "enabled";
 
-
   public CompletableFuture<Boolean> isEcsTlrFeatureEnabled(VertxOkapiHttpClient httpClient,
     Map<String, String> okapiHeaders) {
 
     return httpClient.get(ECS_TLR_SETTINGS_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
-      .exceptionally(this::handleErrorFromModEtsTlr)
+      .exceptionally(this::handleErrorFromModTlr)
       .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
   }
 
-  private JsonObject handleErrorFromModEtsTlr(Throwable throwable) {
+  private JsonObject handleErrorFromModTlr(Throwable throwable) {
     if (throwable instanceof HttpException) {
-      logger.warn("isEcsTlrFeatureEnabled:: failed to fetch ECS TLR settings from mod-tlr",
+      logger.warn("handleErrorFromModTlr:: failed to fetch ECS TLR settings from mod-tlr",
         throwable);
       return null;
     }
@@ -58,6 +56,8 @@ public class EcsTlrSettingsService {
   private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(
     VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
 
+    logger.info("getCirculationStorageEcsTlrFeatureValue:: trying to get isEcsTlrFeatureEnabled " +
+      "from mod-circulation-storage");
     return client.get(CIRCULATION_SETTINGS_STORAGE_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getCirculationStorageEcsTlrFeatureValue);
@@ -65,10 +65,10 @@ public class EcsTlrSettingsService {
 
   private Boolean getCirculationStorageEcsTlrFeatureValue(JsonObject body) {
     return Optional.ofNullable(body)
-        .map(json -> json.getJsonArray(CIRCULATION_SETTINGS_KEY))
-        .map(json -> json.getJsonObject(FIRST_POSITION_INDEX))
-        .map(json -> json.getJsonObject(VALUE_KEY))
-        .map(json -> json.getBoolean(ENABLED_KEY))
-        .orElse(false);
+      .map(json -> json.getJsonArray(CIRCULATION_SETTINGS_KEY))
+      .map(json -> json.getJsonObject(FIRST_POSITION_INDEX))
+      .map(json -> json.getJsonObject(VALUE_KEY))
+      .map(json -> json.getBoolean(ENABLED_KEY))
+      .orElse(false);
   }
 }
