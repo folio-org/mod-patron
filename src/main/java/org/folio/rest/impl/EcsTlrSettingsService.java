@@ -29,6 +29,7 @@ public class EcsTlrSettingsService {
   public CompletableFuture<Boolean> isEcsTlrFeatureEnabled(VertxOkapiHttpClient httpClient,
     Map<String, String> okapiHeaders) {
 
+    logger.debug("isEcsTlrFeatureEnabled:: trying to get isEcsTlrFeatureEnabled from mod-tlr");
     return httpClient.get(ECS_TLR_SETTINGS_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .exceptionally(this::handleErrorFromModTlr)
@@ -56,19 +57,20 @@ public class EcsTlrSettingsService {
   private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(
     VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
 
-    logger.info("getCirculationStorageEcsTlrFeatureValue:: trying to get isEcsTlrFeatureEnabled " +
-      "from mod-circulation-storage");
+    logger.debug("getCirculationStorageEcsTlrFeatureValue:: trying to get isEcsTlrFeatureEnabled");
     return client.get(CIRCULATION_SETTINGS_STORAGE_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getCirculationStorageEcsTlrFeatureValue);
   }
 
   private Boolean getCirculationStorageEcsTlrFeatureValue(JsonObject body) {
-    return Optional.ofNullable(body)
+    Boolean result = Optional.ofNullable(body)
       .map(json -> json.getJsonArray(CIRCULATION_SETTINGS_KEY))
       .map(json -> json.getJsonObject(FIRST_POSITION_INDEX))
       .map(json -> json.getJsonObject(VALUE_KEY))
       .map(json -> json.getBoolean(ENABLED_KEY))
       .orElse(false);
+    logger.debug("getCirculationStorageEcsTlrFeatureValue:: result = {}", result);
+    return result;
   }
 }
