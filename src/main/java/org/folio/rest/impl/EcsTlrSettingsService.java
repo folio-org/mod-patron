@@ -48,9 +48,9 @@ public class EcsTlrSettingsService {
   private CompletableFuture<Boolean> getEcsTlrFeatureValue(JsonObject body,
     VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
 
-    return Objects.nonNull(body) && body.containsKey(ECS_TLR_FEATURE_KEY)
-      ? completedFuture(body.getBoolean(ECS_TLR_FEATURE_KEY))
-      : getCirculationStorageEcsTlrFeatureValue(client, okapiHeaders);
+    return Objects.nonNull(body) && body.containsKey(ECS_TLR_FEATURE_KEY) ?
+      completedFuture(body.getBoolean(ECS_TLR_FEATURE_KEY)) :
+      getCirculationStorageEcsTlrFeatureValue(client, okapiHeaders);
   }
 
   private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(
