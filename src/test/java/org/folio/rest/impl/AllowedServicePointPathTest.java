@@ -56,7 +56,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH =
     "/circulation/requests/allowed-service-points";
   private static final String CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_PATH =
-    "/circulation-bff/allowed-service-points";
+    "/circulation-bff/requests/allowed-service-points";
   private static final String SERVICE_POINTS_CIRCULATION_RESPONSE_JSON =
     "/allowed_service_points_circulation_response.json";
   private static final String ACCOUNT_ID_PATH_PARAM_KEY = "accountId";
