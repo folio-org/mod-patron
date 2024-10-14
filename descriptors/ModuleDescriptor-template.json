@@ -102,6 +102,14 @@
           "modulePermissions": [
             "circulation.requests.allowed-service-points.get"
           ]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/patron/account/{accountId}/item/{itemId}/allowed-service-points",
+          "permissionsRequired": ["patron.hold.allowed-service-points.get"],
+          "modulePermissions": [
+            "circulation.requests.allowed-service-points.get"
+          ]
         }
       ]
     }
