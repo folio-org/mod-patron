@@ -32,6 +32,8 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
@@ -63,6 +65,8 @@ import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -108,8 +112,6 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String TOTAL_RECORDS = "totalRecords";
   private static final String QUERY = "query";
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
-  private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
-    "/circulation/requests/allowed-service-points";
   private static final String ACTIVE = "active";
   private static final String PATRON_GROUP = "patronGroup";
   private static final String ADDRESS_TYPES = "addressTypes";
@@ -121,6 +123,7 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String USERS_FILED = "users";
   private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
   private static final String PROCESS_SINGLE_USER = "processSingleUser:: {}";
+  private static final String VALUE_KEY = "value";
 
   @Override
   public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -477,7 +480,7 @@ public class PatronServicesResourceImpl implements Patron {
           String value = response
             .getJsonArray("configs")
             .getJsonObject(0)
-            .getString("value");
+            .getString(VALUE_KEY);
           JsonObject settings = new JsonObject(value);
           if (settings.containsKey("currency")) {
             currencyType = settings.getString("currency");
@@ -681,7 +684,9 @@ public class PatronServicesResourceImpl implements Patron {
     var queryParameters = Map.of("operation", "create",
       "requesterId", requesterId, "instanceId", instanceId);
 
-    completedFuture(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS)
+    new EcsTlrSettingsService()
+      .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
+      .thenApply(this::getAllowedServicePointsUrl)
       .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getAllowedServicePoints)
@@ -1167,4 +1172,9 @@ public class PatronServicesResourceImpl implements Patron {
     return format("(requesterId==%s and status==Open*)", requesterId);
   }
 
+  private String getAllowedServicePointsUrl(Boolean isEcsTlrFeatureEnabled) {
+    return BooleanUtils.isTrue(isEcsTlrFeatureEnabled)
+      ? CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH
+      : CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
+  }
 }
