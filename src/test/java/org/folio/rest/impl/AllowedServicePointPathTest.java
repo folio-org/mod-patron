@@ -63,11 +63,13 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   private static final String INSTANCE_ID_PATH_PARAM_KEY = "instanceId";
 
   private static final String INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE = "status 500";
-  private static final String INTERNAL_SERVER_ERROR_STATUS_LINE = "HTTP/1.1 500 Internal Server Error";
-  private static final String RESPONSE_WITH_ERROR_EXPECTED = "java.lang.RuntimeException: " +
-    "java.util.concurrent.CompletionException: io.vertx.core.impl.NoStackTraceTimeoutException: " +
-    "The timeout period of 5000ms has been exceeded while executing GET /tlr/settings " +
-    "for server null";
+  private static final String INTERNAL_SERVER_ERROR_STATUS_LINE =
+    "HTTP/1.1 500 Internal Server Error";
+  private static final String RESPONSE_WITH_ERROR_EXPECTED =
+    "org.folio.patron.rest.exceptions.UnexpectedFetchingException: " +
+      "java.util.concurrent.CompletionException: " +
+      "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
+      "exceeded while executing GET /tlr/settings for server null";
 
   @BeforeEach
   public void setUp(Vertx vertx, VertxTestContext context) {
@@ -112,7 +114,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
 
   @Test
   void shouldThrowRuntimeExceptionIfBaseExceptionIsNotHttpException() {
-    String responseWithErrorActual  =  given()
+    String responseWithErrorActual = given()
       .header(new Header(ECS_TLR_HEADER_NAME, INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE))
       .header(tenantHeader)
       .header(urlHeader)
@@ -155,7 +157,6 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
       )
     );
   }
-
 
   public void mockData(HttpServerRequest req) {
     if (req.path().equals(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH)) {

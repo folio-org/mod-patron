@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
+import org.folio.patron.rest.exceptions.UnexpectedFetchingException;
 
 import io.vertx.core.json.JsonObject;
 
@@ -32,18 +33,19 @@ public class EcsTlrSettingsService {
     logger.debug("isEcsTlrFeatureEnabled:: trying to get isEcsTlrFeatureEnabled from mod-tlr");
     return httpClient.get(ECS_TLR_SETTINGS_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
-      .exceptionally(this::handleErrorFromModTlr)
+      .exceptionally(this::handleEcsTlrSettingsFetchingError)
       .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
   }
 
-  private JsonObject handleErrorFromModTlr(Throwable throwable) {
+  private JsonObject handleEcsTlrSettingsFetchingError(Throwable throwable) {
     if (throwable instanceof HttpException) {
       logger.warn("handleErrorFromModTlr:: failed to fetch ECS TLR settings from mod-tlr",
         throwable);
       return null;
     }
     logger.error(throwable);
-    throw new RuntimeException(throwable);
+
+    throw new UnexpectedFetchingException(throwable);
   }
 
   private CompletableFuture<Boolean> getEcsTlrFeatureValue(JsonObject body,
