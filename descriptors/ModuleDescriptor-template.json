@@ -42,8 +42,8 @@
         },
         {
           "methods": ["GET"],
-          "pathPattern": "/patron/account/by-email/{email}",
-          "permissionsRequired": ["patron.account.item.get"],
+          "pathPattern": "/patron/registration-status/{emailId}",
+          "permissionsRequired": ["patron.registration-status.item.get"],
           "modulePermissions": [
             "users.item.get",
             "users.collection.get"
@@ -179,6 +179,11 @@
       "description": "Update external_patron based on emailId"
     },
     {
+      "permissionName": "patron.registration-status.item.get",
+      "displayName": "Get patron details",
+      "description": "Get patron details by emailId"
+    },
+    {
       "permissionName": "patron.all",
       "displayName": "patron - all permissions",
       "description": "Entire set of permissions needed to use patron",
@@ -190,7 +195,8 @@
         "patron.hold.cancel.item.post",
         "patron.hold.allowed-service-points.get",
         "patron.account.item.post",
-        "patron.account.item.put"
+        "patron.account.item.put",
+        "patron.registration-status.item.get"
       ]
     }
   ],

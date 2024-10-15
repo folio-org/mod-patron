@@ -19,6 +19,7 @@ types:
   item: !include item.json
   external_patron: !include external_patron.json
   external_patron_collection: !include external_patron_collection.json
+  user: !include userdata.json
   allowedServicePoints: !include allowed-service-points-response.json
   errors: !include raml-util/schemas/errors.schema
   error: !include raml-util/schemas/error.schema
@@ -97,35 +98,6 @@ traits:
         emailId:
           description: The email of external patron
           type: string
-      get:
-        description: Return account details for the specified external patron email
-        responses:
-          200:
-            description: Returns the external patron account info
-            body:
-              application/json:
-                type: external_patron
-                example: !include examples/external_patron.json
-          400:
-            description: Bad request
-            body:
-              text/plain:
-                example: unable to process request -- constraint violation
-          404:
-            description: Item with a given EMAIL not found
-            body:
-              text/plain:
-                example: account not found
-          422:
-            description: Validation error
-            body:
-              application/json:
-                type: errors
-          500:
-            description: Internal server error, e.g. due to misconfiguration
-            body:
-              text/plain:
-                example: internal server error, contact administrator
       put:
         description: |
           Updates external patron request
@@ -155,6 +127,37 @@ traits:
           500:
             description: |
               Internal server error, e.g. due to misconfiguration
+            body:
+              text/plain:
+                example: internal server error, contact administrator
+    /registration-status/{emailId}:
+      description: endpoint that can be used to fetch a patron by email
+      uriParameters:
+        emailId:
+          description: The email ID of the patron.
+          type: string
+          required: true
+      get:
+        description: Get the patron details by email ID
+        responses:
+          200:
+            description: patron information retrieved successfully
+            body:
+              application/json:
+                type: user
+                example: !include examples/user.json
+          400:
+            description: Validation error
+            body:
+              application/json:
+                type: errors
+          404:
+            description: Validation error
+            body:
+              application/json:
+                type: errors
+          500:
+            description: Internal server error, e.g. due to misconfiguration
             body:
               text/plain:
                 example: internal server error, contact administrator

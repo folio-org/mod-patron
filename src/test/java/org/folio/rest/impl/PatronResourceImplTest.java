@@ -6,6 +6,7 @@ import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.EMAIL_ALREADY_EXIST;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.PATRON_GROUP_NOT_APPLICABLE;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ALREADY_EXIST;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
@@ -57,6 +58,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
 
   private final String remotePatronAccountPath = "/patron/account";
   private final String remotePatronAccountPathByEmail = "/patron/account/by-email";
+  private final String patronAccountRegistrationStatus = "/patron/account/registration-status";
   private final String itemPath = "/item/{itemId}";
   private final String holdPath = "/hold";
   private final String holdIdPath = "/{holdId}";
@@ -399,13 +401,13 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   }
 
   @Test
-  final void testGetPatronAccountByEmail() {
+  final void testGetPatronRegistrationStatusByEmail() {
     given()
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
       .when()
-      .get(remotePatronAccountPathByEmail + "/adsfg")
+      .get(patronAccountRegistrationStatus + "/active@folio.com")
       .then()
       .log().all()
       .contentType(ContentType.JSON)
@@ -414,39 +416,71 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   }
 
   @Test
-  final void testGetPatronAccountByEmailMultipleError() {
+  final void testGetPatronRegistrationStatusByEmailMultipleError() {
     final Errors errors = given()
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
       .when()
-      .get(remotePatronAccountPathByEmail + "/tst123")
+      .get(patronAccountRegistrationStatus + "/multiple@folio.com")
       .then()
       .log().all()
       .contentType(JSON)
-      .statusCode(422)
+      .statusCode(400)
       .extract().response().as(Errors.class);
 
     assertEquals(1, errors.getErrors().size());
     assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errors.getErrors().get(0).getMessage());
-    logger.info("Test done");
   }
 
   @Test
-  final void testGetPatronAccountByEmailUserNotFoundError() {
-    final String errorRes = given()
+  final void testGetPatronRegistrationStatusByEmailUserNotFoundError() {
+    var res = given()
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
       .when()
-      .get(remotePatronAccountPathByEmail + "/a")
+      .get(patronAccountRegistrationStatus + "/notfound@folio.com")
+      .then()
+      .log().all()
+      .contentType(JSON)
+      .statusCode(404)
+      .extract().response().as(Errors.class);
+
+    assertEquals(1, res.getErrors().size());
+    assertEquals(USER_NOT_FOUND.name(), res.getErrors().get(0).getMessage());
+  }
+
+  @Test
+  final void testGetPatronRegistrationStatusByEmailUserInactiveError() {
+    var res = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(patronAccountRegistrationStatus + "/inactive@folio.com")
+      .then()
+      .log().all()
+      .contentType(JSON)
+      .statusCode(404)
+      .extract().response().as(Errors.class);
+
+    assertEquals(1, res.getErrors().size());
+    assertEquals(USER_ACCOUNT_INACTIVE.name(), res.getErrors().get(0).getMessage());
+  }
+
+  @Test
+  final void testGetPatronRegistrationStatusByEmailUserInternalServerError() {
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(patronAccountRegistrationStatus + "/error@folio.com")
       .then()
       .log().all()
       .contentType(TEXT)
-      .statusCode(404)
-      .extract().response().asString();
-
-    assertEquals(USER_NOT_FOUND.name(), errorRes);
+      .statusCode(500);
   }
 
   @Test
@@ -1669,6 +1703,31 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/external_user7.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dactive%40folio.com%20and%20type%3Dpatron%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/user_active1.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dinactive%40folio.com%20and%20type%3Dpatron%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/user_not_active1.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dnotfound%40folio.com%20and%20type%3Dpatron%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/user_not_found.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dmultiple%40folio.com%20and%20type%3Dpatron%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/user_multiple.json"));
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Derror%40folio.com%20and%20type%3Dpatron%29")) {
+          req.response()
+            .setStatusCode(500)
+            .putHeader("content-type", "application/json")
+            .end("Unable to fetch user details");
         } else {
           req.response()
             .setStatusCode(200)
