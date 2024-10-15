@@ -130,37 +130,6 @@ traits:
             body:
               text/plain:
                 example: internal server error, contact administrator
-    /registration-status/{emailId}:
-      description: endpoint that can be used to fetch a patron by email
-      uriParameters:
-        emailId:
-          description: The email ID of the patron.
-          type: string
-          required: true
-      get:
-        description: Get the patron details by email ID
-        responses:
-          200:
-            description: patron information retrieved successfully
-            body:
-              application/json:
-                type: user
-                example: !include examples/user.json
-          400:
-            description: Validation error
-            body:
-              application/json:
-                type: errors
-          404:
-            description: Validation error
-            body:
-              application/json:
-                type: errors
-          500:
-            description: Internal server error, e.g. due to misconfiguration
-            body:
-              text/plain:
-                example: internal server error, contact administrator
     /{id}:
       displayName: Manage Accounts By Id
       description: Service endpoints that manage accounts by an existing Id
@@ -505,4 +474,35 @@ traits:
                   body:
                     text/plain:
                       example: internal server error, contact administrator
+  /registration-status/{emailId}:
+    description: endpoint that can be used to fetch a patron details by email
+    uriParameters:
+      emailId:
+        description: The email ID of the patron.
+        type: string
+        required: true
+    get:
+      description: Get the patron details by email ID
+      responses:
+        200:
+          description: patron information retrieved successfully
+          body:
+            application/json:
+              type: user
+              example: !include examples/user.json
+        400:
+          description: Validation error
+          body:
+            application/json:
+              type: errors
+        404:
+          description: Validation error
+          body:
+            application/json:
+              type: errors
+        500:
+          description: Internal server error, e.g. due to misconfiguration
+          body:
+            text/plain:
+              example: internal server error, contact administrator
 

@@ -145,7 +145,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   @Override
-  public void getPatronAccountRegistrationStatusByEmailId(String email, Map<String, String> okapiHeaders,
+  public void getPatronRegistrationStatusByEmailId(String email, Map<String, String> okapiHeaders,
                                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                                           Context vertxContext) {
     logger.debug("getPatronAccountRegistrationStatusByEmailId:: Fetching patron details with emailId {}", email);
@@ -157,7 +157,7 @@ public class PatronServicesResourceImpl implements Patron {
       .exceptionally(throwable -> {
         logger.error("getPatronAccountRegistrationStatusByEmailId:: Failed to get patron details by email {}",
           email, throwable);
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountRegistrationStatusByEmailIdResponse
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
           .respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
@@ -263,22 +263,22 @@ public class PatronServicesResourceImpl implements Patron {
 
     if (totalRecords > 1) {
       logger.info("handleGetUserResponse:: Multiple user record found for email {}", email);
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountRegistrationStatusByEmailIdResponse.
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse.
         respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.name(), String.valueOf(HTTP_BAD_REQUEST)))));
     } else if (totalRecords == 1) {
       var userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
       var user = convertJsonToUser(userJson);
       if (user != null && user.getActive()) {
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountRegistrationStatusByEmailIdResponse
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
           .respond200WithApplicationJson(user)));
       } else {
         logger.info("handleGetUserResponse:: Inactive user record found for email {}", email);
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountRegistrationStatusByEmailIdResponse
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
           .respond404WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.name(), String.valueOf(HTTP_NOT_FOUND)))));
       }
     } else {
       logger.info("handleGetUserResponse:: user record not found for email {}", email);
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountRegistrationStatusByEmailIdResponse
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
         .respond404WithApplicationJson(createError(USER_NOT_FOUND.name(), String.valueOf(HTTP_NOT_FOUND)))));
     }
   }

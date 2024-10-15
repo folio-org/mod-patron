@@ -58,7 +58,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
 
   private final String remotePatronAccountPath = "/patron/account";
   private final String remotePatronAccountPathByEmail = "/patron/account/by-email";
-  private final String patronAccountRegistrationStatus = "/patron/account/registration-status";
+  private final String patronAccountRegistrationStatus = "/patron/registration-status";
   private final String itemPath = "/item/{itemId}";
   private final String holdPath = "/hold";
   private final String holdIdPath = "/{holdId}";
