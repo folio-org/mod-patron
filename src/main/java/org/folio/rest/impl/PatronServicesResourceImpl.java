@@ -299,7 +299,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   private CompletableFuture<JsonObject> getUserByEmailWithPatronType(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
     logger.info("getUserByEmailWithPatronType:: Trying to get user by email {}", email);
-    return userRepository.getUserByCql("(personal.email==" + email + " and type=patron)", okapiHeaders);
+    return userRepository.getUserByCql("(personal.email==" + email + " and type==patron)", okapiHeaders);
   }
 
   private CompletableFuture<Response> handleUserResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
