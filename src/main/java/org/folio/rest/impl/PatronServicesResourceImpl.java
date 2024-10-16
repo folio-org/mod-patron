@@ -1,18 +1,76 @@
 package org.folio.rest.impl;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.folio.integration.http.HttpClientFactory;
+import org.folio.integration.http.ResponseInterpreter;
+import org.folio.integration.http.VertxOkapiHttpClient;
+import org.folio.patron.rest.exceptions.HttpException;
+import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
+import org.folio.patron.rest.exceptions.ValidationException;
+import org.folio.patron.rest.models.User;
+import org.folio.patron.rest.utils.PatronUtils;
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Account;
+import org.folio.rest.jaxrs.model.AllowedServicePoint;
+import org.folio.rest.jaxrs.model.AllowedServicePoints;
+import org.folio.rest.jaxrs.model.Charge;
+import org.folio.rest.jaxrs.model.Error;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.ExternalPatron;
+import org.folio.rest.jaxrs.model.Hold;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Loan;
+import org.folio.rest.jaxrs.model.Parameter;
+import org.folio.rest.jaxrs.model.StagingUser;
+import org.folio.rest.jaxrs.model.TotalCharges;
+import org.folio.rest.jaxrs.resource.Patron;
+import org.folio.util.StringUtil;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.EMAIL_ALREADY_EXIST;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.INVALID_PATRON_GROUP;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.PATRON_GROUP_NOT_APPLICABLE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ALREADY_EXIST;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
-import static org.folio.patron.rest.utils.PatronUtils.mapUserToExternalPatron;
 import static org.folio.patron.rest.utils.PatronUtils.mapUserCollectionToExternalPatronCollection;
+import static org.folio.patron.rest.utils.PatronUtils.mapUserToExternalPatron;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
@@ -42,77 +100,12 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.ws.rs.core.Response;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.folio.integration.http.HttpClientFactory;
-import org.folio.integration.http.ResponseInterpreter;
-import org.folio.integration.http.VertxOkapiHttpClient;
-import org.folio.patron.rest.exceptions.HttpException;
-import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
-import org.folio.patron.rest.exceptions.ValidationException;
-import org.folio.patron.rest.models.User;
-import org.folio.patron.rest.utils.PatronUtils;
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Account;
-import org.folio.rest.jaxrs.model.AllowedServicePoint;
-import org.folio.rest.jaxrs.model.AllowedServicePoints;
-import org.folio.rest.jaxrs.model.Charge;
-import org.folio.rest.jaxrs.model.Error;
-import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.ExternalPatron;
-import org.folio.rest.jaxrs.model.Hold;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.jaxrs.model.TotalCharges;
-import org.folio.rest.jaxrs.resource.Patron;
-import org.folio.util.StringUtil;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
-import com.google.common.collect.Maps;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-
-public class PatronServicesResourceImpl implements Patron {
+public  class PatronServicesResourceImpl implements Patron {
   private static final Logger logger = LogManager.getLogger();
   private static final String HOME_ADDRESS_TYPE = "home";
   private static final String TOTAL_RECORDS = "totalRecords";
   private static final String QUERY = "query";
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
-  private static final String ACTIVE = "active";
   private static final String PATRON_GROUP = "patronGroup";
   private static final String ADDRESS_TYPES = "addressTypes";
   private static final String USER_GROUPS = "usergroups";
@@ -122,24 +115,55 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String ID_FILED = "id";
   private static final String USERS_FILED = "users";
   private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
-  private static final String PROCESS_SINGLE_USER = "processSingleUser:: {}";
   private static final String VALUE_KEY = "value";
 
   @Override
-  public void postPatronAccount(ExternalPatron entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    logger.info("postPatronAccount:: Trying to create external patron");
-    final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
-    final var userRepository = new UserRepository(httpClient);
-    final String patronEmail = entity.getContactInfo().getEmail();
+  public void postPatron(StagingUser entity, Map<String, String> okapiHeaders,
+                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    logger.info("postPatron:: Trying to create staging user");
+    final var stagingUserRepository = new StagingUserRepository(HttpClientFactory.getHttpClient(vertxContext.owner()));
 
-    getUserByEmail(patronEmail, okapiHeaders, userRepository)
-      .thenCompose(userResponse -> handleUserResponse(userResponse, entity, okapiHeaders, userRepository))
-      .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+    stagingUserRepository.createStagingUser(entity, okapiHeaders)
+      .thenCompose(this::handleCreateStagingUserResponse)
       .exceptionally(throwable -> {
-        logger.error("postPatronAccount:: Failed to create external patron", throwable);
-        asyncResultHandler.handle(Future.succeededFuture(PostPatronAccountResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
+        logger.error("postPatron:: Failed to create external patron", throwable);
+        asyncResultHandler.handle(Future.succeededFuture(PostPatronResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
+  }
+
+  private CompletableFuture<Response> handleCreateStagingUserResponse(org.folio.integration.http.Response response) {
+    if (!response.isSuccess()) {
+      return handlePostStagingUserErrorResponse(response);
+    }
+    return handlePostStagingUserSuccessResponse(response);
+  }
+
+  private CompletableFuture<Response> handlePostStagingUserErrorResponse(org.folio.integration.http.Response response) {
+    switch (response.statusCode) {
+      case 400:
+        return CompletableFuture.completedFuture(PostPatronResponse.respond400WithTextPlain(response.body));
+      case 422:
+        Errors errors = Json.decodeValue(response.body, Errors.class);
+        return CompletableFuture.completedFuture(PostPatronResponse.respond422WithApplicationJson(errors));
+      case 500:
+      default:
+        return CompletableFuture.completedFuture(PostPatronResponse.respond500WithTextPlain(response.body));
+    }
+  }
+
+  private CompletableFuture<Response> handlePostStagingUserSuccessResponse(org.folio.integration.http.Response response) {
+    StagingUser stagingUser = Json.decodeValue(response.body, StagingUser.class);
+    switch (response.statusCode) {
+      case 200:
+        return CompletableFuture.completedFuture(PostPatronResponse.respond200WithApplicationJson(stagingUser));
+      case 201:
+        return CompletableFuture.completedFuture(PostPatronResponse.respond201WithApplicationJson(stagingUser));
+      default:
+        return CompletableFuture.completedFuture(
+          Response.status(response.statusCode).entity(response.body).build()
+        );
+    }
   }
 
   @Override
@@ -281,52 +305,6 @@ public class PatronServicesResourceImpl implements Patron {
     return userRepository.getUserByEmail(email, okapiHeaders);
   }
 
-  private CompletableFuture<Response> handleUserResponse(JsonObject userResponse, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository) {
-    final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
-
-    if (totalRecords > 1) {
-      logger.error("handleUserResponse:: More than 1 record found");
-      return CompletableFuture.completedFuture(
-        PostPatronAccountResponse.respond422WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)))
-      );
-    } else if (totalRecords == 1) {
-      logger.info("handleUserResponse:: 1 record found");
-      final JsonObject userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
-      return processSingleUser(userJson, userRepository, okapiHeaders);
-    } else {
-      logger.info("handleUserResponse:: No record found , creating user");
-      return getRemotePatronGroupId(userRepository, okapiHeaders)
-        .thenCompose(remotePatronGroupId -> getAddressTypes(userRepository, okapiHeaders)
-          .thenCompose(addressTypes -> {
-            final String homeAddressTypeId = addressTypes.getString(HOME_ADDRESS_TYPE);
-            return createUser(entity, okapiHeaders, userRepository, remotePatronGroupId, homeAddressTypeId);
-          })
-        );
-    }
-  }
-
-  private CompletableFuture<Response> processSingleUser(JsonObject userJson, UserRepository userRepository, Map<String, String> okapiHeaders) {
-    final boolean isActive = userJson.getBoolean(ACTIVE, false);
-    final String patronGroup = userJson.getString(PATRON_GROUP, "");
-
-    logger.info("processSingleUser:: Processing user with patron group: {} and active status: {}", patronGroup, isActive);
-
-    return getRemotePatronGroupId(userRepository, okapiHeaders).thenApply(remotePatronGroupId -> {
-      logger.info("processSingleUser:: Retrieved remote patron group ID: {}", remotePatronGroupId);
-
-      if (!isActive) {
-        logger.warn(PROCESS_SINGLE_USER, USER_ACCOUNT_INACTIVE.value());
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
-      } else if (remotePatronGroupId.equals(patronGroup)) {
-        logger.warn(PROCESS_SINGLE_USER, USER_ALREADY_EXIST.value());
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError(USER_ALREADY_EXIST.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
-      } else {
-        logger.warn(PROCESS_SINGLE_USER, INVALID_PATRON_GROUP.value());
-        return PostPatronAccountResponse.respond422WithApplicationJson(createError(INVALID_PATRON_GROUP.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)));
-      }
-    });
-  }
-
   private CompletableFuture<String> getRemotePatronGroupId(UserRepository userRepository, Map<String, String> okapiHeaders) {
     logger.info("getRemotePatronGroupId::Attempting to retrieve remote patron group ID");
 
@@ -369,15 +347,6 @@ public class PatronServicesResourceImpl implements Patron {
         }
         return addressTypes;
       });
-  }
-
-  private CompletableFuture<Response> createUser(ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId) {
-    logger.info("createUser::Trying to create user");
-    final User user = PatronUtils.mapExternalPatronToUser(entity, remotePatronGroupId, homeAddressTypeId);
-    return userRepository.createUser(user, okapiHeaders)
-      .thenApply(createdUserJson ->
-        PostPatronAccountResponse.respond201WithApplicationJson(entity)
-      );
   }
 
   private CompletableFuture<Response> updateUser(String id, ExternalPatron entity, Map<String, String> okapiHeaders, UserRepository userRepository, String remotePatronGroupId, String homeAddressTypeId) {

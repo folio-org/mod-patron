@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Staging User Information Schema",
+  "description": "A staging user",
+  "javaName": "StagingUser",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description" : "A globally unique (UUID) identifier for the user",
+      "type": "string"
+    },
+    "isEmailVerified": {
+      "description": "A flag to determine if a patron is activated.",
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string",
+      "description": "whether tier-1 or tier-2",
+      "enum": ["TIER-1", "TIER-2"]
+    },
+    "generalInfo": {
+      "type": "object",
+      "description": "General info of staging user",
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "description": "The staging user's given name"
+        },
+        "preferredFirstName": {
+          "type": "string",
+          "description": "The user's preferred name"
+        },
+        "middleName": {
+          "type": "string",
+          "description": "The staging user's middle name (if any)"
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The staging user's surname"
+        }
+      },
+      "required": ["firstName", "lastName"],
+      "additionalProperties": false
+    },
+    "addressInfo": {
+      "type": "object",
+      "description": "Primary address info of staging user",
+      "properties": {
+        "addressLine0": {
+          "type": "string",
+          "description": "Address, Line 0"
+        },
+        "addressLine1": {
+          "type": "string",
+          "description": "Address, Line 1"
+        },
+        "city": {
+          "type": "string",
+          "description": "City name"
+        },
+        "province": {
+          "type": "string",
+          "description": "Province"
+        },
+        "zip": {
+          "type": "string",
+          "description": "Zip Code"
+        },
+        "country": {
+          "type": "string",
+          "description": "Country"
+        }
+      },
+      "additionalProperties": false
+    },
+    "contactInfo": {
+      "type": "object",
+      "description": "Contact info of staging user",
+      "properties": {
+        "phone": {
+          "type": "string",
+          "description": "The user's primary phone number"
+        },
+        "mobilePhone": {
+          "type": "string",
+          "description": "The user's mobile phone number"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address",
+          "format": "email"
+        }
+      },
+      "required": ["email"],
+      "additionalProperties": false
+    },
+    "preferredEmailCommunication": {
+      "type": "array",
+      "description": "Email communication info of staging user",
+      "items": {
+        "type": "string",
+        "enum": ["Support", "Programs", "Services"]
+      },
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    }
+  },
+  "required": ["generalInfo", "contactInfo"],
+  "additionalProperties": false
+}
