@@ -1703,27 +1703,27 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/external_user7.json"));
-        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dactive%40folio.com%20and%20type%3Dpatron%29")) {
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dactive%40folio.com%20and%20type%3D%3Dpatron%29")) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/user_active1.json"));
-        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dinactive%40folio.com%20and%20type%3Dpatron%29")) {
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dinactive%40folio.com%20and%20type%3D%3Dpatron%29")) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/user_not_active1.json"));
-        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dnotfound%40folio.com%20and%20type%3Dpatron%29")) {
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dnotfound%40folio.com%20and%20type%3D%3Dpatron%29")) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/user_not_found.json"));
-        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dmultiple%40folio.com%20and%20type%3Dpatron%29")) {
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dmultiple%40folio.com%20and%20type%3D%3Dpatron%29")) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/user_multiple.json"));
-        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Derror%40folio.com%20and%20type%3Dpatron%29")) {
+        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Derror%40folio.com%20and%20type%3D%3Dpatron%29")) {
           req.response()
             .setStatusCode(500)
             .putHeader("content-type", "application/json")
