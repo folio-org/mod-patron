@@ -64,6 +64,8 @@ import java.util.stream.Stream;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
+import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.EMAIL_ALREADY_EXIST;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
@@ -167,15 +169,20 @@ public  class PatronServicesResourceImpl implements Patron {
   }
 
   @Override
-  public void getPatronAccountByEmailByEmailId(String email, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getPatronRegistrationStatusByEmailId(String email, Map<String, String> okapiHeaders,
+                                                          Handler<AsyncResult<Response>> asyncResultHandler,
+                                                          Context vertxContext) {
+    logger.debug("getPatronAccountRegistrationStatusByEmailId:: Fetching patron details with emailId {}", email);
     final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
     final var userRepository = new UserRepository(httpClient);
 
-    getUserByEmail(email, okapiHeaders, userRepository)
-      .thenAccept(userResponse -> handleGetUserResponse(userResponse, asyncResultHandler))
+    getUserByEmailWithPatronType(email, okapiHeaders, userRepository)
+      .thenAccept(userResponse -> handleGetUserResponse(email, userResponse, asyncResultHandler))
       .exceptionally(throwable -> {
-        logger.error("getPatronAccountByEmailByEmailId:: Failed to get external patron by email", throwable);
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
+        logger.error("getPatronAccountRegistrationStatusByEmailId:: Failed to get patron details by email {}",
+          email, throwable);
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+          .respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
   }
@@ -275,26 +282,36 @@ public  class PatronServicesResourceImpl implements Patron {
     }
   }
 
-  private void handleGetUserResponse(JsonObject userResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
-    final int totalRecords = userResponse.getInteger(TOTAL_RECORDS);
+  private void handleGetUserResponse(String email, JsonObject userResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
+    final int totalRecords = userResponse.getJsonArray(USERS_FILED).size();
 
     if (totalRecords > 1) {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond422WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.name(), String.valueOf(HTTP_UNPROCESSABLE_ENTITY)))));
+      logger.info("handleGetUserResponse:: Multiple user record found for email {}", email);
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse.
+        respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.name(), MULTIPLE_USER_WITH_EMAIL.value()))));
     } else if (totalRecords == 1) {
-      final JsonObject userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
-      final User user = convertJsonToUser(userJson);
-      final ExternalPatron externalPatron = mapUserToExternalPatron(user);
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond200WithApplicationJson(externalPatron)));
+      var userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
+      var user = convertJsonToUser(userJson);
+      if (user != null && user.getActive()) {
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+          .respond200WithApplicationJson(user)));
+      } else {
+        logger.info("handleGetUserResponse:: Inactive user record found for email {}", email);
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+          .respond404WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.name(), USER_ACCOUNT_INACTIVE.value()))));
+      }
     } else {
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronAccountByEmailByEmailIdResponse.respond404WithTextPlain(USER_NOT_FOUND.name())));
+      logger.info("handleGetUserResponse:: user record not found for email {}", email);
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+        .respond404WithApplicationJson(createError(USER_NOT_FOUND.name(), USER_NOT_FOUND.value()))));
     }
   }
 
-  private User convertJsonToUser(JsonObject userJson) {
+  private org.folio.rest.jaxrs.model.User convertJsonToUser(JsonObject userJson) {
     final ObjectMapper mapper = new ObjectMapper();
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     try {
-      return mapper.readValue(userJson.encode(), User.class);
+      return mapper.readValue(userJson.encode(), org.folio.rest.jaxrs.model.User.class);
     } catch (IOException e) {
       return null;
     }
@@ -302,7 +319,12 @@ public  class PatronServicesResourceImpl implements Patron {
 
   private CompletableFuture<JsonObject> getUserByEmail(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
     logger.info("getUserByEmail:: Trying to get user by email");
-    return userRepository.getUserByEmail(email, okapiHeaders);
+    return userRepository.getUserByCql("(personal.email==" + email + ")", okapiHeaders);
+  }
+
+  private CompletableFuture<JsonObject> getUserByEmailWithPatronType(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
+    logger.info("getUserByEmailWithPatronType:: Trying to get user by email {}", email);
+    return userRepository.getUserByCql("(personal.email==" + email + " and type==patron)", okapiHeaders);
   }
 
   private CompletableFuture<String> getRemotePatronGroupId(UserRepository userRepository, Map<String, String> okapiHeaders) {
