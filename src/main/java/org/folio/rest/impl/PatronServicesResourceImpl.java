@@ -107,6 +107,7 @@ public  class PatronServicesResourceImpl implements Patron {
 
     stagingUserRepository.createStagingUser(entity, okapiHeaders)
       .thenCompose(this::handleCreateStagingUserResponse)
+      .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
         logger.error("postPatron:: Failed to create external patron", throwable);
         asyncResultHandler.handle(Future.succeededFuture(PostPatronResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
