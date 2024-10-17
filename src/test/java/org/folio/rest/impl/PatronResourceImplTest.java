@@ -51,9 +51,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 @ExtendWith(VertxExtension.class)
 public class PatronResourceImplTest extends BaseResourceServiceTest{
   private final Logger logger = LogManager.getLogger();
-
-  private final String remotePatronAccountPath = "/patron/account";
-  private final String remotePatronAccountPathByEmail = "/patron/account/by-email";
   private final String patronAccountRegistrationStatus = "/patron/registration-status";
   private final String itemPath = "/item/{itemId}";
   private final String holdPath = "/hold";
