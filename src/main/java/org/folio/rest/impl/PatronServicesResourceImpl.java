@@ -259,7 +259,7 @@ public class PatronServicesResourceImpl implements Patron {
     final int totalRecords = userResponse.getJsonArray(USERS_FILED).size();
 
     if (totalRecords > 1) {
-      logger.info("handleGetUserResponse:: Multiple user record found for email {}", email);
+      logger.warn("handleGetUserResponse:: Multiple user record found for email {}", email);
       asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse.
         respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.value(), MULTIPLE_USER_WITH_EMAIL.name()))));
     } else if (totalRecords == 1) {
@@ -269,12 +269,12 @@ public class PatronServicesResourceImpl implements Patron {
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
           .respond200WithApplicationJson(user)));
       } else {
-        logger.info("handleGetUserResponse:: Inactive user record found for email {}", email);
+        logger.warn("handleGetUserResponse:: Inactive user record found for email {}", email);
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
           .respond404WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.value(), USER_ACCOUNT_INACTIVE.name()))));
       }
     } else {
-      logger.info("handleGetUserResponse:: user record not found for email {}", email);
+      logger.warn("handleGetUserResponse:: user record not found for email {}", email);
       asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
         .respond404WithApplicationJson(createError(USER_NOT_FOUND.value(), USER_NOT_FOUND.name()))));
     }
