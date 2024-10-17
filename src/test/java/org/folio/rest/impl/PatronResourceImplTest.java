@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import io.restassured.response.ValidatableResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -802,21 +803,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
 
     // Test done
     logger.info("Test done");
-  }
-
-  @Test
-  final void testSuccessCreatePatron() {
-    given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/remote_patron.json"))
-      .when()
-      .post(remotePatronAccountPath)
-      .then()
-      .contentType(JSON)
-      .statusCode(201);
   }
 
   @Test
@@ -2261,9 +2247,160 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
               .end("Invalid combination of query parameters");
           }
         }
+      } else if (req.method() == HttpMethod.POST && req.uri().equals("/staging-users")) {
+        req.bodyHandler(body -> {
+          String content = new String(body.getBytes());
+          JsonObject jsonContent = new JsonObject(content);
+          String firstName = jsonContent.getJsonObject("generalInfo").getString("firstName");
+          if ("TEST_STATUS_CODE_200".equals(firstName)) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-response.json"));
+          } else if ("TEST_STATUS_CODE_201".equals(firstName)) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-response.json"));
+          } else if ("TEST_STATUS_CODE_250".equals(firstName)) {
+            req.response()
+              .setStatusCode(250)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-response.json"));
+          } else if ("TEST_STATUS_CODE_400".equals(firstName)) {
+            req.response()
+              .setStatusCode(400)
+              .putHeader("content-type", "text/plain")
+              .end("A bad exception occurred");
+          } else if ("TEST_STATUS_CODE_422".equals(firstName)) {
+            req.response()
+              .setStatusCode(422)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-error-response.json"));
+          } else if ("TEST_STATUS_CODE_500".equals(firstName)) {
+            req.response()
+              .setStatusCode(500)
+              .putHeader("content-type", "text/plain")
+              .end("A random exception occurred");
+          }
+        });
       }
       else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
+  }
+
+
+  @Test
+  final void testSuccessCreateStagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject= new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_201");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .contentType(JSON)
+      .statusCode(201);
+  }
+
+  @Test
+  final void testSuccessUpdateStagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject= new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_200");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .contentType(JSON)
+      .statusCode(200);
+  }
+
+  @Test
+  final void testSuccess250StagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject= new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_250");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(250);
+  }
+
+  @Test
+  final void testFailure400StagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject= new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_400");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(400)
+      .body(containsString("A bad exception occurred"))
+      .contentType(TEXT);
+  }
+
+  @Test
+  final void testFailure422StagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject= new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_422");
+    Errors errors = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(422)
+      .contentType(JSON).extract().as(Errors.class);
+    assertEquals(2, errors.getTotalRecords());
+    assertEquals(2, errors.getErrors().size());
+    assertEquals("STANDARD_TYPE", errors.getErrors().get(0).getType());
+    assertEquals("ABC is required", errors.getErrors().get(0).getMessage());
+  }
+
+  @Test
+  final void testFailure500StagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject= new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_500");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(500)
+      .body(containsString("A random exception occurred"))
+      .contentType(TEXT);
   }
 }
