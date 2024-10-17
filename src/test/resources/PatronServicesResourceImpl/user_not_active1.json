@@ -1,0 +1,56 @@
+{
+  "users": [
+    {
+      "id": "cacc29d8-cade-4312-a5f2-4eeac55d8697",
+      "externalSystemId": "inactive@folio.com",
+      "active": false,
+      "type": "patron",
+      "patronGroup": "63f8065f-df84-4e76-a36b-3ba32dbdc9e5",
+      "departments": [],
+      "proxyFor": [],
+      "personal": {
+        "lastName": "inactive",
+        "firstName": "folio",
+        "middleName": "",
+        "preferredFirstName": "new",
+        "email": "inactive@folio.com",
+        "phone": "555-123456",
+        "mobilePhone": "555-5678",
+        "addresses": [
+          {
+            "id": "ec8c23d5-c301-4bba-8ade-39cc409e5d7e",
+            "countryId": "US",
+            "addressLine1": "123 Main St",
+            "addressLine2": "Apt 8",
+            "city": "Metropolis",
+            "region": "NY",
+            "postalCode": "12345",
+            "addressTypeId": "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "primaryAddress": true
+          }
+        ],
+        "preferredContactTypeId": "002"
+      },
+      "enrollmentDate": "2024-08-29T13:29:39.248+00:00",
+      "expirationDate": "2026-08-29T00:00:00.000+00:00",
+      "createdDate": "2024-08-29T13:29:39.256+00:00",
+      "updatedDate": "2024-08-29T13:29:39.256+00:00",
+      "metadata": {
+        "createdDate": "2024-08-29T13:29:39.250+00:00",
+        "createdByUserId": "21457ab5-4635-4e56-906a-908f05e9233b",
+        "updatedDate": "2024-08-29T13:29:39.250+00:00",
+        "updatedByUserId": "21457ab5-4635-4e56-906a-908f05e9233b"
+      },
+      "preferredEmailCommunication": [
+        "Support",
+        "Programs"
+      ]
+    }
+  ],
+  "totalRecords": 1,
+  "resultInfo": {
+    "totalRecords": 1,
+    "facets": [],
+    "diagnostics": []
+  }
+}

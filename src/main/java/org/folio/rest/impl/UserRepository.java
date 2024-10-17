@@ -30,13 +30,13 @@ public class UserRepository {
       });
   }
 
-  public CompletableFuture<JsonObject> getUserByEmail(String email, Map<String, String> okapiHeaders) {
-    logger.info("getUserByEmail::Retrieving user by email");
+  public CompletableFuture<JsonObject> getUserByCql(String cqlQuery, Map<String, String> okapiHeaders) {
+    logger.info("getUserByCql::Retrieving user by cqlQuery {}", cqlQuery);
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
-    queryParameters.put(QUERY, "(personal.email==" + email + ")");
+    queryParameters.put(QUERY, cqlQuery);
     return client.get(USERS, queryParameters, okapiHeaders)
       .thenApply(response -> {
-        logger.info("getUserByEmail::Successfully retrieved user by email: {}", email);
+        logger.info("getUserByCql::Successfully retrieved user by query: {}", cqlQuery);
         return ResponseInterpreter.verifyAndExtractBody(response);
       });
   }

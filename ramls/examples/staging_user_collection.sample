@@ -1,0 +1,40 @@
+{
+    "staging_users": [
+        {
+            "id": "362399c3-dad4-49c5-880a-a65823312065",
+            "isEmailVerified": false,
+            "status": "TIER-1",
+            "generalInfo": {
+                "firstName": "test1",
+                "preferredFirstName": "New Record",
+                "middleName": "www",
+                "lastName": "new-record-1"
+            },
+            "addressInfo": {
+                "addressLine0": "123 Main St",
+                "addressLine1": "Apt 4B",
+                "city": "Metropolis",
+                "province": "NY",
+                "zip": "12345",
+                "country": "USA"
+            },
+            "contactInfo": {
+                "phone": "555-123456",
+                "mobilePhone": "555-5678",
+                "email": "new-record-kapil.1.2@test.com"
+            },
+            "preferredEmailCommunication": [
+                "Support",
+                "Programs",
+                "Services"
+            ],
+            "metadata": {
+                "createdDate": "2024-10-14T09:40:50.311+00:00",
+                "createdByUserId": "21457ab5-4635-4e56-906a-908f05e12345",
+                "updatedDate": "2024-10-14T09:41:50.653+00:00",
+                "updatedByUserId": "21457ab5-4635-4e56-906a-908f05e12345"
+            }
+        }
+    ],
+    "totalRecords": 1
+}

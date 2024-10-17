@@ -1,0 +1,27 @@
+{
+    "isEmailVerified": false,
+    "status": "TIER-1",
+    "generalInfo": {
+        "firstName": "test1",
+        "middleName": "www",
+        "lastName": "new-record-1"
+    },
+    "addressInfo": {
+        "addressLine0": "123 Main St",
+        "addressLine1": "Apt 4B",
+        "city": "Metropolis",
+        "province": "NY",
+        "zip": "12345",
+        "country": "USA"
+    },
+    "contactInfo": {
+        "phone": "555-123456",
+        "mobilePhone": "555-5678",
+        "email": "new-record-kapil_new1@test.com"
+    },
+    "preferredEmailCommunication": [
+        "Programs",
+        "Support",
+        "Services"
+    ]
+}
