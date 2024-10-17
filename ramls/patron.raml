@@ -17,8 +17,6 @@ types:
   charge: !include charge.json
   money: !include money.json
   item: !include item.json
-  external_patron: !include external_patron.json
-  external_patron_collection: !include external_patron_collection.json
   user: !include userdata.json
   stagingUser: !include staging_userdata.json
   stagingUserdataCollection: !include staging_userdataCollection.json
@@ -74,71 +72,6 @@ traits:
           text/plain:
             example: internal server error, contact administrator
   /account:
-    get:
-      description: Return external_patrons detail
-      queryParameters:
-        expired:
-          description: |
-            Indicates to return only expired patron
-          required: false
-          type: boolean
-          default: false
-      responses:
-        200:
-          description: Returns the external patron accounts collection
-          body:
-            application/json:
-              type: external_patron_collection
-              example: !include examples/external_patron_collection.json
-        400:
-          description: Bad request
-          body:
-            text/plain:
-              example: unable to process request -- constraint violation
-        500:
-          description: Internal server error, e.g. due to misconfiguration
-          body:
-            text/plain:
-              example: internal server error, contact administrator
-    /by-email/{emailId}:
-      displayName: Get Accounts By email
-      description: Service endpoints that manage accounts by an existing email
-      uriParameters:
-        emailId:
-          description: The email of external patron
-          type: string
-      put:
-        description: |
-          Updates external patron request
-        is: [validate]
-        body:
-          application/json:
-            type: external_patron
-            example: !include examples/external_patron.json
-        responses:
-          204:
-            description: updates external patron
-          400:
-            description: Bad request
-            body:
-              text/plain:
-                example: unable to process request
-          404:
-            description: Item with a given ID not found
-            body:
-              text/plain:
-                example: item not found
-          422:
-            description: Validation error
-            body:
-              application/json:
-                type: errors
-          500:
-            description: |
-              Internal server error, e.g. due to misconfiguration
-            body:
-              text/plain:
-                example: internal server error, contact administrator
     /{id}:
       displayName: Manage Accounts By Id
       description: Service endpoints that manage accounts by an existing Id
