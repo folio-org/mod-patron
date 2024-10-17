@@ -26,7 +26,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron",
-          "permissionsRequired": ["staging-users.item.post"],
+          "permissionsRequired": ["patron.staging-users.item.post"],
           "modulePermissions": [
             "staging-users.item.post"
           ]
@@ -199,7 +199,7 @@
       ]
     },
     {
-      "permissionName" : "staging-users.item.post",
+      "permissionName" : "patron.staging-users.item.post",
       "displayName" : "staging-users post",
       "description" : "Post a staging user records"
     }
