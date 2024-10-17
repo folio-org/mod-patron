@@ -1,27 +1,19 @@
 package org.folio.rest.impl;
 
-import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
-import static io.restassured.http.ContentType.TEXT;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.EMAIL_ALREADY_EXIST;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.PATRON_GROUP_NOT_APPLICABLE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ALREADY_EXIST;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
-import static org.folio.patron.utils.Utils.readMockFile;
-import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.util.Objects;
-import java.util.stream.Stream;
-
-import io.restassured.response.ValidatableResponse;
+import io.restassured.http.ContentType;
+import io.restassured.http.Header;
+import io.restassured.http.Headers;
+import io.restassured.response.Response;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.Checkpoint;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,20 +30,23 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import io.restassured.http.ContentType;
-import io.restassured.http.Header;
-import io.restassured.http.Headers;
-import io.restassured.response.Response;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.Checkpoint;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import static io.restassured.RestAssured.given;
+import static io.restassured.http.ContentType.JSON;
+import static io.restassured.http.ContentType.TEXT;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
+import static org.folio.patron.utils.Utils.readMockFile;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(VertxExtension.class)
 public class PatronResourceImplTest extends BaseResourceServiceTest{
@@ -1236,7 +1231,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   @Test
   final void testSuccessCreateStagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
-    JsonObject jsonObject= new JsonObject(body);
+    JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_201");
     given()
       .log().all()
@@ -1254,7 +1249,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   @Test
   final void testSuccessUpdateStagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
-    JsonObject jsonObject= new JsonObject(body);
+    JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_200");
     given()
       .log().all()
@@ -1272,7 +1267,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   @Test
   final void testSuccess250StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
-    JsonObject jsonObject= new JsonObject(body);
+    JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_250");
     given()
       .log().all()
@@ -1289,7 +1284,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   @Test
   final void testFailure400StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
-    JsonObject jsonObject= new JsonObject(body);
+    JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_400");
     given()
       .log().all()
@@ -1308,7 +1303,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   @Test
   final void testFailure422StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
-    JsonObject jsonObject= new JsonObject(body);
+    JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_422");
     Errors errors = given()
       .log().all()
@@ -1330,7 +1325,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   @Test
   final void testFailure500StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
-    JsonObject jsonObject= new JsonObject(body);
+    JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_500");
     given()
       .log().all()
@@ -1349,7 +1344,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   @Test
   final void testExceptionStagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
-    JsonObject jsonObject= new JsonObject(body);
+    JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_EXCEPTIONALLY_PART");
     given()
       .log().all()
