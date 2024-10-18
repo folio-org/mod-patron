@@ -686,7 +686,12 @@ public class PatronServicesResourceImpl implements Patron {
 
     new EcsTlrSettingsService()
       .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
-      .thenApply(this::getAllowedServicePointsUrl)
+      .thenApply(isEnabled -> {
+        logger.info("ANTON!!!!: isEnabledValue from isEcsTlrFeatureEnabled:: = {}", isEnabled);
+        String allowedServicePointsUrl = getAllowedServicePointsUrl(isEnabled);
+        logger.info("ANTON!!!!: FINAL URL IS {}", allowedServicePointsUrl);
+        return allowedServicePointsUrl;
+      })
       .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getAllowedServicePoints)
