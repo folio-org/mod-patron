@@ -1,26 +1,19 @@
 package org.folio.rest.impl;
 
-import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
-import static io.restassured.http.ContentType.TEXT;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.EMAIL_ALREADY_EXIST;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.PATRON_GROUP_NOT_APPLICABLE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ALREADY_EXIST;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
-import static org.folio.patron.utils.Utils.readMockFile;
-import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.util.Objects;
-import java.util.stream.Stream;
-
+import io.restassured.http.ContentType;
+import io.restassured.http.Header;
+import io.restassured.http.Headers;
+import io.restassured.response.Response;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.Checkpoint;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,27 +30,27 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import io.restassured.http.ContentType;
-import io.restassured.http.Header;
-import io.restassured.http.Headers;
-import io.restassured.response.Response;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.Checkpoint;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import static io.restassured.RestAssured.given;
+import static io.restassured.http.ContentType.JSON;
+import static io.restassured.http.ContentType.TEXT;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
+import static org.folio.patron.utils.Utils.readMockFile;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(VertxExtension.class)
 public class PatronResourceImplTest extends BaseResourceServiceTest{
   private final Logger logger = LogManager.getLogger();
-
-  private final String remotePatronAccountPath = "/patron/account";
-  private final String remotePatronAccountPathByEmail = "/patron/account/by-email";
   private final String patronAccountRegistrationStatus = "/patron/registration-status";
   private final String itemPath = "/item/{itemId}";
   private final String holdPath = "/hold";
@@ -114,12 +107,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   private static final String holdingsRecordId = "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19";
   private boolean tlrEnabled;
 
-  static Stream<Object[]> testData() {
-    return Stream.of(
-      new Object[]{"remote_patron3.json", 422, "User account is not active"},
-      new Object[]{"remote_patron4.json", 422, "User does not belong to the required patron group"}
-    );
-  }
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
@@ -373,34 +360,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   }
 
   @Test
-  final void testSuccessGetPatronCollection() {
-    given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .when()
-      .get(remotePatronAccountPath)
-      .then()
-      .contentType(JSON)
-      .statusCode(200);
-  }
-
-  @Test
-  final void testSuccessGetExpiredPatronCollection() {
-    given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .when()
-      .get(remotePatronAccountPath + "?expired=true")
-      .then()
-      .contentType(JSON)
-      .statusCode(200);
-  }
-
-  @Test
   final void testGetPatronRegistrationStatusByEmail() {
     given()
       .header(tenantHeader)
@@ -481,83 +440,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
       .log().all()
       .contentType(TEXT)
       .statusCode(500);
-  }
-
-  @Test
-  final void testUpdatePatronAccountByEmail() {
-    given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/remote_patron2.json"))
-      .when()
-      .put(remotePatronAccountPathByEmail + "/adsfg")
-      .then()
-      .contentType("")
-      .statusCode(204)
-      .extract()
-      .response();
-  }
-
-  @Test
-  final void testUpdatePatronAccountByEmailWithEmailAlreadyExistInPayload() {
-
-    final Errors errors = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/remote_patron7.json"))
-      .when()
-      .put(remotePatronAccountPathByEmail + "/adsfg")
-      .then()
-      .contentType(JSON)
-      .statusCode(422)
-      .extract()
-      .response().as(Errors.class);
-
-    assertEquals(1, errors.getErrors().size());
-    assertEquals(EMAIL_ALREADY_EXIST.name(), errors.getErrors().get(0).getMessage());
-  }
-
-  @Test
-  final void testNotFoundWhenUpdatePatronAccountByEmail() {
-    final String res = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/remote_patron6.json"))
-      .when()
-      .put(remotePatronAccountPathByEmail + "/a")
-      .then()
-      .contentType(TEXT)
-      .statusCode(404)
-      .extract()
-      .response().asString();
-
-    assertEquals(USER_NOT_FOUND.name(), res);
-  }
-
-  @Test
-  final void testIncorrectPatronWhenUpdatePatronAccountByEmail() {
-    final Errors errors = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/remote_patron2.json"))
-      .when()
-      .put(remotePatronAccountPathByEmail + "/ad")
-      .then()
-      .contentType(JSON)
-      .statusCode(422)
-      .extract()
-      .response().as(Errors.class);
-
-    assertEquals(1, errors.getErrors().size());
-    assertEquals(PATRON_GROUP_NOT_APPLICABLE.name(), errors.getErrors().get(0).getMessage());
   }
 
   @Test
@@ -804,80 +686,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
     logger.info("Test done");
   }
 
-  @Test
-  final void testSuccessCreatePatron() {
-    given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/remote_patron.json"))
-      .when()
-      .post(remotePatronAccountPath)
-      .then()
-      .contentType(JSON)
-      .statusCode(201);
-  }
-
-  @Test
-  final void testSuccessCreatePatronMultipleUserError() {
-    final Errors errors = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/remote_patron_multiple_users.json"))
-      .when()
-      .post(remotePatronAccountPath)
-      .then()
-      .contentType(JSON)
-      .statusCode(422)
-      .extract().response().as(Errors.class);
-
-    assertEquals(1, errors.getErrors().size());
-    assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errors.getErrors().get(0).getMessage());
-  }
-
-  @Test
-  final void testCreateDuplicateUser() {
-    final Errors r = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/remote_patron2.json"))
-      .when()
-      .post(remotePatronAccountPath)
-      .then()
-      .contentType(JSON)
-      .statusCode(422)
-      .extract()
-      .as(Errors.class);
-
-    assertEquals(1, r.getErrors().size());
-    assertEquals(USER_ALREADY_EXIST.name(), r.getErrors().get(0).getMessage());
-    logger.info("Test done");
-  }
-
-  @ParameterizedTest
-  @MethodSource("testData")
-  void patronPostApiTests(String fileName, int expectedStatusCode) {
-    final Errors r = given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(readMockFile(MOCK_DATA_FOLDER + "/" + fileName))
-      .when()
-      .post(remotePatronAccountPath)
-      .then()
-      .contentType(JSON)
-      .statusCode(expectedStatusCode)
-      .extract()
-      .as(Errors.class);
-
-    assertEquals(1, r.getErrors().size());
-  }
   @Test
   public final void testCannotPostPatronAccountItemHoldByIdAndItemIdMissingField() {
     logger.info("Testing creating a hold on an item for the specified user");
@@ -1415,6 +1223,137 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
     assertEquals(new JsonObject(expected), new JsonObject(response));
 
     logger.info("Test done");
+  }
+
+  @Test
+  final void testSuccessCreateStagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_201");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .contentType(JSON)
+      .statusCode(201);
+  }
+
+  @Test
+  final void testSuccessUpdateStagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_200");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .contentType(JSON)
+      .statusCode(200);
+  }
+
+  @Test
+  final void testSuccess250StagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_250");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(250);
+  }
+
+  @Test
+  final void testFailure400StagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_400");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(400)
+      .body(containsString("A bad exception occurred"))
+      .contentType(TEXT);
+  }
+
+  @Test
+  final void testFailure422StagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_422");
+    Errors errors = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(422)
+      .contentType(JSON).extract().as(Errors.class);
+    assertEquals(2, errors.getTotalRecords());
+    assertEquals(2, errors.getErrors().size());
+    assertEquals("STANDARD_TYPE", errors.getErrors().get(0).getType());
+    assertEquals("ABC is required", errors.getErrors().get(0).getMessage());
+  }
+
+  @Test
+  final void testFailure500StagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_500");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(500)
+      .body(containsString("A random exception occurred"))
+      .contentType(TEXT);
+  }
+
+  @Test
+  final void testExceptionStagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_EXCEPTIONALLY_PART");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .post("/patron")
+      .then()
+      .statusCode(500)
+      .contentType(TEXT);
   }
 
   static Stream<Arguments> tlrFeatureStates() {
@@ -2261,6 +2200,43 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
               .end("Invalid combination of query parameters");
           }
         }
+      } else if (req.method() == HttpMethod.POST && req.uri().equals("/staging-users")) {
+        req.bodyHandler(body -> {
+          String content = new String(body.getBytes());
+          JsonObject jsonContent = new JsonObject(content);
+          String firstName = jsonContent.getJsonObject("generalInfo").getString("firstName");
+          if ("TEST_STATUS_CODE_200".equals(firstName)) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-response.json"));
+          } else if ("TEST_STATUS_CODE_201".equals(firstName)) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-response.json"));
+          } else if ("TEST_STATUS_CODE_250".equals(firstName)) {
+            req.response()
+              .setStatusCode(250)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-response.json"));
+          } else if ("TEST_STATUS_CODE_400".equals(firstName)) {
+            req.response()
+              .setStatusCode(400)
+              .putHeader("content-type", "text/plain")
+              .end("A bad exception occurred");
+          } else if ("TEST_STATUS_CODE_422".equals(firstName)) {
+            req.response()
+              .setStatusCode(422)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-error-response.json"));
+          } else if ("TEST_STATUS_CODE_500".equals(firstName)) {
+            req.response()
+              .setStatusCode(500)
+              .putHeader("content-type", "text/plain")
+              .end("A random exception occurred");
+          }
+        });
       }
       else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
