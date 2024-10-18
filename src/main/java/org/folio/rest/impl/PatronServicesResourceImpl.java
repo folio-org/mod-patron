@@ -64,6 +64,7 @@ import static org.folio.patron.rest.models.ExternalPatronErrorCode.INVALID_PATRO
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
+import static org.folio.patron.rest.utils.PatronUtils.mapUserCollectionToExternalPatronCollection;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
