@@ -389,7 +389,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
       .extract().response().as(Errors.class);
 
     assertEquals(1, errors.getErrors().size());
-    assertEquals(MULTIPLE_USER_WITH_EMAIL.name(), errors.getErrors().get(0).getMessage());
+    assertEquals(MULTIPLE_USER_WITH_EMAIL.value(), errors.getErrors().get(0).getMessage());
   }
 
   @Test
@@ -407,7 +407,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
       .extract().response().as(Errors.class);
 
     assertEquals(1, res.getErrors().size());
-    assertEquals(USER_NOT_FOUND.name(), res.getErrors().get(0).getMessage());
+    assertEquals(USER_NOT_FOUND.value(), res.getErrors().get(0).getMessage());
   }
 
   @Test
@@ -425,7 +425,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
       .extract().response().as(Errors.class);
 
     assertEquals(1, res.getErrors().size());
-    assertEquals(USER_ACCOUNT_INACTIVE.name(), res.getErrors().get(0).getMessage());
+    assertEquals(USER_ACCOUNT_INACTIVE.value(), res.getErrors().get(0).getMessage());
   }
 
   @Test

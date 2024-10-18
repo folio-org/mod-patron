@@ -58,6 +58,9 @@ import java.util.stream.Stream;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.EMAIL_ALREADY_EXIST;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.INVALID_PATRON_GROUP;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
@@ -172,9 +175,9 @@ public  class PatronServicesResourceImpl implements Patron {
     final int totalRecords = userResponse.getJsonArray(USERS_FILED).size();
 
     if (totalRecords > 1) {
-      logger.info("handleGetUserResponse:: Multiple user record found for email {}", email);
+      logger.warn("handleGetUserResponse:: Multiple user record found for email {}", email);
       asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse.
-        respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.name(), MULTIPLE_USER_WITH_EMAIL.value()))));
+        respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.value(), MULTIPLE_USER_WITH_EMAIL.name()))));
     } else if (totalRecords == 1) {
       var userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
       var user = convertJsonToUser(userJson);
@@ -182,14 +185,14 @@ public  class PatronServicesResourceImpl implements Patron {
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
           .respond200WithApplicationJson(user)));
       } else {
-        logger.info("handleGetUserResponse:: Inactive user record found for email {}", email);
+        logger.warn("handleGetUserResponse:: Inactive user record found for email {}", email);
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
-          .respond404WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.name(), USER_ACCOUNT_INACTIVE.value()))));
+          .respond404WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.value(), USER_ACCOUNT_INACTIVE.name()))));
       }
     } else {
-      logger.info("handleGetUserResponse:: user record not found for email {}", email);
+      logger.warn("handleGetUserResponse:: user record not found for email {}", email);
       asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
-        .respond404WithApplicationJson(createError(USER_NOT_FOUND.name(), USER_NOT_FOUND.value()))));
+        .respond404WithApplicationJson(createError(USER_NOT_FOUND.value(), USER_NOT_FOUND.name()))));
     }
   }
 
