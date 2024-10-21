@@ -1,0 +1,27 @@
+{
+  "total_records": 2,
+  "errors": [
+    {
+      "message": "ABC is required",
+      "type": "STANDARD_TYPE",
+      "code": "ERROR_CODE",
+      "parameters": [
+        {
+          "key": "KEY-1",
+          "value": "VALUE-1"
+        }
+      ]
+    },
+    {
+      "message": "XYZ is required",
+      "type": "STANDARD_TYPE",
+      "code": "ERROR_CODE",
+      "parameters": [
+        {
+          "key": "KEY-2",
+          "value": "VALUE-2"
+        }
+      ]
+    }
+  ]
+}
