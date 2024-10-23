@@ -494,6 +494,16 @@ public  class PatronServicesResourceImpl implements Patron {
   }
 
   @Override
+  public void getPatronAccountItemAllowedServicePointsByIdAndItemId(String requesterId, String itemId,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    var queryParameters = Map.of("operation", "create",
+      "requesterId", requesterId, "itemId", itemId);
+
+    getAllowedServicePoints(okapiHeaders, asyncResultHandler, httpClient, queryParameters);
+  }
+
+  @Override
   public void getPatronAccountInstanceAllowedServicePointsByIdAndInstanceId(String requesterId,
     String instanceId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -502,6 +512,11 @@ public  class PatronServicesResourceImpl implements Patron {
     var queryParameters = Map.of("operation", "create",
       "requesterId", requesterId, "instanceId", instanceId);
 
+    getAllowedServicePoints(okapiHeaders, asyncResultHandler, httpClient, queryParameters);
+  }
+
+  private void getAllowedServicePoints(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    VertxOkapiHttpClient httpClient, Map<String, String> queryParameters) {
     new EcsTlrSettingsService()
       .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
       .thenApply(this::getAllowedServicePointsUrl)

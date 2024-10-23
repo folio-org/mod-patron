@@ -1143,9 +1143,88 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
     // Test done
     logger.info("Test done");
   }
+  @Test
+  final void allowedServicePointsForItemShouldSucceed() {
+    logger.info("Testing allowed service points for Item");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + itemPath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/allowed_sp_mod_patron_expected_response.json"));
+    verifyAllowedServicePoints(expectedJson, new JsonObject(response));
+    logger.info("Test done");
+  }
 
   @Test
-  final void allowedServicePointsShouldSucceed() {
+  final void allowedServicePointsForItemShouldFailWhenModCirculationFails() {
+    logger.info("Testing allowed service points for item");
+
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .header(new Header(okapiBadDataHeader, "500"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + itemPath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(TEXT)
+      .and().assertThat().statusCode(500)
+      .extract()
+      .asString();
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsForItemShouldProxyModCirculationErrors() {
+    logger.info("Testing allowed service points for item");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .header(new Header(okapiBadDataHeader, "422"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", goodItemId)
+      .log().all()
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + itemPath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(JSON)
+      .and().assertThat().statusCode(422)
+      .extract()
+      .asString();
+
+    final var expected = readMockFile(MOCK_DATA_FOLDER +
+      "/allowed_service_points_instance_not_found.json");
+    assertEquals(new JsonObject(expected), new JsonObject(response));
+
+    logger.info("Test done");
+  }
+  @Test
+  final void allowedServicePointsForInstanceShouldSucceed() {
     logger.info("Testing allowed service points");
 
     var response = given()
@@ -1172,7 +1251,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   }
 
   @Test
-  final void allowedServicePointsShouldFailWhenModCirculationFails() {
+  final void allowedServicePointsForInstanceShouldFailWhenModCirculationFails() {
     logger.info("Testing allowed service points");
 
     given()
@@ -1197,7 +1276,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   }
 
   @Test
-  final void allowedServicePointsShouldProxyModCirculationErrors() {
+  final void allowedServicePointsForInstanceShouldProxyModCirculationErrors() {
     logger.info("Testing allowed service points");
 
     var response = given()
@@ -2193,7 +2272,16 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
               .end(readMockFile(MOCK_DATA_FOLDER + "/allowed_sp_mod_circulation_response.json"));
-          } else {
+          }
+          else if ("create".equals(req.getParam("operation"))
+            && goodUserId.equals(req.getParam("requesterId"))
+            && goodItemId.equals(req.getParam("itemId"))) {
+            req.response()
+              .setStatusCode(200)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/allowed_sp_mod_circulation_response.json"));
+          }
+          else {
             req.response()
               .setStatusCode(400)
               .putHeader("content-type", "text/plain")
