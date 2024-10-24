@@ -30,13 +30,7 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,7 +82,7 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
     "/circulation/requests/allowed-service-points";
 
-  private final Logger logger = LogManager.getLogger();
+  private final Logger logger = LogManager.getLogger(PatronServicesResourceImpl.class);
 
   @Validate
   @Override
@@ -815,13 +809,20 @@ public class PatronServicesResourceImpl implements Patron {
           GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
             .respond422WithApplicationJson(errors));
       } else {
-        logger.error("HttpException: during allowed service points get: {}", t.getMessage());
+        var e = (HttpException)t;
+        String stackTrace = Arrays.stream(e.getStackTrace())
+          .map(StackTraceElement::toString)
+          .collect(Collectors.joining("\n"));
+        logger.error("HttpException: message {}", e.getMessage());
+        logger.error("HttpException: stackTrace {}", stackTrace);
+        logger.error("HttpException: code {}", e.getCode());
+        logger.error("HttpException: during allowed service points get", t);
         result = succeededFuture(
           GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
             .respond500WithTextPlain(message));
       }
     } else {
-      logger.error("Other exception: during allowed service points get: {}", t.getMessage());
+      logger.error("Other exception: during allowed service points get", t);
       result = succeededFuture(GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
         .respond500WithTextPlain(throwable.getMessage()));
     }
