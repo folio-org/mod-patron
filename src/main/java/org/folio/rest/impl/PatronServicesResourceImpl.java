@@ -366,9 +366,17 @@ public class PatronServicesResourceImpl implements Patron {
     String instanceId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
-    var queryParameters = Map.of("operation", "create",
-      "requesterId", requesterId, "instanceId", instanceId);
+    VertxOkapiHttpClient httpClient;
+    Map<String, String> queryParameters;
+
+    try {
+      httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+      queryParameters = Map.of("operation", "create",
+        "requesterId", requesterId, "instanceId", instanceId);
+    } catch (Exception e) {
+      logger.error("Error getting HttpClient", e);
+      throw e;
+    }
 
     completedFuture(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS)
       .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
