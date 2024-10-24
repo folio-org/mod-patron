@@ -366,6 +366,13 @@ public class PatronServicesResourceImpl implements Patron {
     String instanceId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
+    String mapAsString = okapiHeaders.entrySet()
+      .stream()
+      .map(entry -> entry.getKey() + "=" + entry.getValue())
+      .collect(Collectors.joining(", "));
+
+    logger.error("Okapi headers entries: {}", mapAsString);
+
     VertxOkapiHttpClient httpClient;
     Map<String, String> queryParameters;
 
