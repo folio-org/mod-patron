@@ -48,6 +48,8 @@ import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.HttpClientFactory;
 import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -85,6 +87,8 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS =
     "/circulation/requests/allowed-service-points";
+
+  private final Logger logger = LogManager.getLogger();
 
   @Validate
   @Override
@@ -289,7 +293,7 @@ public class PatronServicesResourceImpl implements Patron {
                 asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
               })
               .exceptionally(e -> {
-                
+
                 asyncResultHandler.handle(handleItemHoldPOSTError(e));
                 return null;
               });
@@ -811,11 +815,13 @@ public class PatronServicesResourceImpl implements Patron {
           GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
             .respond422WithApplicationJson(errors));
       } else {
+        logger.error("HttpException: during allowed service points get: {}", t.getMessage());
         result = succeededFuture(
           GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
             .respond500WithTextPlain(message));
       }
     } else {
+      logger.error("Other exception: during allowed service points get: {}", t.getMessage());
       result = succeededFuture(GetPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
         .respond500WithTextPlain(throwable.getMessage()));
     }
