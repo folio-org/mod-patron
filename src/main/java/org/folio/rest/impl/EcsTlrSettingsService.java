@@ -40,7 +40,7 @@ public class EcsTlrSettingsService {
 
   private JsonObject handleEcsTlrSettingsFetchingError(Throwable throwable) {
     logger.info("handleEcsTlrSettingsFetchingError:: BEFORE IF statement");
-    if (throwable instanceof HttpException || throwable instanceof CompletionException) {
+    if (isCompletionExceptionWithHttpCause(throwable)) {
       logger.warn("handleErrorFromModTlr:: failed to fetch ECS TLR settings from mod-tlr",
         throwable);
       return null;
@@ -76,5 +76,13 @@ public class EcsTlrSettingsService {
       .orElse(false);
     logger.debug("getCirculationStorageEcsTlrFeatureValue:: result = {}", result);
     return result;
+  }
+
+  private static boolean isCompletionExceptionWithHttpCause(Throwable throwable) {
+    return  Optional.ofNullable(throwable)
+      .filter(CompletionException.class::isInstance)
+      .map(Throwable::getCause)
+      .filter(HttpException.class::isInstance)
+      .isPresent();
   }
 }
