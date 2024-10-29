@@ -79,10 +79,10 @@ public class EcsTlrSettingsService {
   }
 
   private static boolean isCompletionExceptionWithHttpCause(Throwable throwable) {
-    return  Optional.ofNullable(throwable)
-      .filter(CompletionException.class::isInstance)
-      .map(Throwable::getCause)
-      .filter(HttpException.class::isInstance)
-      .isPresent();
+    if (throwable instanceof CompletionException) {
+      Throwable cause = throwable.getCause();
+      return cause instanceof HttpException;
+    }
+    return false;
   }
 }
