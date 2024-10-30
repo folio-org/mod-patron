@@ -1,3 +1,23 @@
+# 6.2.0 2024-10-30
+
+* Update to RMB 35.3.0 (MODPATRON-189)
+* Implementation of POST: `/patron` API (MODPATRON-191)
+* Modify existing getByEmail API to return patron details as per new design (MODPATRON-190)
+* Added new endpoint to get service points based on the item (MODPATRON-181)
+* Add interface `inventory` 14.0 (MODPATRON-186)
+* Allowed service points: switch to mod-circulation-bff (MODPATRON-178)
+* Added debugging logs for `getPatronAccountById` API (MODPATRON-182)
+* Fixed `enrolmentDate` field is not saving in database (MODPATRON-180)
+* Enhance the error response to ENUM constant for LC User registration APIs (MODPATRON-179)
+* Fixed PreferredEmailCommunication `Service` to `Services` (MODPATRON-177)
+* Fix vulnerabilities (MODPATRON-170, MODPATRON-173)
+* Removed address0 (MODPATRON-171)
+* Added GET endpoint for expired LC users (MODPATRON-169)
+* Added PUT endpoint for LC user (MODPATRON-168)
+* Validation errors return 422 HTTP code (MODPATRON-156)
+* Added GET API for external patron (MODPATRON-166)
+* Added POST API for external patron (MODPATRON-165)
+
 # 6.1.0 2024-03-21
 
 * Upgrade to RMB 35.2.0, Vertx 4.5.5, Spring 6.1.5 (MODPATRON-160)
