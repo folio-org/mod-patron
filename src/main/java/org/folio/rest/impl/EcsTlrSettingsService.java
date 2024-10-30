@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +39,7 @@ public class EcsTlrSettingsService {
   }
 
   private JsonObject handleEcsTlrSettingsFetchingError(Throwable throwable) {
-    if (throwable instanceof HttpException) {
+    if (isCompletionExceptionWithHttpCause(throwable)) {
       logger.warn("handleErrorFromModTlr:: failed to fetch ECS TLR settings from mod-tlr",
         throwable);
       return null;
@@ -74,5 +75,13 @@ public class EcsTlrSettingsService {
       .orElse(false);
     logger.debug("getCirculationStorageEcsTlrFeatureValue:: result = {}", result);
     return result;
+  }
+
+  private static boolean isCompletionExceptionWithHttpCause(Throwable throwable) {
+    if (throwable instanceof CompletionException) {
+      Throwable cause = throwable.getCause();
+      return cause instanceof HttpException;
+    }
+    return false;
   }
 }
