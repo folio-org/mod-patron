@@ -39,7 +39,7 @@ public class EcsTlrSettingsService {
   }
 
   private JsonObject handleEcsTlrSettingsFetchingError(Throwable throwable) {
-    if (isCompletionExceptionWithHttpCause(throwable)) {
+    if (throwable.getCause() instanceof HttpException) {
       logger.warn("handleErrorFromModTlr:: failed to fetch ECS TLR settings from mod-tlr",
         throwable);
       return null;
@@ -75,13 +75,5 @@ public class EcsTlrSettingsService {
       .orElse(false);
     logger.debug("getCirculationStorageEcsTlrFeatureValue:: result = {}", result);
     return result;
-  }
-
-  private static boolean isCompletionExceptionWithHttpCause(Throwable throwable) {
-    if (throwable instanceof CompletionException) {
-      Throwable cause = throwable.getCause();
-      return cause instanceof HttpException;
-    }
-    return false;
   }
 }
