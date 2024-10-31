@@ -67,7 +67,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold",
-          "permissionsRequired": ["patron.account-hold.item.post"],
+          "permissionsRequired": ["patron.account.item-hold.item.post"],
           "modulePermissions": [
             "circulation.requests.item.post",
             "inventory.items.item.get",
@@ -80,7 +80,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/hold",
-          "permissionsRequired": ["patron.account-instance-hold.item.post"],
+          "permissionsRequired": ["patron.account.instance-hold.item.post"],
           "modulePermissions": [
             "circulation.requests.instances.item.post"
           ]
@@ -88,7 +88,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/hold/{holdId}/cancel",
-          "permissionsRequired": ["patron.account-hold-cancel.item.post"],
+          "permissionsRequired": ["patron.account.hold-cancel.item.post"],
           "modulePermissions": [
             "circulation.requests.item.put",
             "circulation.requests.item.get"
@@ -97,7 +97,7 @@
         {
           "methods": ["GET"],
           "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/allowed-service-points",
-          "permissionsRequired": ["patron.account-instance-allowed-service-points.item.get"],
+          "permissionsRequired": ["patron.account.instance-allowed-service-points.item.get"],
           "modulePermissions": [
             "circulation.requests.allowed-service-points.get"
           ]
@@ -105,7 +105,7 @@
         {
           "methods": ["GET"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/allowed-service-points",
-          "permissionsRequired": ["patron.account-item-allowed-service-points.item.get"],
+          "permissionsRequired": ["patron.account.item-allowed-service-points.item.get"],
           "modulePermissions": [
             "circulation.requests.allowed-service-points.get"
           ]
@@ -173,31 +173,31 @@
       "replaces": ["patron.renew.item.post"]
     },
     {
-      "permissionName": "patron.account-hold.item.post",
+      "permissionName": "patron.account.item-hold.item.post",
       "displayName": "patron - create a hold",
       "description": "Creates a hold on the specified item for this patron",
       "replaces": ["patron.hold.item.post"]
     },
     {
-      "permissionName": "patron.account-instance-hold.item.post",
+      "permissionName": "patron.account.instance-hold.item.post",
       "displayName": "patron - create an instance level hold",
       "description": "Creates a hold on an item from the specified instance for this patron",
       "replaces": ["patron.hold.instance.item.post"]
     },
     {
-      "permissionName": "patron.account-hold-cancel.item.post",
+      "permissionName": "patron.account.hold-cancel.item.post",
       "displayName": "patron - remove a hold",
       "description": "Removes the specified hold",
       "replaces": ["patron.hold.cancel.item.post"]
     },
     {
-      "permissionName": "patron.account-instance-allowed-service-points.item.get",
+      "permissionName": "patron.account.instance-allowed-service-points.item.get",
       "displayName": "patron - get a list of allowed service points for a hold",
       "description": "Get a list of allowed service points for a hold",
       "replaces": ["patron.hold.allowed-service-points.get"]
     },
     {
-      "permissionName": "patron.account-item-allowed-service-points.item.get",
+      "permissionName": "patron.account.item-allowed-service-points.item.get",
       "displayName": "patron - get a list of allowed service points for a hold",
       "description": "Get a list of allowed service points for a hold",
       "replaces": ["patron.hold.allowed-service-points.get"]
@@ -227,11 +227,11 @@
         "patron.account-by-email.item.put",
         "patron.account.collection.get",
         "patron.account-renew.item.post",
-        "patron.account-hold.item.post",
-        "patron.account-instance-hold.item.post",
-        "patron.account-hold-cancel.item.post",
-        "patron.account-item-allowed-service-points.item.get",
-        "patron.account-instance-allowed-service-points.item.get",
+        "patron.account.item-hold.item.post",
+        "patron.account.instance-hold.item.post",
+        "patron.account.hold-cancel.item.post",
+        "patron.account.item-allowed-service-points.item.get",
+        "patron.account.instance-allowed-service-points.item.get",
         "patron.registration-status.item.get"
       ]
     }
