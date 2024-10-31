@@ -38,7 +38,7 @@ public class EcsTlrSettingsService {
   }
 
   private JsonObject handleEcsTlrSettingsFetchingError(Throwable throwable) {
-    if (throwable instanceof HttpException) {
+    if (throwable.getCause() instanceof HttpException) {
       logger.warn("handleErrorFromModTlr:: failed to fetch ECS TLR settings from mod-tlr",
         throwable);
       return null;
