@@ -140,7 +140,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   }
 
   @Test
-  void shouldThrowCompletionExceptionIsNotHttpException() {
+  void shouldThrowUnexpectedFetchingExceptionIsNotHttpException() {
     String responseWithErrorActual = given()
       .header(new Header(ECS_TLR_HEADER_NAME, NOT_FOUND_STATUS_HEADER_VALUE))
       .header(tenantHeader)
@@ -203,7 +203,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
           .end(EMPTY_STUB_RESPONSE);
       } else if (req.getHeader(ECS_TLR_HEADER_NAME).equals(NOT_FOUND_STATUS_HEADER_VALUE)) {
         req.response()
-          .setStatusCode(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt())
+          .setStatusCode(HttpStatus.HTTP_NOT_FOUND.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER);
       } else if (req.getHeader(ECS_TLR_HEADER_NAME).isEmpty()) {
         req.response()

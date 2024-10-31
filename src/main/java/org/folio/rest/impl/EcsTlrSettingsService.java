@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
