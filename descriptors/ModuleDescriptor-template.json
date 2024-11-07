@@ -59,7 +59,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/renew",
-          "permissionsRequired": ["patron.account-renew.item.post"],
+          "permissionsRequired": ["patron.renew.item.post"],
           "modulePermissions": [
             "circulation.renew-by-id.post"
           ]
@@ -167,10 +167,9 @@
       "description": "Get user account collection details"
     },
     {
-      "permissionName": "patron.account-renew.item.post",
+      "permissionName": "patron.renew.item.post",
       "displayName": "patron - renew a loan",
-      "description": "Renew a loan for this patron",
-      "replaces": ["patron.renew.item.post"]
+      "description": "Renew a loan for this patron"
     },
     {
       "permissionName": "patron.account.item-hold.item.post",
@@ -201,11 +200,6 @@
       "displayName": "patron - get a list of allowed service points for a hold",
       "description": "Get a list of allowed service points for a hold",
       "replaces": ["patron.hold.allowed-service-points.get"]
-    },
-    {
-      "permissionName": "patron.account.item.put",
-      "displayName": "update external_patron",
-      "description": "Update external_patron based on emailId"
     },
     {
       "permissionName": "patron.account-by-email.item.put",
