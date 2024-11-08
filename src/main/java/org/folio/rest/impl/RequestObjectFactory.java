@@ -55,14 +55,13 @@ class RequestObjectFactory {
           return null;
         }
         JsonObject holdJSON = new JsonObject()
+          .put(JSON_FIELD_REQUEST_TYPE, "Page")
           .put(JSON_FIELD_REQUEST_LEVEL, "Item")
-          .put(JSON_FIELD_REQUEST_TYPE, "Hold")
           .put("instanceId", context.getInstanceId())
           .put(JSON_FIELD_ITEM_ID, itemId)
           .put(JSON_FIELD_HOLDINGS_RECORD_ID,
             context.getItem().getString(JSON_FIELD_HOLDINGS_RECORD_ID))
           .put("requesterId", patronId)
-          .put("requestType", context.getRequestType().getValue())
           .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
           .put(JSON_FIELD_FULFILLMENT_PREFERENCE, JSON_VALUE_HOLD_SHELF)
           .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())

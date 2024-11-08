@@ -478,7 +478,7 @@ public  class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject holdJSON = new JsonObject()
-      .put(JSON_FIELD_REQUEST_TYPE, "Hold")
+      .put(JSON_FIELD_REQUEST_TYPE, "Page")
       .put(JSON_FIELD_REQUEST_LEVEL, "Title")
       .put(JSON_FIELD_INSTANCE_ID, instanceId)
       .put(JSON_FIELD_REQUESTER_ID, id)
