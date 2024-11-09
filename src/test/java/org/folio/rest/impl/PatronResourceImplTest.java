@@ -2264,13 +2264,13 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       }
 
       else if (req.path().equals("/tlr/settings")) {
-        String mockResponseFileName = ecsTlrFeatureEnabledInTlr
+        String mockResponseFilePath = ecsTlrFeatureEnabledInTlr
           ? "/ecs_tlr_module_feature_enabled.json"
           : "/ecs_tlr_module_feature_disabled.json";
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + mockResponseFileName));
+          .end(readMockFile(MOCK_DATA_FOLDER + mockResponseFilePath));
       } else if (req.path().equals("/circulation-settings-storage/circulation-settings")) {
         String mockResponseFileName = ecsTlrFeatureEnabledInCirculation
           ? "/circulation_storage_module_feature_enabled.json"
