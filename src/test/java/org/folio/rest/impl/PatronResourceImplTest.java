@@ -664,7 +664,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("itemRequestsParams")
-  public final void testPostPatronAccountByIdItemByItemIdRequests(
+  final void testPostPatronAccountByIdItemByItemIdRequests(
     boolean isEcsTlrFeatureEnabledInTlr, boolean isEcsTlrFeatureEnabledInCirculation) {
 
     ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
@@ -968,7 +968,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("tlrFeatureStates")
-  public final void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean tlrState,
+  final void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean tlrState,
     boolean noItemId, boolean isEcsTlrFeatureEnabledInTlr,
     boolean isEcsTlrFeatureEnabledInCirculation) {
 
