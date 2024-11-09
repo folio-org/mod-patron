@@ -63,6 +63,7 @@ import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
+import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILLMENT_PREFERENCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
@@ -74,9 +75,12 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_TYPE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_TOTAL_RECORDS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
+import static org.folio.rest.impl.Constants.JSON_VALUE_HOLD_SHELF;
 import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
 import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
 import static org.folio.rest.impl.HoldHelpers.getHold;
@@ -411,7 +415,10 @@ public  class PatronServicesResourceImpl implements Patron {
               asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(errors)));
             }
 
-            httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
+            new EcsTlrSettingsService()
+              .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
+              .thenApply(this::getPostCirculationRequestUrl)
+              .thenCompose(url -> httpClient.post(url, holdJSON, okapiHeaders))
               .thenApply(ResponseInterpreter::verifyAndExtractBody)
               .thenAccept(body -> {
                 final Item item = getItem(body);
@@ -428,6 +435,12 @@ public  class PatronServicesResourceImpl implements Patron {
           }
         }
       });
+  }
+
+  private String getPostCirculationRequestUrl(Boolean isEcsTlrFeatureEnabled) {
+    return BooleanUtils.isTrue(isEcsTlrFeatureEnabled)
+      ? UrlPath.URL_CIRCULATION_BFF_CREATE_REQUEST
+      : UrlPath.URL_CIRCULATION_CREATE_ITEM_REQUEST;
   }
 
   @Validate
@@ -465,11 +478,14 @@ public  class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject holdJSON = new JsonObject()
-        .put(JSON_FIELD_INSTANCE_ID, instanceId)
-        .put(JSON_FIELD_REQUESTER_ID, id)
-        .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-        .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-        .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
+      .put(JSON_FIELD_REQUEST_TYPE, "Page")
+      .put(JSON_FIELD_REQUEST_LEVEL, "Title")
+      .put(JSON_FIELD_INSTANCE_ID, instanceId)
+      .put(JSON_FIELD_REQUESTER_ID, id)
+      .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+      .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+      .put(JSON_FIELD_FULFILLMENT_PREFERENCE, JSON_VALUE_HOLD_SHELF)
+      .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
     if (entity.getExpirationDate() != null) {
       holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
@@ -477,7 +493,10 @@ public  class PatronServicesResourceImpl implements Patron {
     }
 
     try {
-      httpClient.post("/circulation/requests/instances", holdJSON, okapiHeaders)
+      new EcsTlrSettingsService()
+        .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
+        .thenApply(this::getPostCirculationRequestInstancesUrl)
+        .thenCompose(url -> httpClient.post(url, holdJSON, okapiHeaders))
           .thenApply(ResponseInterpreter::verifyAndExtractBody)
           .thenAccept(body -> {
             final Item item = getItem(body);
@@ -491,6 +510,12 @@ public  class PatronServicesResourceImpl implements Patron {
     } catch (Exception e) {
       asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
     }
+  }
+
+  private String getPostCirculationRequestInstancesUrl(Boolean isEcsTlrFeatureEnabled) {
+    return BooleanUtils.isTrue(isEcsTlrFeatureEnabled)
+      ? UrlPath.URL_CIRCULATION_BFF_CREATE_REQUEST
+      : UrlPath.URL_CIRCULATION_CREATE_INSTANCE_REQUEST;
   }
 
   @Override

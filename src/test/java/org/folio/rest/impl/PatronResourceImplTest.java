@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(VertxExtension.class)
-public class PatronResourceImplTest extends BaseResourceServiceTest{
+public class PatronResourceImplTest extends BaseResourceServiceTest {
   private final Logger logger = LogManager.getLogger();
   private final String patronAccountRegistrationStatus = "/patron/registration-status";
   private final String itemPath = "/item/{itemId}";
@@ -105,7 +105,14 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
   private static final String checkedoutItemId = "32e5757d-6566-466e-b69d-994eb33d2b73";
   private static final String sortByParam = "item.title/sort.ascending";
   private static final String holdingsRecordId = "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19";
+
+  private static final String REQUEST_LEVEL_ITEM = "Item";
+  private static final String REQUEST_LEVEL_TITLE = "Title";
+  private static final String REQUEST_TYPE_PAGE = "Page";
+
   private boolean tlrEnabled;
+  private boolean ecsTlrFeatureEnabledInTlr = false;
+  private boolean ecsTlrFeatureEnabledInCirculation = false;
 
 
   static {
@@ -657,7 +664,12 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
 
   @ParameterizedTest
   @MethodSource("itemRequestsParams")
-  public final void testPostPatronAccountByIdItemByItemIdRequests(String itemId, String responseFile) {
+  final void testPostPatronAccountByIdItemByItemIdRequests(
+    boolean isEcsTlrFeatureEnabledInTlr, boolean isEcsTlrFeatureEnabledInCirculation) {
+
+    ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
+    ecsTlrFeatureEnabledInCirculation = isEcsTlrFeatureEnabledInCirculation;
+
     logger.info("Testing creating a hold on an item for the specified user");
 
     final Response r = given()
@@ -667,7 +679,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
         .header(contentTypeHeader)
         .body(readMockFile(MOCK_DATA_FOLDER + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
         .pathParam("accountId", goodUserId)
-        .pathParam("itemId", itemId)
+        .pathParam("itemId", availableItemId)
       .when()
         .post(accountPath + itemPath + holdPath)
       .then()
@@ -678,13 +690,24 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
-    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER + responseFile));
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/response_testPostPatronAccountByIdItemByItemIdPage.json"));
 
     verifyRequests(expectedJson, json);
 
     // Test done
     logger.info("Test done");
   }
+
+  static Stream<Arguments> itemRequestsParams() {
+    return Stream.of(
+      Arguments.of(true, true),
+      Arguments.of(false, true),
+      Arguments.of(true, false),
+      Arguments.of(false, false)
+    );
+  }
+
 
   @Test
   public final void testCannotPostPatronAccountItemHoldByIdAndItemIdMissingField() {
@@ -945,12 +968,15 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
 
   @ParameterizedTest
   @MethodSource("tlrFeatureStates")
-  public final void testPostPatronAccountByIdInstanceByInstanceIdHold(String responseFile,
-    boolean tlrState, boolean noItemId) {
+  final void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean tlrState,
+    boolean noItemId, boolean isEcsTlrFeatureEnabledInTlr,
+    boolean isEcsTlrFeatureEnabledInCirculation) {
 
     logger.info("Testing creating a hold on an instance for the specified user");
 
     tlrEnabled = tlrState;
+    ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
+    ecsTlrFeatureEnabledInCirculation = isEcsTlrFeatureEnabledInCirculation;
 
     Headers headers;
 
@@ -975,12 +1001,26 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
       .extract()
         .asString();
 
-    final var expectedHold = new JsonObject(readMockFile(MOCK_DATA_FOLDER + responseFile));
+    final var expectedHold = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json"));
 
     verifyHold(expectedHold, new JsonObject(hold));
 
     // Test done
     logger.info("Test done");
+  }
+
+  static Stream<Arguments> tlrFeatureStates() {
+    return Stream.of(
+      Arguments.of(true, false, true, true),
+      Arguments.of(true, false, true, false),
+      Arguments.of(true, false, false, true),
+      Arguments.of(true, false, false, false),
+      Arguments.of(false, false, true, true),
+      Arguments.of(false, false, true, false),
+      Arguments.of(false, false, false, true),
+      Arguments.of(false, false, false, false)
+    );
   }
 
   @ParameterizedTest
@@ -1435,13 +1475,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
       .contentType(TEXT);
   }
 
-  static Stream<Arguments> tlrFeatureStates() {
-    return Stream.of(
-      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHoldNoItemId.json", true, true),
-      Arguments.of("/response_testPostPatronAccountByIdInstanceByInstanceIdHold.json", false, false)
-    );
-  }
-
   static Stream<Arguments> instanceHoldsFailureCodes() {
     return Stream.of(
         Arguments.of("400", 422, JSON),
@@ -1490,14 +1523,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
         Arguments.of("500", 500, "internal server error, contact administrator")
       );
   }
-
-  static Stream<Arguments> itemRequestsParams() {
-    return Stream.of(
-      Arguments.of(availableItemId, "/response_testPostPatronAccountByIdItemByItemIdPage.json" ),
-      Arguments.of(checkedoutItemId, "/response_testPostPatronAccountByIdItemByItemIdHold.json")
-    );
-  }
-
   private boolean verifyCharge(JsonObject expectedCharge, JsonObject actualCharge) {
     // Bad check, but each date is unique in the mock data.
     if (expectedCharge.getString("accrualDate").equals(actualCharge.getString("accrualDate"))) {
@@ -2239,15 +2264,21 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
       }
 
       else if (req.path().equals("/tlr/settings")) {
+        String mockResponseFilePath = ecsTlrFeatureEnabledInTlr
+          ? "/ecs_tlr_module_feature_enabled.json"
+          : "/ecs_tlr_module_feature_disabled.json";
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/ecs_tlr_module_feature_disabled.json"));
+          .end(readMockFile(MOCK_DATA_FOLDER + mockResponseFilePath));
       } else if (req.path().equals("/circulation-settings-storage/circulation-settings")) {
+        String mockResponseFileName = ecsTlrFeatureEnabledInCirculation
+          ? "/circulation_storage_module_feature_enabled.json"
+          : "/circulation_storage_module_feature_disabled.json";
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/circulation_storage_module_feature_enabled.json"));
+          .end(readMockFile(MOCK_DATA_FOLDER + mockResponseFileName));
       }
 
       else if (req.path().equals("/circulation/requests/allowed-service-points")) {
@@ -2325,7 +2356,28 @@ public class PatronResourceImplTest extends BaseResourceServiceTest{
               .end("A random exception occurred");
           }
         });
+      } else if (req.method() == HttpMethod.POST && req.uri().equals("/circulation-bff/requests")) {
+        req.bodyHandler(buffer -> {
+          JsonObject request  = new JsonObject(buffer);
+          String requestLevel = request.getString("requestLevel");
+          String requestType = request.getString("requestType");
+
+          if (REQUEST_TYPE_PAGE.equals(requestType)) {
+            if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
+              req.response()
+                .setStatusCode(201)
+                .putHeader("content-type", "application/json")
+                .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_page.json"));
+            } else if (REQUEST_LEVEL_TITLE.equals(requestLevel)) {
+              req.response()
+                .setStatusCode(201)
+                .putHeader("content-type", "application/json")
+                .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_titleLevel_page.json"));
+            }
+          }
+        });
       }
+
       else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
