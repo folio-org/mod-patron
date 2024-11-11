@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.integration.http.ResponseInterpreter;
@@ -34,7 +35,8 @@ public class EcsTlrSettingsService {
     return httpClient.get(ECS_TLR_SETTINGS_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .exceptionally(this::handleEcsTlrSettingsFetchingError)
-      .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders));
+      .thenCompose(body -> getEcsTlrFeatureValue(body, httpClient, okapiHeaders))
+      .thenApply(BooleanUtils::isTrue);
   }
 
   private JsonObject handleEcsTlrSettingsFetchingError(Throwable throwable) {
