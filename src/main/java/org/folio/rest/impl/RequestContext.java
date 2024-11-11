@@ -4,6 +4,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.jaxrs.model.Hold;
 
 public class RequestContext {
+  private final boolean isEcsTlrFeatureEnabled;
   private final String patronId;
   private final String itemId;
   private String instanceId;
@@ -14,11 +15,17 @@ public class RequestContext {
   private JsonObject requestPolicyId ;
   private RequestPolicy requestPolicy;
   private RequestType requestType;
+  private JsonObject holdRequest;
 
-  public RequestContext(String patronId, String itemId, Hold hold) {
+  public RequestContext(boolean isEcsTlrFeatureEnabled, String patronId, String itemId, Hold hold) {
+    this.isEcsTlrFeatureEnabled = isEcsTlrFeatureEnabled;
     this.patronId = patronId;
     this.itemId = itemId;
     this.hold = hold;
+  }
+
+  public boolean isEcsTlrFeatureEnabled() {
+    return isEcsTlrFeatureEnabled;
   }
 
   public String getPatronId() {
@@ -95,6 +102,15 @@ public class RequestContext {
 
   public RequestContext setRequestPolicy(RequestPolicy requestPolicy) {
     this.requestPolicy = requestPolicy;
+    return this;
+  }
+
+  public JsonObject getHoldRequest() {
+    return holdRequest;
+  }
+
+  public RequestContext setHoldRequest(JsonObject holdRequest) {
+    this.holdRequest = holdRequest;
     return this;
   }
 }
