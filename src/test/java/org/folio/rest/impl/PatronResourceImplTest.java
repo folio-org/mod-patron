@@ -701,12 +701,12 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @ParameterizedTest
-  @MethodSource("itemRequestsParams")
+  @MethodSource("nonPageRequestsParams")
   final void testPostPatronAccountByItemNonPageRequests(
-    boolean isEcsTlrFeatureEnabledInTlr, boolean isEcsTlrFeatureEnabledInCirculation) {
+    boolean isEcsTlrFeatureEnabledInTlr, String expectedHoldFile) {
 
     ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
-    ecsTlrFeatureEnabledInCirculation = isEcsTlrFeatureEnabledInCirculation;
+    ecsTlrFeatureEnabledInCirculation = false;
 
     logger.info("Testing creating a hold on an item for the specified user");
 
@@ -728,9 +728,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     final String body = r.getBody().asString();
     final JsonObject json = new JsonObject(body);
-    String expectedHoldFile = isEcsTlrFeatureEnabledInTlr
-      ? "/response_testPostPatronAccountByIdItemByItemIdPage.json"
-      : "/response_testPostPatronAccountByIdItemByItemIdHold.json";
     final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER + expectedHoldFile));
 
     verifyRequests(expectedJson, json);
@@ -745,6 +742,13 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       Arguments.of(false, true),
       Arguments.of(true, false),
       Arguments.of(false, false)
+    );
+  }
+
+  static Stream<Arguments> nonPageRequestsParams() {
+    return Stream.of(
+      Arguments.of(false, "/response_testPostPatronAccountByIdItemByItemIdHold.json"),
+      Arguments.of(true, "/response_testPostPatronAccountByIdItemByItemIdPage.json")
     );
   }
 
