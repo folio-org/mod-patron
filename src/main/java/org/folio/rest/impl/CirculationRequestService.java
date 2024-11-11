@@ -14,6 +14,9 @@ import static org.folio.rest.impl.Constants.JSON_VALUE_HOLD_SHELF;
 
 public class CirculationRequestService {
 
+  private CirculationRequestService() {
+  }
+
   public static CompletableFuture<Response> createItemLevelRequest(
     boolean isEcsTlrFeatureEnabled, JsonObject hold,
     VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {

@@ -109,6 +109,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private static final String REQUEST_LEVEL_ITEM = "Item";
   private static final String REQUEST_LEVEL_TITLE = "Title";
   private static final String REQUEST_TYPE_PAGE = "Page";
+  private static final String REQUEST_TYPE_HOLD = "Hold";
 
   private boolean tlrEnabled;
   private boolean ecsTlrFeatureEnabledInTlr = false;
@@ -692,6 +693,45 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     final JsonObject json = new JsonObject(body);
     final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
       "/response_testPostPatronAccountByIdItemByItemIdPage.json"));
+
+    verifyRequests(expectedJson, json);
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @ParameterizedTest
+  @MethodSource("itemRequestsParams")
+  final void testPostPatronAccountByItemNonPageRequests(
+    boolean isEcsTlrFeatureEnabledInTlr, boolean isEcsTlrFeatureEnabledInCirculation) {
+
+    ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
+    ecsTlrFeatureEnabledInCirculation = isEcsTlrFeatureEnabledInCirculation;
+
+    logger.info("Testing creating a hold on an item for the specified user");
+
+    final Response r = given()
+        .log().all()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .body(readMockFile(MOCK_DATA_FOLDER + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
+        .pathParam("accountId", goodUserId)
+        .pathParam("itemId", checkedoutItemId)
+      .when()
+        .post(accountPath + itemPath + holdPath)
+      .then()
+        .log().all()
+        .contentType(ContentType.JSON)
+        .statusCode(201)
+        .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    String expectedHoldFile = isEcsTlrFeatureEnabledInTlr
+      ? "/response_testPostPatronAccountByIdItemByItemIdPage.json"
+      : "/response_testPostPatronAccountByIdItemByItemIdHold.json";
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER + expectedHoldFile));
 
     verifyRequests(expectedJson, json);
 
@@ -2373,6 +2413,14 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
                 .setStatusCode(201)
                 .putHeader("content-type", "application/json")
                 .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_titleLevel_page.json"));
+            }
+          }
+          if (REQUEST_TYPE_HOLD.equals(requestType)) {
+            if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
+              req.response()
+                .setStatusCode(201)
+                .putHeader("content-type", "application/json")
+                .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_hold.json"));
             }
           }
         });
