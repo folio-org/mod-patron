@@ -1,15 +1,20 @@
 package org.folio.rest.impl;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILLMENT_PREFERENCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_GROUP;
 import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
+import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_TYPE;
 import static org.folio.rest.impl.Constants.JSON_VALUE_HOLD_SHELF;
 
 import java.util.Map;
@@ -40,37 +45,35 @@ class RequestObjectFactory {
     this.holdingsRecordRepository = new HoldingsRecordRepository(httpClient);
   }
 
-  CompletableFuture<JsonObject> createRequestByItem(String patronId, String itemId, Hold entity) {
+  CompletableFuture<RequestContext> createRequestByItem(boolean isEcsTlrFeatureEnabled, String patronId, String itemId, Hold entity) {
 
-    return completedFuture(new RequestContext(patronId, itemId, entity))
+    return completedFuture(new RequestContext(isEcsTlrFeatureEnabled, patronId, itemId, entity))
       .thenCompose(this::fetchItem)
       .thenCompose(this::fetchInstanceId)
       .thenCompose(this::fetchUser)
       .thenCompose(this::fetchRequestType)
       .thenApply(context -> {
-        if (context.getRequestType() != RequestType.NONE) {
-          final JsonObject holdJSON = new JsonObject()
-            .put("requestLevel", "Item")
-            .put("requestType", "Hold")
-            .put("instanceId", context.getInstanceId())
-            .put(JSON_FIELD_ITEM_ID, itemId)
-            .put(JSON_FIELD_HOLDINGS_RECORD_ID,
-              context.getItem().getString(JSON_FIELD_HOLDINGS_RECORD_ID))
-            .put("requesterId", patronId)
-            .put("requestType", context.getRequestType().getValue())
-            .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-            .put("fulfillmentPreference", JSON_VALUE_HOLD_SHELF)
-            .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-            .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
-
-          if (entity.getExpirationDate() != null) {
-            holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
-              new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
-          }
-          return holdJSON;
-        } else {
+        if (context.getRequestType() == RequestType.NONE) {
           return null;
         }
+        JsonObject holdJSON = new JsonObject()
+          .put(JSON_FIELD_REQUEST_LEVEL, "Item")
+          .put(JSON_FIELD_INSTANCE_ID, context.getInstanceId())
+          .put(JSON_FIELD_ITEM_ID, itemId)
+          .put(JSON_FIELD_HOLDINGS_RECORD_ID,
+            context.getItem().getString(JSON_FIELD_HOLDINGS_RECORD_ID))
+          .put(JSON_FIELD_REQUESTER_ID, patronId)
+          .put(JSON_FIELD_REQUEST_TYPE, context.getRequestType().getValue())
+          .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+          .put(JSON_FIELD_FULFILLMENT_PREFERENCE, JSON_VALUE_HOLD_SHELF)
+          .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+          .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
+
+        if (entity.getExpirationDate() != null) {
+          holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
+            new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
+        }
+        return context.setHoldRequest(holdJSON);
       });
   }
 
@@ -92,6 +95,9 @@ class RequestObjectFactory {
   }
 
   private CompletableFuture<RequestContext> fetchRequestType(RequestContext requestContext) {
+    if (requestContext.isEcsTlrFeatureEnabled()) {
+      requestContext.setRequestType(RequestType.PAGE);
+    }
     return CompletableFuture.completedFuture(createRequestPolicyIdCriteria(requestContext))
       .thenCompose(this::lookupRequestPolicyId)
       .thenCompose(this::getRequestPolicy)

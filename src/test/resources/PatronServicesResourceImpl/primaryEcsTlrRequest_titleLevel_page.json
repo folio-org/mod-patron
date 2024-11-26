@@ -1,0 +1,60 @@
+{
+  "id": "d0f032db-9579-443e-a2ac-6add937f4aa2",
+  "requestType": "Page",
+  "requestLevel": "Title",
+  "ecsRequestPhase": "Primary",
+  "requestDate": "2021-09-06T15:37:55.000+00:00",
+  "requestExpirationDate": "3000-01-30T08:16:30.000+00:00",
+  "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+  "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
+  "holdingsRecordId": "10cd3a5a-d36f-4c7a-bc4f-e1ae3cf820c9",
+  "itemId": "32e5757d-6566-466e-b69d-994eb33d2b62",
+  "status": "Open - Not yet filled",
+  "position": 1,
+  "patronComments" : "I need this book. Instance level comment.",
+  "instance": {
+    "title": "Something's Got a Hold on Me",
+    "contributorNames": [
+      {
+        "name": "Antoniou, Grigoris"
+      },
+      {
+        "name": "Van Harmelen, Frank"
+      }
+    ]
+  },
+  "item": {
+    "barcode": "test_barcode",
+    "location": {
+      "name": "Test location",
+      "libraryName": "Test library",
+      "code": "TEST"
+    },
+    "status": "Paged"
+  },
+  "requester": {
+    "firstName": "User",
+    "lastName": "Test",
+    "barcode": "tester",
+    "patronGroupId": "ad0bc554-d5bc-463c-85d1-5562127ae91b",
+    "patronGroup": {
+      "id": "ad0bc554-d5bc-463c-85d1-5562127ae91b",
+      "group": "graduate",
+      "desc": "Graduate Student"
+    }
+  },
+  "fulfillmentPreference": "Hold Shelf",
+  "pickupServicePointId": "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
+  "pickupServicePoint": {
+    "name": "Circ Desk 1",
+    "code": "cd1",
+    "discoveryDisplayName": "Circulation Desk -- Hallway",
+    "pickupLocation": true
+  },
+  "metadata": {
+    "createdDate": "2024-11-09T13:37:57.848+00:00",
+    "createdByUserId": "300db33c-a54a-46cc-8149-66f3d8d5ad01",
+    "updatedDate": "2024-11-09T13:37:58.599+00:00",
+    "updatedByUserId": "300db33c-a54a-46cc-8149-66f3d8d5ad01"
+  }
+}

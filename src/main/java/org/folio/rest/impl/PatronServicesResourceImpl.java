@@ -61,6 +61,8 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
+import static org.folio.rest.impl.CirculationRequestService.createItemLevelRequest;
+import static org.folio.rest.impl.CirculationRequestService.createTitleLevelRequest;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
@@ -383,8 +385,10 @@ public  class PatronServicesResourceImpl implements Patron {
 
     RequestObjectFactory requestFactory = new RequestObjectFactory(httpClient, okapiHeaders);
 
-    requestFactory.createRequestByItem(id, itemId, entity)
-      .whenComplete((holdJSON, throwable) -> {
+    new EcsTlrSettingsService()
+      .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
+      .thenCompose(isEcsTlrFeatureEnabled -> requestFactory.createRequestByItem(isEcsTlrFeatureEnabled, id, itemId, entity))
+      .whenComplete((context, throwable) -> {
         if (throwable != null) {
           Throwable cause = throwable.getCause();
           if (cause instanceof ValidationException) {
@@ -396,7 +400,7 @@ public  class PatronServicesResourceImpl implements Patron {
           }
         } else {
           try {
-            if (holdJSON == null) {
+            if (context == null) {
               final Errors errors = new Errors()
                 .withErrors(Collections.singletonList(
                   new Error()
@@ -409,9 +413,10 @@ public  class PatronServicesResourceImpl implements Patron {
                 ));
 
               asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(errors)));
+              return;
             }
 
-            httpClient.post("/circulation/requests", holdJSON, okapiHeaders)
+            createItemLevelRequest(context.isEcsTlrFeatureEnabled(), context.getHoldRequest(), httpClient, okapiHeaders)
               .thenApply(ResponseInterpreter::verifyAndExtractBody)
               .thenAccept(body -> {
                 final Item item = getItem(body);
@@ -465,11 +470,11 @@ public  class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final JsonObject holdJSON = new JsonObject()
-        .put(JSON_FIELD_INSTANCE_ID, instanceId)
-        .put(JSON_FIELD_REQUESTER_ID, id)
-        .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-        .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-        .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
+      .put(JSON_FIELD_INSTANCE_ID, instanceId)
+      .put(JSON_FIELD_REQUESTER_ID, id)
+      .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
+      .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
+      .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
     if (entity.getExpirationDate() != null) {
       holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
@@ -477,17 +482,19 @@ public  class PatronServicesResourceImpl implements Patron {
     }
 
     try {
-      httpClient.post("/circulation/requests/instances", holdJSON, okapiHeaders)
-          .thenApply(ResponseInterpreter::verifyAndExtractBody)
-          .thenAccept(body -> {
-            final Item item = getItem(body);
-            final Hold hold = getHold(body, item);
-            asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
-          })
-          .exceptionally(throwable -> {
-            asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
-            return null;
-          });
+      new EcsTlrSettingsService()
+        .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
+        .thenCompose(isEcsTlrFeatureEnabled -> createTitleLevelRequest(isEcsTlrFeatureEnabled, holdJSON, httpClient, okapiHeaders))
+        .thenApply(ResponseInterpreter::verifyAndExtractBody)
+        .thenAccept(body -> {
+          final Item item = getItem(body);
+          final Hold hold = getHold(body, item);
+          asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
+        })
+        .exceptionally(throwable -> {
+          asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
+          return null;
+        });
     } catch (Exception e) {
       asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond500WithTextPlain(e.getMessage())));
     }
