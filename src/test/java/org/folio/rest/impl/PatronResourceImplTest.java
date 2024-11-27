@@ -1969,11 +1969,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
                 .putHeader("content-type", "text/plain")
                 .end(badDataValue);
             }
-          } else if (tlrEnabled && req.getHeader("X-Okapi-TLR-No-Item-id") != null) {
-            req.response()
-              .setStatusCode(201)
-              .putHeader("content-type", "application/json")
-              .end(readMockFile(MOCK_DATA_FOLDER + "/instance_holds_tlr_create.json"));
           } else {
             req.response()
               .setStatusCode(201)
@@ -1983,6 +1978,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
+      } else if (req.path().equals("/circulation-bff/create-ecs-request-external")) {
+          req.response()
+            .setStatusCode(201)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/instance_holds_tlr_create.json"));
       } else if (req.path().equals("/circulation/requests/" + goodCancelHoldId)) {
         final String badDataValue = req.getHeader(okapiBadDataHeader);
         if (req.method() == HttpMethod.PUT) {
