@@ -1,0 +1,14 @@
+{
+  "response": "from-tlr",
+  "status": "Open - Not yet filled",
+  "pickupServicePointId": "servicePointId",
+  "requestDate": "2024-01-01",
+  "requestDate": 2,
+  "cancellationAdditionalInformation": "cancellationAdditionalInformation",
+  "cancellationReasonId": "cancellationReasonId",
+  "cancelledByUserId": "cancelledByUserId",
+  "patronComments": "tlr-response",
+  "instance" :  {
+    "id": "instanceId"
+  }
+}

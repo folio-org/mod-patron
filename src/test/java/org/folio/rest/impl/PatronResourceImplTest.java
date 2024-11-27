@@ -53,7 +53,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private final Logger logger = LogManager.getLogger();
   private final String patronAccountRegistrationStatus = "/patron/registration-status";
   private final String itemPath = "/item/{itemId}";
-  private final String holdPath = "/hold";
   private final String holdIdPath = "/{holdId}";
   private final String renewPath = "/renew";
   private final String cancelPath = "/cancel";
@@ -881,6 +880,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
+        .header(new Header("ABC", "ABCD"))
         .body(aBody)
         .pathParam("accountId", goodUserId)
         .pathParam("holdId", goodCancelHoldId)

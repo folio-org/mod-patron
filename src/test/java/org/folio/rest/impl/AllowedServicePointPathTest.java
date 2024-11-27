@@ -27,20 +27,11 @@ import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
 public class AllowedServicePointPathTest extends BaseResourceServiceTest {
-  public static final String CONTENT_TYPE_HEADER_NAME = "content-type";
-  private static final String CONTENT_TYPE_APPLICATION_JSON_HEADER = "application/json";
   private static final String CIRCULATION_STORAGE_HEADER_NAME = "x-okapi-bad-user-id";
   private static final String ECS_TLR_HEADER_NAME = "x-okapi-bad-data";
   private static final String EMPTY_HEADER = "";
   private static final String CIRCULATION_STORAGE_ENABLED_HEADER = "circulation-storage-true";
   private static final String CIRCULATION_STORAGE_DISABLED_HEADER = "circulation-storage-false";
-  private static final String ECS_TLR_ENABLED_HEADER = "ecs-tlr-true";
-  private static final String ECS_TLR_DISABLED_HEADER = "ecs-tlr-false";
-  private static final String ECS_TLR_MOD_ENABLED_JSON_FILE_PATH =
-    "/ecs_tlr_module_feature_enabled.json";
-  private static final String ECS_TLR_MOD_DISABLED_JSON_FILE_PATH =
-    "/ecs_tlr_module_feature_disabled.json";
-  private static final String ECS_TLR_SETTINGS_PATH = "/tlr/settings";
   private static final String CIRCULATION_STORAGE_MOD_ENABLED_JSON_FILE_PATH =
     "/circulation_storage_module_feature_enabled.json";
   private static final String CIRCULATION_STORAGE_MOD_DISABLED_JSON_FILE_PATH =
@@ -59,8 +50,6 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
     "/circulation-bff/requests/allowed-service-points";
   private static final String SERVICE_POINTS_CIRCULATION_RESPONSE_JSON =
     "/allowed_service_points_circulation_response.json";
-  private static final String ACCOUNT_ID_PATH_PARAM_KEY = "accountId";
-  private static final String INSTANCE_ID_PATH_PARAM_KEY = "instanceId";
 
   private static final String INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE = "status 500";
   private static final String NOT_FOUND_STATUS_HEADER_VALUE = "status 404";
@@ -182,6 +171,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
     );
   }
 
+  @Override
   public void mockData(HttpServerRequest req) {
     if (req.path().equals(CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_PATH)) {
       req.response()

@@ -30,7 +30,19 @@ public abstract class BaseResourceServiceTest {
   protected final String accountPath = "/patron/account/{accountId}";
   protected final String instancePath = "/instance/{instanceId}";
   protected final String allowedServicePointsPath = "/allowed-service-points";
-  private final Logger logger = LogManager.getLogger();
+  protected static final String INSTANCE_ID_PATH_PARAM_KEY = "instanceId";
+  protected static final String ACCOUNT_ID_PATH_PARAM_KEY = "accountId";
+  protected static final String CONTENT_TYPE_HEADER_NAME = "content-type";
+  protected static final String CONTENT_TYPE_APPLICATION_JSON_HEADER = "application/json";
+  protected final String holdPath = "/hold";
+  protected static final String ECS_TLR_ENABLED_HEADER = "ecs-tlr-true";
+  protected static final String ECS_TLR_DISABLED_HEADER = "ecs-tlr-false";
+  protected static final String ECS_TLR_MOD_ENABLED_JSON_FILE_PATH =
+    "/ecs_tlr_module_feature_enabled.json";
+  protected static final String ECS_TLR_MOD_DISABLED_JSON_FILE_PATH =
+    "/ecs_tlr_module_feature_disabled.json";
+  protected static final String ECS_TLR_SETTINGS_PATH = "/tlr/settings";
+  protected final Logger logger = LogManager.getLogger();
 
   protected abstract void mockData(HttpServerRequest req);
 

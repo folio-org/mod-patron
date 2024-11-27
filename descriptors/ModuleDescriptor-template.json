@@ -82,7 +82,8 @@
           "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/hold",
           "permissionsRequired": ["patron.hold.instance.item.post"],
           "modulePermissions": [
-            "circulation.requests.instances.item.post"
+            "circulation.requests.instances.item.post",
+            "circulation-bff.ecs-external-request.post"
           ]
         },
         {
@@ -146,6 +147,10 @@
     },
     {
       "id": "circulation-bff-requests",
+      "version": "1.0"
+    },
+    {
+      "id": "circulation-bff-request-external",
       "version": "1.0"
     }
   ],

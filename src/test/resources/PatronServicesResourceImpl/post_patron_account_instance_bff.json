@@ -1,0 +1,10 @@
+{
+  "item" : { },
+  "requestDate" : "0002-01-03T00:00:00.000+00:00",
+  "status" : "Open - Not yet filled",
+  "pickupLocationId" : "servicePointId",
+  "cancellationReasonId" : "cancellationReasonId",
+  "canceledByUserId" : "cancelledByUserId",
+  "cancellationAdditionalInformation" : "cancellationAdditionalInformation",
+  "patronComments" : "tlr-response"
+}
