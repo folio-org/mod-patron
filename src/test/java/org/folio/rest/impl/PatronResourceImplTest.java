@@ -110,7 +110,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private static final String REQUEST_TYPE_PAGE = "Page";
   private static final String REQUEST_TYPE_HOLD = "Hold";
 
-  private boolean tlrEnabled;
   private boolean ecsTlrFeatureEnabledInTlr = false;
   private boolean ecsTlrFeatureEnabledInCirculation = false;
 
