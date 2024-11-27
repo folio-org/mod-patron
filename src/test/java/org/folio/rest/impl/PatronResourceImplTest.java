@@ -880,7 +880,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         .header(tenantHeader)
         .header(urlHeader)
         .header(contentTypeHeader)
-        .header(new Header("ABC", "ABCD"))
         .body(aBody)
         .pathParam("accountId", goodUserId)
         .pathParam("holdId", goodCancelHoldId)
