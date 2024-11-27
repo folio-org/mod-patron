@@ -24,7 +24,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
 @ExtendWith(VertxExtension.class)
-public class CirculationRequestServiceTest extends BaseResourceServiceTest {
+class CirculationRequestServiceTest extends BaseResourceServiceTest {
 
   private static final String URL_PATH = "/patron/account/{accountId}/instance/{instanceId}/hold";
   private static final String TLR_SETTINGS_HEADER = "x-okapi-tlr-settings-header";
@@ -44,7 +44,7 @@ public class CirculationRequestServiceTest extends BaseResourceServiceTest {
     "/circulation-bff/create-ecs-request-external";
 
   @BeforeEach
-  public void setUp(Vertx vertx, VertxTestContext context) {
+  void setUp(Vertx vertx, VertxTestContext context) {
     setUpConnectionForTest(vertx, context);
     final Checkpoint mockOkapiStarted = context.checkpoint(1);
     final String host = "localhost";
@@ -54,7 +54,7 @@ public class CirculationRequestServiceTest extends BaseResourceServiceTest {
   }
 
   @AfterEach
-  public void tearDown(Vertx vertx, VertxTestContext context) {
+  void tearDown(Vertx vertx, VertxTestContext context) {
     closeConnectionForTest(vertx, context);
   }
 

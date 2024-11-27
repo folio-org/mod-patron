@@ -109,8 +109,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private static final String REQUEST_LEVEL_TITLE = "Title";
   private static final String REQUEST_TYPE_PAGE = "Page";
   private static final String REQUEST_TYPE_HOLD = "Hold";
-
-  private boolean tlrEnabled;
   private boolean ecsTlrFeatureEnabledInTlr = false;
   private boolean ecsTlrFeatureEnabledInCirculation = false;
 
@@ -1017,7 +1015,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     logger.info("Testing creating a hold on an instance for the specified user");
 
-    tlrEnabled = tlrState;
+    boolean tlrEnabled = tlrState;
     ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
     ecsTlrFeatureEnabledInCirculation = isEcsTlrFeatureEnabledInCirculation;
 
