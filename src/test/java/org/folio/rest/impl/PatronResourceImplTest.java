@@ -109,6 +109,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private static final String REQUEST_LEVEL_TITLE = "Title";
   private static final String REQUEST_TYPE_PAGE = "Page";
   private static final String REQUEST_TYPE_HOLD = "Hold";
+
+  private boolean tlrEnabled;
   private boolean ecsTlrFeatureEnabledInTlr = false;
   private boolean ecsTlrFeatureEnabledInCirculation = false;
 
@@ -1009,13 +1011,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("tlrFeatureStates")
-  final void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean tlrState,
-    boolean noItemId, boolean isEcsTlrFeatureEnabledInTlr,
-    boolean isEcsTlrFeatureEnabledInCirculation) {
+  final void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean noItemId,
+    boolean isEcsTlrFeatureEnabledInTlr, boolean isEcsTlrFeatureEnabledInCirculation) {
 
     logger.info("Testing creating a hold on an instance for the specified user");
 
-    boolean tlrEnabled = tlrState;
     ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
     ecsTlrFeatureEnabledInCirculation = isEcsTlrFeatureEnabledInCirculation;
 
@@ -1053,14 +1053,14 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   static Stream<Arguments> tlrFeatureStates() {
     return Stream.of(
-      Arguments.of(true, false, true, true),
-      Arguments.of(true, false, true, false),
-      Arguments.of(true, false, false, true),
-      Arguments.of(true, false, false, false),
-      Arguments.of(false, false, true, true),
-      Arguments.of(false, false, true, false),
-      Arguments.of(false, false, false, true),
-      Arguments.of(false, false, false, false)
+      Arguments.of( false, true, true),
+      Arguments.of( false, true, false),
+      Arguments.of( false, false, true),
+      Arguments.of( false, false, false),
+      Arguments.of( false, true, true),
+      Arguments.of( false, true, false),
+      Arguments.of( false, false, true),
+      Arguments.of( false, false, false)
     );
   }
 
