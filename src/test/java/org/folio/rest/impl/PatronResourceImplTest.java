@@ -53,7 +53,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private final Logger logger = LogManager.getLogger();
   private final String patronAccountRegistrationStatus = "/patron/registration-status";
   private final String itemPath = "/item/{itemId}";
-  private final String holdPath = "/hold";
   private final String holdIdPath = "/{holdId}";
   private final String renewPath = "/renew";
   private final String cancelPath = "/cancel";
@@ -111,7 +110,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private static final String REQUEST_TYPE_PAGE = "Page";
   private static final String REQUEST_TYPE_HOLD = "Hold";
 
-  private boolean tlrEnabled;
   private boolean ecsTlrFeatureEnabledInTlr = false;
   private boolean ecsTlrFeatureEnabledInCirculation = false;
 
@@ -1012,13 +1010,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("tlrFeatureStates")
-  final void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean tlrState,
-    boolean noItemId, boolean isEcsTlrFeatureEnabledInTlr,
-    boolean isEcsTlrFeatureEnabledInCirculation) {
+  final void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean noItemId,
+    boolean isEcsTlrFeatureEnabledInTlr, boolean isEcsTlrFeatureEnabledInCirculation) {
 
     logger.info("Testing creating a hold on an instance for the specified user");
 
-    tlrEnabled = tlrState;
     ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
     ecsTlrFeatureEnabledInCirculation = isEcsTlrFeatureEnabledInCirculation;
 
@@ -1056,14 +1052,14 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   static Stream<Arguments> tlrFeatureStates() {
     return Stream.of(
-      Arguments.of(true, false, true, true),
-      Arguments.of(true, false, true, false),
-      Arguments.of(true, false, false, true),
-      Arguments.of(true, false, false, false),
-      Arguments.of(false, false, true, true),
-      Arguments.of(false, false, true, false),
-      Arguments.of(false, false, false, true),
-      Arguments.of(false, false, false, false)
+      Arguments.of( false, true, true),
+      Arguments.of( false, true, false),
+      Arguments.of( false, false, true),
+      Arguments.of( false, false, false),
+      Arguments.of( false, true, true),
+      Arguments.of( false, true, false),
+      Arguments.of( false, false, true),
+      Arguments.of( false, false, false)
     );
   }
 
@@ -1970,11 +1966,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
                 .putHeader("content-type", "text/plain")
                 .end(badDataValue);
             }
-          } else if (tlrEnabled && req.getHeader("X-Okapi-TLR-No-Item-id") != null) {
-            req.response()
-              .setStatusCode(201)
-              .putHeader("content-type", "application/json")
-              .end(readMockFile(MOCK_DATA_FOLDER + "/instance_holds_tlr_create.json"));
           } else {
             req.response()
               .setStatusCode(201)
@@ -1984,6 +1975,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         } else {
           req.response().setStatusCode(500).end("Unexpected call: " + req.path());
         }
+      } else if (req.path().equals("/circulation-bff/create-ecs-request-external")) {
+          req.response()
+            .setStatusCode(201)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/instance_holds_tlr_create.json"));
       } else if (req.path().equals("/circulation/requests/" + goodCancelHoldId)) {
         final String badDataValue = req.getHeader(okapiBadDataHeader);
         if (req.method() == HttpMethod.PUT) {

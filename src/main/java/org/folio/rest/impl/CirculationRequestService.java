@@ -39,7 +39,7 @@ public class CirculationRequestService {
     }
 
     String url = isEcsTlrFeatureEnabled
-      ? UrlPath.URL_CIRCULATION_BFF_CREATE_REQUEST
+      ? UrlPath.CIRCULATION_BFF_CREATE_ECS_REQUEST_EXTERNAL
       : UrlPath.URL_CIRCULATION_CREATE_INSTANCE_REQUEST;
     return httpClient.post(url, hold, okapiHeaders);
   }

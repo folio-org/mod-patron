@@ -1,0 +1,16 @@
+{
+  "requestId": "d0f032db-9579-443e-a2ac-6add937f4aa2",
+  "item" : {
+    "itemId": "32e5757d-6566-466e-b69d-994eb33d2b73",
+    "instanceId" : "23611f0b-35cc-4f40-af09-75907d7cc421"
+  },
+  "requestDate": "2021-09-06T15:37:55.000+00:00",
+  "requestExpirationDate": "3000-01-30T08:16:30Z",
+  "fulfillmentPreference": "Hold Shelf",
+  "status": "Open - In transit",
+  "cancellationReasonId": "b548b182-55c2-4741-b169-616d9cd995a8",
+  "canceledByUserId": "ab5a5c57-491c-4b08-8f39-907810e14913",
+  "cancellationAdditionalInformation": "I don't want it anymore",
+  "canceledDate": "2021-11-06T16:23:30.262+0000",
+  "pickupLocationId": "c4c90014-c8c9-4ade-8f24-b5e313319f4b"
+}
