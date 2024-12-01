@@ -7,6 +7,31 @@
       "version": "6.1",
       "handlers": [
         {
+          "methods": ["POST"],
+          "pathPattern": "/patron",
+          "permissionsRequired": ["patron.item.post"],
+          "modulePermissions": [
+            "staging-users.item.post"
+          ]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/patron/registration-status/{emailId}",
+          "permissionsRequired": ["patron.registration-status.item.get"],
+          "modulePermissions": [
+            "users.item.get",
+            "users.collection.get"
+          ]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/patron/account",
+          "permissionsRequired": ["patron.account.collection.get"],
+          "modulePermissions": [
+            "users.collection.get"
+          ]
+        },
+        {
           "methods": ["GET"],
           "pathPattern": "/patron/account/{accountId}",
           "permissionsRequired": ["patron.account.item.get"],
@@ -24,34 +49,9 @@
           ]
         },
         {
-          "methods": ["POST"],
-          "pathPattern": "/patron",
-          "permissionsRequired": ["patron.staging-users.item.post"],
-          "modulePermissions": [
-            "staging-users.item.post"
-          ]
-        },
-        {
-          "methods": ["GET"],
-          "pathPattern": "/patron/account",
-          "permissionsRequired": ["patron.account.item.get"],
-          "modulePermissions": [
-            "users.collection.get"
-          ]
-        },
-        {
-          "methods": ["GET"],
-          "pathPattern": "/patron/registration-status/{emailId}",
-          "permissionsRequired": ["patron.registration-status.item.get"],
-          "modulePermissions": [
-            "users.item.get",
-            "users.collection.get"
-          ]
-        },
-        {
           "methods": ["PUT"],
           "pathPattern": "/patron/account/by-email/{email}",
-          "permissionsRequired": ["patron.account.item.put"],
+          "permissionsRequired": ["patron.account-by-email.item.put"],
           "modulePermissions": [
             "users.item.put"
           ]
@@ -67,7 +67,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/hold",
-          "permissionsRequired": ["patron.hold.item.post"],
+          "permissionsRequired": ["patron.account.item-hold.item.post"],
           "modulePermissions": [
             "circulation.requests.item.post",
             "inventory.items.item.get",
@@ -80,7 +80,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/hold",
-          "permissionsRequired": ["patron.hold.instance.item.post"],
+          "permissionsRequired": ["patron.account.instance-hold.item.post"],
           "modulePermissions": [
             "circulation.requests.instances.item.post"
           ]
@@ -88,7 +88,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron/account/{accountId}/hold/{holdId}/cancel",
-          "permissionsRequired": ["patron.hold.cancel.item.post"],
+          "permissionsRequired": ["patron.account.hold-cancel.item.post"],
           "modulePermissions": [
             "circulation.requests.item.put",
             "circulation.requests.item.get"
@@ -97,7 +97,7 @@
         {
           "methods": ["GET"],
           "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/allowed-service-points",
-          "permissionsRequired": ["patron.hold.allowed-service-points.get"],
+          "permissionsRequired": ["patron.account.instance-allowed-service-points.item.get"],
           "modulePermissions": [
             "circulation.requests.allowed-service-points.get"
           ]
@@ -105,7 +105,7 @@
         {
           "methods": ["GET"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/allowed-service-points",
-          "permissionsRequired": ["patron.hold.allowed-service-points.get"],
+          "permissionsRequired": ["patron.account.item-allowed-service-points.item.get"],
           "modulePermissions": [
             "circulation.requests.allowed-service-points.get"
           ]
@@ -151,9 +151,20 @@
   ],
   "permissionSets": [
     {
+      "permissionName" : "patron.item.post",
+      "displayName" : "staging-users post",
+      "description" : "Post a staging user records",
+      "replaces": ["patron.staging-users.item.post"]
+    },
+    {
       "permissionName": "patron.account.item.get",
       "displayName": "patron - get account details",
       "description": "Get user account details"
+    },
+    {
+      "permissionName": "patron.account.collection.get",
+      "displayName": "patron - get account collection details",
+      "description": "Get user account collection details"
     },
     {
       "permissionName": "patron.renew.item.post",
@@ -161,29 +172,39 @@
       "description": "Renew a loan for this patron"
     },
     {
-      "permissionName": "patron.hold.item.post",
+      "permissionName": "patron.account.item-hold.item.post",
       "displayName": "patron - create a hold",
-      "description": "Creates a hold on the specified item for this patron"
+      "description": "Creates a hold on the specified item for this patron",
+      "replaces": ["patron.hold.item.post"]
     },
     {
-      "permissionName": "patron.hold.instance.item.post",
+      "permissionName": "patron.account.instance-hold.item.post",
       "displayName": "patron - create an instance level hold",
-      "description": "Creates a hold on an item from the specified instance for this patron"
+      "description": "Creates a hold on an item from the specified instance for this patron",
+      "replaces": ["patron.hold.instance.item.post"]
     },
     {
-      "permissionName": "patron.hold.cancel.item.post",
+      "permissionName": "patron.account.hold-cancel.item.post",
       "displayName": "patron - remove a hold",
-      "description": "Removes the specified hold"
+      "description": "Removes the specified hold",
+      "replaces": ["patron.hold.cancel.item.post"]
     },
     {
-      "permissionName": "patron.hold.allowed-service-points.get",
+      "permissionName": "patron.account.instance-allowed-service-points.item.get",
       "displayName": "patron - get a list of allowed service points for a hold",
-      "description": "Get a list of allowed service points for a hold"
+      "description": "Get a list of allowed service points for a hold",
+      "replaces": ["patron.hold.allowed-service-points.get"]
     },
     {
-      "permissionName": "patron.account.item.put",
-      "displayName": "update external_patron",
-      "description": "Update external_patron based on emailId"
+      "permissionName": "patron.account.item-allowed-service-points.item.get",
+      "displayName": "patron - get a list of allowed service points for a hold",
+      "description": "Get a list of allowed service points for a hold",
+      "replaces": ["patron.hold.allowed-service-points.get"]
+    },
+    {
+      "permissionName": "patron.account-by-email.item.put",
+      "displayName": "update account by email",
+      "description": "Update account based on emailId"
     },
     {
       "permissionName": "patron.registration-status.item.get",
@@ -196,20 +217,17 @@
       "description": "Entire set of permissions needed to use patron",
       "subPermissions": [
         "patron.account.item.get",
-        "patron.renew.item.post",
-        "patron.hold.item.post",
-        "patron.hold.instance.item.post",
-        "patron.hold.cancel.item.post",
-        "patron.hold.allowed-service-points.get",
-        "patron.account.item.post",
         "patron.account.item.put",
+        "patron.account-by-email.item.put",
+        "patron.account.collection.get",
+        "patron.account-renew.item.post",
+        "patron.account.item-hold.item.post",
+        "patron.account.instance-hold.item.post",
+        "patron.account.hold-cancel.item.post",
+        "patron.account.item-allowed-service-points.item.get",
+        "patron.account.instance-allowed-service-points.item.get",
         "patron.registration-status.item.get"
       ]
-    },
-    {
-      "permissionName" : "patron.staging-users.item.post",
-      "displayName" : "staging-users post",
-      "description" : "Post a staging user records"
     }
   ],
   "launchDescriptor": {
