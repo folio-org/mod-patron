@@ -1,3 +1,8 @@
+# 6.2.1 2024-12-01
+
+* Create request: switch to mod-circulation-bff (MODPATRON-183)
+* Review and cleanup Module Descriptor for mod-patron (MODPATRON-184)
+
 # 6.2.0 2024-10-30
 
 * Update to RMB 35.3.0 (MODPATRON-189)
