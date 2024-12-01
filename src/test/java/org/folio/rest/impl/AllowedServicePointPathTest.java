@@ -63,13 +63,19 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   private static final String INSTANCE_ID_PATH_PARAM_KEY = "instanceId";
 
   private static final String INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE = "status 500";
+  private static final String NOT_FOUND_STATUS_HEADER_VALUE = "status 404";
   private static final String INTERNAL_SERVER_ERROR_STATUS_LINE =
     "HTTP/1.1 500 Internal Server Error";
-  private static final String RESPONSE_WITH_ERROR_EXPECTED =
+  private static final String ECS_TLR_RESPONSE_WITH_ERROR_EXPECTED =
     "org.folio.patron.rest.exceptions.UnexpectedFetchingException: " +
       "java.util.concurrent.CompletionException: " +
       "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
       "exceeded while executing GET /tlr/settings for server null";
+  private static final String CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED =
+    "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
+      "exceeded while executing GET /circulation-settings-storage/circulation-settings for server " +
+      "null";
+  public static final String EMPTY_STUB_RESPONSE = "null";
 
   @BeforeEach
   public void setUp(Vertx vertx, VertxTestContext context) {
@@ -113,7 +119,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   }
 
   @Test
-  void shouldThrowRuntimeExceptionIfBaseExceptionIsNotHttpException() {
+  void shouldThrowRuntimeExceptionIfBaseExceptionIsHttpException() {
     String responseWithErrorActual = given()
       .header(new Header(ECS_TLR_HEADER_NAME, INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE))
       .header(tenantHeader)
@@ -130,9 +136,27 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
       .extract()
       .asString();
 
-    assertEquals(RESPONSE_WITH_ERROR_EXPECTED, responseWithErrorActual);
+    assertEquals(CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED, responseWithErrorActual);
   }
 
+  @Test
+  void shouldThrowUnexpectedFetchingExceptionIsNotHttpException() {
+    String responseWithErrorActual = given()
+      .header(new Header(ECS_TLR_HEADER_NAME, NOT_FOUND_STATUS_HEADER_VALUE))
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam(ACCOUNT_ID_PATH_PARAM_KEY, goodUserId)
+      .pathParam(INSTANCE_ID_PATH_PARAM_KEY, goodInstanceId)
+      .log().all()
+      .when()
+      .get(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .extract()
+      .asString();
+
+    assertEquals(ECS_TLR_RESPONSE_WITH_ERROR_EXPECTED, responseWithErrorActual);
+  }
 
   private static Stream<Arguments> headerValueToFileName() {
     return Stream.of(
@@ -172,9 +196,14 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
         .end(readMockFile(MOCK_DATA_FOLDER +
           ALLOWED_SERVICE_POINTS_CIRCULATION_BFF_JSON_FILE_PATH));
     } else if (req.path().equals(ECS_TLR_SETTINGS_PATH)) {
-      if(req.getHeader(ECS_TLR_HEADER_NAME).equals(INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE)) {
+      if (req.getHeader(ECS_TLR_HEADER_NAME).equals(INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE)) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt())
+          .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
+          .end(EMPTY_STUB_RESPONSE);
+      } else if (req.getHeader(ECS_TLR_HEADER_NAME).equals(NOT_FOUND_STATUS_HEADER_VALUE)) {
+        req.response()
+          .setStatusCode(HttpStatus.HTTP_NOT_FOUND.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER);
       } else if (req.getHeader(ECS_TLR_HEADER_NAME).isEmpty()) {
         req.response()
