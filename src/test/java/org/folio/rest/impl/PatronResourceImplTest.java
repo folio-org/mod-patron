@@ -119,6 +119,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
       "io.vertx.core.logging.Log4j2LogDelegateFactory");
+//    System.setProperty("SECURE_TENANT_ID", "patronresourceimpltest");
   }
 
   @BeforeEach
@@ -734,6 +735,35 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     // Test done
     logger.info("Test done");
+  }
+
+  @Test
+  final void postPatronAccountItemHoldByIdAndItemIdShouldCallRequestMediatedIfTenantIsSecure() {
+    System.setProperty("SECURE_TENANT_ID", "patronresourceimpltest");
+    ecsTlrFeatureEnabledInTlr = true;
+
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", checkedoutItemId)
+      .when()
+      .post(accountPath + itemPath + holdPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(201)
+      .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/response_testPostPatronAccountByIdItemByItemIdHold.json"));
+
+    verifyRequests(expectedJson, json);
   }
 
   static Stream<Arguments> itemRequestsParams() {
@@ -2426,6 +2456,23 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
                 .putHeader("content-type", "application/json")
                 .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_hold.json"));
             }
+          }
+        });
+      } else if (req.method() == HttpMethod.POST && req.uri().equals("/requests-mediated/mediated-requests")) {
+        req.bodyHandler(buffer -> {
+          JsonObject request  = new JsonObject(buffer);
+          String requestLevel = request.getString("requestLevel");
+
+          if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_itemLevel_hold.json"));
+          } else if (REQUEST_LEVEL_TITLE.equals(requestLevel)) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_titleLevel_hold.json"));
           }
         });
       }
