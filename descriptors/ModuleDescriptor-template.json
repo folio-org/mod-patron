@@ -74,7 +74,9 @@
             "inventory-storage.holdings.item.get",
             "users.item.get",
             "circulation.rules.request-policy.get",
-            "circulation-storage.request-policies.item.get"
+            "circulation-storage.request-policies.item.get",
+            "circulation-bff.ecs-request-external.item.post",
+            "requests-mediated.mediated-request.item.post"
           ]
         },
         {
@@ -82,7 +84,9 @@
           "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/hold",
           "permissionsRequired": ["patron.account.instance-hold.item.post"],
           "modulePermissions": [
-            "circulation.requests.instances.item.post"
+            "circulation.requests.instances.item.post",
+            "circulation-bff.ecs-request-external.item.post",
+            "requests-mediated.mediated-request.item.post"
           ]
         },
         {
@@ -145,8 +149,12 @@
       "version": "1.0"
     },
     {
-      "id": "circulation-bff-requests",
+      "id": "circulation-bff-request-external",
       "version": "1.0"
+    },
+    {
+      "id": "requests-mediated",
+      "version": "2.0"
     }
   ],
   "permissionSets": [
