@@ -1,23 +1,23 @@
 {
   "requestLevel": "Item",
   "requestType": "Hold",
-  "requestDate": "2024-11-30T00:12:00Z",
-  "patronComments": "Test comment",
-  "requesterId": "3c22820f-4a05-4b92-a50c-de4d433fb630",
+  "requestDate": "2024-10-14T00:12:00Z",
+  "patronComments": "My comment",
+  "requesterId": "9addcbc1-20c3-4dbb-965f-3df73fe8fa9f",
   "requester": {
-    "firstName": "TestName",
-    "lastName": "TestLastName",
+    "firstName": "Roman",
+    "lastName": "Barannyk",
     "barcode": "1"
   },
-  "instanceId": "d637a57b-fbc0-4478-b929-eb528a46c696",
+  "instanceId": "7a767f78-0bfb-426d-b41b-829c2cd6d7a0",
   "instance": {
-    "title": "Test instance",
+    "title": "Roman's instance 2",
     "identifiers": []
   },
-  "holdingsRecordId": "77aad88f-40a1-4073-b00c-16b055a79ccd",
-  "itemId": "fe77e7b8-effd-4cbd-8034-90cb1cb24e1a",
+  "holdingsRecordId": "2cb61b4e-1425-4e1d-b741-f1cced796e4d",
+  "itemId": "1d33f2c2-11a8-498c-ada1-73a5435bfd2f",
   "item": {
-    "barcode": "1"
+    "barcode": "112"
   },
   "mediatedWorkflow": "Private request",
   "status": "New - Awaiting confirmation",
