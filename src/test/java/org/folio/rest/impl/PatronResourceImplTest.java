@@ -119,7 +119,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
       "io.vertx.core.logging.Log4j2LogDelegateFactory");
-//    System.setProperty("SECURE_TENANT_ID", "patronresourceimpltest");
   }
 
   @BeforeEach
@@ -738,7 +737,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void postPatronAccountItemHoldByIdAndItemIdShouldCallRequestMediatedIfTenantIsSecure() {
+  final void postPatronAccountItemHoldByIdShouldCallRequestMediatedIfTenantIsSecure() {
     System.setProperty("SECURE_TENANT_ID", "patronresourceimpltest");
     ecsTlrFeatureEnabledInTlr = true;
 
