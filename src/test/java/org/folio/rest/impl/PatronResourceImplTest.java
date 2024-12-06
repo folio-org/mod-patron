@@ -736,6 +736,36 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     logger.info("Test done");
   }
 
+  @Test
+  final void postPatronAccountItemHoldByIdShouldCallRequestMediatedIfTenantIsSecure() {
+    System.setProperty("SECURE_TENANT_ID", "patronresourceimpltest");
+    ecsTlrFeatureEnabledInTlr = true;
+
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", checkedoutItemId)
+      .when()
+      .post(accountPath + itemPath + holdPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(201)
+      .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/response_testPostPatronAccountByIdItemByItemIdHoldMedRequest.json"));
+
+    verifyRequests(expectedJson, json);
+    System.setProperty("SECURE_TENANT_ID", "");
+  }
+
   static Stream<Arguments> itemRequestsParams() {
     return Stream.of(
       Arguments.of(true, true),
@@ -2400,7 +2430,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
               .end("A random exception occurred");
           }
         });
-      } else if (req.method() == HttpMethod.POST && req.uri().equals("/circulation-bff/requests")) {
+      } else if (req.method() == HttpMethod.POST && req.uri().equals("/circulation-bff/create-ecs-request-external")) {
         req.bodyHandler(buffer -> {
           JsonObject request  = new JsonObject(buffer);
           String requestLevel = request.getString("requestLevel");
@@ -2426,6 +2456,23 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
                 .putHeader("content-type", "application/json")
                 .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_hold.json"));
             }
+          }
+        });
+      } else if (req.method() == HttpMethod.POST && req.uri().equals("/requests-mediated/mediated-requests")) {
+        req.bodyHandler(buffer -> {
+          JsonObject request  = new JsonObject(buffer);
+          String requestLevel = request.getString("requestLevel");
+
+          if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_itemLevel_hold_response.json"));
+          } else if (REQUEST_LEVEL_TITLE.equals(requestLevel)) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_titleLevel_hold.json"));
           }
         });
       }

@@ -1,0 +1,41 @@
+{
+  "requestLevel": "Item",
+  "requestType": "Hold",
+  "requestDate": "2024-10-14T00:12:00Z",
+  "patronComments": "My comment",
+  "requesterId": "9addcbc1-20c3-4dbb-965f-3df73fe8fa9f",
+  "requester": {
+    "firstName": "Roman",
+    "lastName": "Barannyk",
+    "barcode": "1"
+  },
+  "instanceId": "7a767f78-0bfb-426d-b41b-829c2cd6d7a0",
+  "instance": {
+    "title": "Roman's instance 2",
+    "identifiers": []
+  },
+  "holdingsRecordId": "2cb61b4e-1425-4e1d-b741-f1cced796e4d",
+  "itemId": "1d33f2c2-11a8-498c-ada1-73a5435bfd2f",
+  "item": {
+    "barcode": "112"
+  },
+  "mediatedWorkflow": "Private request",
+  "status": "New - Awaiting confirmation",
+  "cancellationReasonId": null,
+  "cancelledByUserId": null,
+  "cancellationAdditionalInformation": null,
+  "cancelledDate": null,
+  "position": 1,
+  "fulfillmentPreference": "Hold Shelf",
+  "deliveryAddressTypeId": null,
+  "pickupServicePointId": "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
+  "searchIndex": {
+    "callNumberComponents": {
+      "callNumber": "F16.H37 A2 9001",
+      "prefix": "pre",
+      "suffix": "suf"
+    },
+    "shelvingOrder": "F 416 H37 A2 59001",
+    "pickupServicePointName": "Circ Desk 1"
+  }
+}

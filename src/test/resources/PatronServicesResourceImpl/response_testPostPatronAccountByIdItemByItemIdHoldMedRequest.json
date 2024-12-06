@@ -1,0 +1,13 @@
+{
+  "requestId":"8e3964a9-9937-4c44-9208-a369e93958c0",
+  "item":{
+    "instanceId":"7a767f78-0bfb-426d-b41b-829c2cd6d7a0",
+    "itemId":"1d33f2c2-11a8-498c-ada1-73a5435bfd2f",
+    "title":"Roman's instance 2"
+  },
+  "requestDate":"2024-10-14T00:12:00.000+00:00",
+  "status":"New - Awaiting confirmation",
+  "pickupLocationId":"3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
+  "queuePosition":1,
+  "patronComments":"My comment"
+}
