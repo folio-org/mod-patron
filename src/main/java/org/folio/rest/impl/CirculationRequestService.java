@@ -33,7 +33,7 @@ public class CirculationRequestService {
       isEcsTlrFeatureEnabled, hold);
 
     return httpClient.post(defineUrlForRequest(isEcsTlrFeatureEnabled,
-      isModuleSecure(okapiHeaders), false), hold, okapiHeaders);
+      isTenantSecure(okapiHeaders), false), hold, okapiHeaders);
   }
 
   public static CompletableFuture<Response> createTitleLevelRequest(
@@ -51,7 +51,7 @@ public class CirculationRequestService {
     }
 
     return httpClient.post(defineUrlForRequest(isEcsTlrFeatureEnabled,
-      isModuleSecure(okapiHeaders), true), hold, okapiHeaders);
+      isTenantSecure(okapiHeaders), true), hold, okapiHeaders);
   }
 
   private static String defineUrlForRequest(boolean isEcsTlrFeatureEnabled,
@@ -61,6 +61,7 @@ public class CirculationRequestService {
       "isModuleSecure: {}, isTitleLevel: {}", isEcsTlrFeatureEnabled, isModuleSecure, isTitleLevel);
 
     if (isEcsTlrFeatureEnabled) {
+      log.info("defineUrlForRequest:: ecsTlrFeature enabled");
       return isModuleSecure
         ? UrlPath.CREATE_MEDIATED_REQUEST_URL
         : UrlPath.CIRCULATION_BFF_CREATE_ECS_REQUEST_EXTERNAL;
@@ -71,7 +72,15 @@ public class CirculationRequestService {
       : UrlPath.URL_CIRCULATION_CREATE_ITEM_REQUEST;
   }
 
-  private static boolean isModuleSecure(Map<String, String> okapiHeaders) {
-    return getProperty(SECURE_TENANT_ID, EMPTY).equals(okapiHeaders.get(OKAPI_TENANT));
+  private static boolean isTenantSecure(Map<String, String> okapiHeaders) {
+    String secureProperty = getProperty(SECURE_TENANT_ID, EMPTY);
+    log.info("isTenantSecure:: secureProperty: {}", secureProperty);
+    String tenantFromHeaders = okapiHeaders.get(OKAPI_TENANT);
+    log.info("isTenantSecure:: tenantFromHeaders: {}", tenantFromHeaders);
+
+    var result = getProperty(SECURE_TENANT_ID, EMPTY).equals(tenantFromHeaders);
+    log.info("isModuleSecure:: result: {}", result);
+
+    return result;
   }
 }
