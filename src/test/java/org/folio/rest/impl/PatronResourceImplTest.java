@@ -14,6 +14,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,15 +45,19 @@ import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@ExtendWith(VertxExtension.class)
+@ExtendWith({VertxExtension.class, SystemStubsExtension.class})
 public class PatronResourceImplTest extends BaseResourceServiceTest {
+  private static final String TENANT = "patronresourceimpltest";
+  private static final String SECURE_TENANT_VARIABLE = "SECURE_TENANT_ID";
   private final Logger logger = LogManager.getLogger();
   private final String patronAccountRegistrationStatus = "/patron/registration-status";
   private final String itemPath = "/item/{itemId}";
@@ -115,6 +123,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private boolean ecsTlrFeatureEnabledInTlr = false;
   private boolean ecsTlrFeatureEnabledInCirculation = false;
 
+  @SystemStub
+  private EnvironmentVariables environmentVariables;
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
@@ -734,6 +744,36 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     // Test done
     logger.info("Test done");
+  }
+
+  @Test
+  final void postPatronAccountItemHoldByIdShouldCallRequestMediatedIfTenantIsSecure() {
+    environmentVariables.set(SECURE_TENANT_VARIABLE, TENANT);
+    assertThat(System.getenv(SECURE_TENANT_VARIABLE), is(TENANT));
+    ecsTlrFeatureEnabledInTlr = true;
+
+    final Response response = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/request_testPostPatronAccountByIdItemByItemIdHold.json"))
+      .pathParam("accountId", goodUserId)
+      .pathParam("itemId", checkedoutItemId)
+      .when()
+      .post(accountPath + itemPath + holdPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(201)
+      .extract().response();
+
+    final String body = response.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/response_testPostPatronAccountByIdItemByItemIdHoldMedRequest.json"));
+
+    verifyRequests(expectedJson, json);
   }
 
   static Stream<Arguments> itemRequestsParams() {
@@ -2400,7 +2440,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
               .end("A random exception occurred");
           }
         });
-      } else if (req.method() == HttpMethod.POST && req.uri().equals("/circulation-bff/requests")) {
+      } else if (req.method() == HttpMethod.POST && req.uri().equals("/circulation-bff/create-ecs-request-external")) {
         req.bodyHandler(buffer -> {
           JsonObject request  = new JsonObject(buffer);
           String requestLevel = request.getString("requestLevel");
@@ -2426,6 +2466,23 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
                 .putHeader("content-type", "application/json")
                 .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_hold.json"));
             }
+          }
+        });
+      } else if (req.method() == HttpMethod.POST && req.uri().equals("/requests-mediated/mediated-requests")) {
+        req.bodyHandler(buffer -> {
+          JsonObject request  = new JsonObject(buffer);
+          String requestLevel = request.getString("requestLevel");
+
+          if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_itemLevel_hold_response.json"));
+          } else if (REQUEST_LEVEL_TITLE.equals(requestLevel)) {
+            req.response()
+              .setStatusCode(201)
+              .putHeader("content-type", "application/json")
+              .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_titleLevel_hold.json"));
           }
         });
       }

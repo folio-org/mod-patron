@@ -1,3 +1,8 @@
+# 6.2.2 2024-12-09
+
+* Create mediated requests in secure tenant (MODPATRON-194)
+* Request types - failsafe approach for ECS requesting (MODPATRON-192)
+
 # 6.2.1 2024-12-01
 
 * Create request: switch to mod-circulation-bff (MODPATRON-183)
