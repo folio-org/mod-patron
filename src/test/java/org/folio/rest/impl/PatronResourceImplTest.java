@@ -752,7 +752,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     assertThat(System.getenv(SECURE_TENANT_VARIABLE), is(TENANT));
     ecsTlrFeatureEnabledInTlr = true;
 
-    final Response r = given()
+    final Response response = given()
       .log().all()
       .header(tenantHeader)
       .header(urlHeader)
@@ -768,7 +768,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .statusCode(201)
       .extract().response();
 
-    final String body = r.getBody().asString();
+    final String body = response.getBody().asString();
     final JsonObject json = new JsonObject(body);
     final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
       "/response_testPostPatronAccountByIdItemByItemIdHoldMedRequest.json"));
