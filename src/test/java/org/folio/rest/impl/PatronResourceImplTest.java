@@ -14,6 +14,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,6 +28,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,15 +46,19 @@ import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@ExtendWith(VertxExtension.class)
+@ExtendWith({VertxExtension.class, SystemStubsExtension.class})
 public class PatronResourceImplTest extends BaseResourceServiceTest {
+  private static final String TENANT = "patronresourceimpltest";
+  private static final String SECURE_TENANT_VARIABLE = "SECURE_TENANT_ID";
   private final Logger logger = LogManager.getLogger();
   private final String patronAccountRegistrationStatus = "/patron/registration-status";
   private final String itemPath = "/item/{itemId}";
@@ -115,6 +124,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private boolean ecsTlrFeatureEnabledInTlr = false;
   private boolean ecsTlrFeatureEnabledInCirculation = false;
 
+  @SystemStub
+  private EnvironmentVariables environmentVariables;
 
   static {
     System.setProperty("vertx.logger-delegate-factory-class-name",
@@ -738,7 +749,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @Test
   final void postPatronAccountItemHoldByIdShouldCallRequestMediatedIfTenantIsSecure() {
-    System.setProperty("SECURE_TENANT_ID", "patronresourceimpltest");
+    environmentVariables.set(SECURE_TENANT_VARIABLE, TENANT);
+    assertThat(System.getenv(SECURE_TENANT_VARIABLE), is(TENANT));
     ecsTlrFeatureEnabledInTlr = true;
 
     final Response r = given()
@@ -763,7 +775,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       "/response_testPostPatronAccountByIdItemByItemIdHoldMedRequest.json"));
 
     verifyRequests(expectedJson, json);
-    System.setProperty("SECURE_TENANT_ID", "");
   }
 
   static Stream<Arguments> itemRequestsParams() {

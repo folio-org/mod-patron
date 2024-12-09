@@ -10,7 +10,6 @@ import org.folio.integration.http.VertxOkapiHttpClient;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.System.getProperty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILLMENT_PREFERENCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
@@ -73,14 +72,11 @@ public class CirculationRequestService {
   }
 
   private static boolean isTenantSecure(Map<String, String> okapiHeaders) {
-    String secureProperty = getProperty(SECURE_TENANT_ID, EMPTY);
-    log.info("isTenantSecure:: secureProperty: {}", secureProperty);
+    String secureTenantId = System.getenv().getOrDefault(SECURE_TENANT_ID, EMPTY);
+    log.info("isTenantSecure:: SECURE_TENANT_ID: {}", secureTenantId);
     String tenantFromHeaders = okapiHeaders.get(OKAPI_TENANT);
     log.info("isTenantSecure:: tenantFromHeaders: {}", tenantFromHeaders);
 
-    var result = getProperty(SECURE_TENANT_ID, EMPTY).equals(tenantFromHeaders);
-    log.info("isModuleSecure:: result: {}", result);
-
-    return result;
+    return secureTenantId.equals(tenantFromHeaders);
   }
 }
