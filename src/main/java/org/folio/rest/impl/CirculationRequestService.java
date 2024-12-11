@@ -31,7 +31,7 @@ public class CirculationRequestService {
     log.info("createItemLevelRequest:: parameters isEcsTlrFeatureEnabled: {}, hold: {}",
       isEcsTlrFeatureEnabled, hold);
 
-    return httpClient.postNoTimeout(defineUrlForRequest(isEcsTlrFeatureEnabled,
+    return httpClient.postExtendedTimeout(defineUrlForRequest(isEcsTlrFeatureEnabled,
       isTenantSecure(okapiHeaders), false), hold, okapiHeaders);
   }
 
@@ -49,7 +49,7 @@ public class CirculationRequestService {
         .put(JSON_FIELD_FULFILLMENT_PREFERENCE, JSON_VALUE_HOLD_SHELF);
     }
 
-    return httpClient.postNoTimeout(defineUrlForRequest(isEcsTlrFeatureEnabled,
+    return httpClient.postExtendedTimeout(defineUrlForRequest(isEcsTlrFeatureEnabled,
       isTenantSecure(okapiHeaders), true), hold, okapiHeaders);
   }
 

@@ -20,6 +20,7 @@ public class VertxOkapiHttpClient {
   private static final Logger logger = LogManager.getLogger();
 
   private static final long DEFAULT_TIMEOUT_MS = 5000;
+  private static final long EXTENDED_TIMEOUT_MS = 20000;
   private final WebClient client;
 
   public VertxOkapiHttpClient(WebClient client) {
@@ -36,10 +37,10 @@ public class VertxOkapiHttpClient {
     return get(path, queryParameters, okapiHeaders, DEFAULT_TIMEOUT_MS);
   }
 
-  public CompletableFuture<Response> getNoTimeout(String path,
+  public CompletableFuture<Response> getExtendedTimeout(String path,
     Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
-    return get(path, queryParameters, okapiHeaders, 0);
+    return get(path, queryParameters, okapiHeaders, EXTENDED_TIMEOUT_MS);
   }
 
   public CompletableFuture<Response> get(String path,
@@ -51,12 +52,8 @@ public class VertxOkapiHttpClient {
 
     final var request = client
       .get(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
-
-    if (timeout > 0) {
-      logger.info("get:: applying timeout {}", timeout);
-      request.timeout(timeout);
-    }
+      .putHeaders(buildHeaders(okapiHeaders))
+      .timeout(timeout);
 
     queryParameters.forEach(request::addQueryParam);
 
@@ -72,10 +69,10 @@ public class VertxOkapiHttpClient {
     return post(path, body, okapiHeaders, DEFAULT_TIMEOUT_MS);
   }
 
-  public CompletableFuture<Response> postNoTimeout(String path, JsonObject body,
+  public CompletableFuture<Response> postExtendedTimeout(String path, JsonObject body,
     Map<String, String> okapiHeaders) {
 
-    return post(path, body, okapiHeaders, 0);
+    return post(path, body, okapiHeaders, EXTENDED_TIMEOUT_MS);
   }
 
   public CompletableFuture<Response> post(String path, JsonObject body,
@@ -87,12 +84,8 @@ public class VertxOkapiHttpClient {
 
     final var request = client
       .post(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders));
-
-    if (timeout > 0) {
-      logger.info("post:: applying timeout {}", timeout);
-      request.timeout(timeout);
-    }
+      .putHeaders(buildHeaders(okapiHeaders))
+      .timeout(timeout);
 
     return makeRequestWithBody(request, body);
   }
