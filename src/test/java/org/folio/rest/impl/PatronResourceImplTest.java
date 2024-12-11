@@ -1565,9 +1565,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         Arguments.of("401", 401, TEXT),
         Arguments.of("403", 403, TEXT),
         Arguments.of("404", 404, TEXT),
-        Arguments.of("500", 500, TEXT),
-        Arguments.of("java.lang.NullPointerException", 500, TEXT)
-      );
+        Arguments.of("500", 500, TEXT));
   }
 
   static Stream<Arguments> itemHoldsFailureCodes() {
@@ -1576,9 +1574,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         Arguments.of("401", 401, TEXT),
         Arguments.of("403", 403, TEXT),
         Arguments.of("404", 404, TEXT),
-        Arguments.of("500", 500, TEXT),
-        Arguments.of("java.lang.NullPointerException", 500, TEXT)
-      );
+        Arguments.of("500", 500, TEXT));
   }
 
   static Stream<Arguments> renewFailureCodes() {

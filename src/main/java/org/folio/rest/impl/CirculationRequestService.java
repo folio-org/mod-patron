@@ -28,10 +28,10 @@ public class CirculationRequestService {
     boolean isEcsTlrFeatureEnabled, JsonObject hold,
     VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
 
-    log.debug("createItemLevelRequest:: parameters isEcsTlrFeatureEnabled: {}, hold: {}",
+    log.info("createItemLevelRequest:: parameters isEcsTlrFeatureEnabled: {}, hold: {}",
       isEcsTlrFeatureEnabled, hold);
 
-    return httpClient.post(defineUrlForRequest(isEcsTlrFeatureEnabled,
+    return httpClient.postExtendedTimeout(defineUrlForRequest(isEcsTlrFeatureEnabled,
       isTenantSecure(okapiHeaders), false), hold, okapiHeaders);
   }
 
@@ -39,7 +39,7 @@ public class CirculationRequestService {
     boolean isEcsTlrFeatureEnabled, JsonObject hold,
     VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
 
-    log.debug("createTitleLevelRequest:: parameters isEcsTlrFeatureEnabled: {}, hold: {}",
+    log.info("createTitleLevelRequest:: parameters isEcsTlrFeatureEnabled: {}, hold: {}",
       isEcsTlrFeatureEnabled, hold);
 
     if (isEcsTlrFeatureEnabled) {
@@ -49,26 +49,34 @@ public class CirculationRequestService {
         .put(JSON_FIELD_FULFILLMENT_PREFERENCE, JSON_VALUE_HOLD_SHELF);
     }
 
-    return httpClient.post(defineUrlForRequest(isEcsTlrFeatureEnabled,
+    return httpClient.postExtendedTimeout(defineUrlForRequest(isEcsTlrFeatureEnabled,
       isTenantSecure(okapiHeaders), true), hold, okapiHeaders);
   }
 
   private static String defineUrlForRequest(boolean isEcsTlrFeatureEnabled,
-    boolean isModuleSecure, boolean isTitleLevel) {
+    boolean isTenantSecure, boolean isTitleLevel) {
 
-    log.debug("defineUrlForRequest:: parameters isEcsTlrFeatureEnabled: {}, " +
-      "isModuleSecure: {}, isTitleLevel: {}", isEcsTlrFeatureEnabled, isModuleSecure, isTitleLevel);
+    log.info("defineUrlForRequest:: parameters isEcsTlrFeatureEnabled: {}, " +
+      "isModuleSecure: {}, isTitleLevel: {}", isEcsTlrFeatureEnabled, isTenantSecure,
+      isTitleLevel);
 
     if (isEcsTlrFeatureEnabled) {
-      log.info("defineUrlForRequest:: ecsTlrFeature enabled");
-      return isModuleSecure
+      String url = isTenantSecure
         ? UrlPath.CREATE_MEDIATED_REQUEST_URL
         : UrlPath.CIRCULATION_BFF_CREATE_ECS_REQUEST_EXTERNAL;
+
+      log.info("defineUrlForRequest:: ECS request feature is enabled. URL is {}", url);
+
+      return url;
     }
 
-    return isTitleLevel
+    String url = isTitleLevel
       ? UrlPath.URL_CIRCULATION_CREATE_INSTANCE_REQUEST
       : UrlPath.URL_CIRCULATION_CREATE_ITEM_REQUEST;
+
+    log.info("defineUrlForRequest:: ECS request feature is disabled. URL is {}", url);
+
+    return url;
   }
 
   private static boolean isTenantSecure(Map<String, String> okapiHeaders) {
