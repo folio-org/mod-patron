@@ -50,7 +50,7 @@ public class VertxOkapiHttpClient {
     final var request = client
       .post(url.getPort(), url.getHost(), url.getPath())
       .putHeaders(buildHeaders(okapiHeaders))
-      .timeout(5000);
+      .timeout(10000);
 
     return makeRequestWithBody(request, body);
   }

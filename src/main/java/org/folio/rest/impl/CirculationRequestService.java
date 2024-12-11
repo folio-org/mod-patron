@@ -54,14 +54,14 @@ public class CirculationRequestService {
   }
 
   private static String defineUrlForRequest(boolean isEcsTlrFeatureEnabled,
-    boolean isModuleSecure, boolean isTitleLevel) {
+    boolean isTenantSecure, boolean isTitleLevel) {
 
     log.debug("defineUrlForRequest:: parameters isEcsTlrFeatureEnabled: {}, " +
-      "isModuleSecure: {}, isTitleLevel: {}", isEcsTlrFeatureEnabled, isModuleSecure, isTitleLevel);
+      "isTenantSecure: {}, isTitleLevel: {}", isEcsTlrFeatureEnabled, isTenantSecure, isTitleLevel);
 
     if (isEcsTlrFeatureEnabled) {
       log.info("defineUrlForRequest:: ecsTlrFeature enabled");
-      return isModuleSecure
+      return isTenantSecure
         ? UrlPath.CREATE_MEDIATED_REQUEST_URL
         : UrlPath.CIRCULATION_BFF_CREATE_ECS_REQUEST_EXTERNAL;
     }
