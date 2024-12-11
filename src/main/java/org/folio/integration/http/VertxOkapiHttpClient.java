@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
@@ -14,6 +17,9 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class VertxOkapiHttpClient {
+  private static final Logger logger = LogManager.getLogger();
+
+  private static final long DEFAULT_TIMEOUT_MS = 5000;
   private final WebClient client;
 
   public VertxOkapiHttpClient(WebClient client) {
@@ -27,12 +33,30 @@ public class VertxOkapiHttpClient {
   public CompletableFuture<Response> get(String path,
     Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
 
+    return get(path, queryParameters, okapiHeaders, DEFAULT_TIMEOUT_MS);
+  }
+
+  public CompletableFuture<Response> getNoTimeout(String path,
+    Map<String, String> queryParameters, Map<String, String> okapiHeaders) {
+
+    return get(path, queryParameters, okapiHeaders, 0);
+  }
+
+  public CompletableFuture<Response> get(String path,
+    Map<String, String> queryParameters, Map<String, String> okapiHeaders, long timeout) {
+
+    logger.info("get:: path {}, timeout {}", path, timeout);
+
     URL url = buildUrl(path, okapiHeaders);
 
     final var request = client
       .get(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders))
-      .timeout(5000);
+      .putHeaders(buildHeaders(okapiHeaders));
+
+    if (timeout > 0) {
+      logger.info("get:: applying timeout {}", timeout);
+      request.timeout(timeout);
+    }
 
     queryParameters.forEach(request::addQueryParam);
 
@@ -45,12 +69,30 @@ public class VertxOkapiHttpClient {
   public CompletableFuture<Response> post(String path, JsonObject body,
     Map<String, String> okapiHeaders) {
 
+    return post(path, body, okapiHeaders, DEFAULT_TIMEOUT_MS);
+  }
+
+  public CompletableFuture<Response> postNoTimeout(String path, JsonObject body,
+    Map<String, String> okapiHeaders) {
+
+    return post(path, body, okapiHeaders, 0);
+  }
+
+  public CompletableFuture<Response> post(String path, JsonObject body,
+    Map<String, String> okapiHeaders, long timeout) {
+
+    logger.info("post:: path {}, timeout {}", path, timeout);
+
     URL url = buildUrl(path, okapiHeaders);
 
     final var request = client
       .post(url.getPort(), url.getHost(), url.getPath())
-      .putHeaders(buildHeaders(okapiHeaders))
-      .timeout(5000);
+      .putHeaders(buildHeaders(okapiHeaders));
+
+    if (timeout > 0) {
+      logger.info("post:: applying timeout {}", timeout);
+      request.timeout(timeout);
+    }
 
     return makeRequestWithBody(request, body);
   }
