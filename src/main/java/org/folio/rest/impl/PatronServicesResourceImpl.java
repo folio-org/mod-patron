@@ -529,7 +529,7 @@ public  class PatronServicesResourceImpl implements Patron {
     new EcsTlrSettingsService()
       .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
       .thenApply(this::getAllowedServicePointsUrl)
-      .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
+      .thenCompose(path -> httpClient.getExtendedTimeout(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getAllowedServicePoints)
       .whenComplete((allowedServicePoints, throwable) -> {
