@@ -1,3 +1,7 @@
+# 6.2.3 2024-12-12
+
+* Add extended timeouts for `POST` requests and `GET` allowed service points (MODPATRON-197)
+
 # 6.2.2 2024-12-09
 
 * Create mediated requests in secure tenant (MODPATRON-194)
