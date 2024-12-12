@@ -487,11 +487,13 @@ public  class PatronServicesResourceImpl implements Patron {
         .thenCompose(isEcsTlrFeatureEnabled -> createTitleLevelRequest(isEcsTlrFeatureEnabled, holdJSON, httpClient, okapiHeaders))
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenAccept(body -> {
+          logger.info("postPatronAccountInstanceHoldByIdAndInstanceId:: body: {}", body);
           final Item item = getItem(body);
           final Hold hold = getHold(body, item);
           asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));
         })
         .exceptionally(throwable -> {
+          logger.warn("postPatronAccountInstanceHoldByIdAndInstanceId:: request creation failed: ", throwable);
           asyncResultHandler.handle(handleInstanceHoldPOSTError(throwable));
           return null;
         });
@@ -527,7 +529,7 @@ public  class PatronServicesResourceImpl implements Patron {
     new EcsTlrSettingsService()
       .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
       .thenApply(this::getAllowedServicePointsUrl)
-      .thenCompose(path -> httpClient.get(path, queryParameters, okapiHeaders))
+      .thenCompose(path -> httpClient.getExtendedTimeout(path, queryParameters, okapiHeaders))
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getAllowedServicePoints)
       .whenComplete((allowedServicePoints, throwable) -> {
@@ -592,9 +594,12 @@ public  class PatronServicesResourceImpl implements Patron {
       itemJson = new JsonObject();
     }
     JsonObject instanceJson = body.getJsonObject(JSON_FIELD_INSTANCE);
+    if (instanceJson != null) {
+      itemJson.put(JSON_FIELD_TITLE, instanceJson.getString(JSON_FIELD_TITLE));
+      itemJson.put(JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(JSON_FIELD_CONTRIBUTOR_NAMES));
+    }
     itemJson.put(JSON_FIELD_INSTANCE_ID, body.getString(JSON_FIELD_INSTANCE_ID));
-    itemJson.put(JSON_FIELD_TITLE, instanceJson.getString(JSON_FIELD_TITLE));
-    itemJson.put(JSON_FIELD_CONTRIBUTORS, instanceJson.getJsonArray(JSON_FIELD_CONTRIBUTOR_NAMES));
+
     return getItem(body.getString(JSON_FIELD_ITEM_ID), itemJson);
   }
 
