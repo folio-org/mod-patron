@@ -139,15 +139,13 @@ public  class PatronServicesResourceImpl implements Patron {
 
   private CompletableFuture<Response> handlePostStagingUserSuccessResponse(org.folio.integration.http.Response response) {
     StagingUser stagingUser = Json.decodeValue(response.body, StagingUser.class);
-    switch (response.statusCode) {
-      case 201:
-        return CompletableFuture.completedFuture(PostPatronResponse.respond201WithApplicationJson(stagingUser));
-      default:
-        return CompletableFuture.completedFuture(
-          Response.status(response.statusCode).entity(response.body).build()
-        );
+    if (response.statusCode == 201) {
+      return CompletableFuture.completedFuture(PostPatronResponse.respond201WithApplicationJson(stagingUser));
     }
-  }
+      return CompletableFuture.completedFuture(
+        Response.status(response.statusCode).entity(response.body).build()
+      );
+    }
 
   @Override
   public void getPatronRegistrationStatusByEmailId(String email, Map<String, String> okapiHeaders,
