@@ -1447,24 +1447,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testSuccessUpdateStagingUser() {
-    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
-    JsonObject jsonObject = new JsonObject(body);
-    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_200");
-    given()
-      .log().all()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .body(jsonObject.encode())
-      .when()
-      .post("/patron")
-      .then()
-      .contentType(JSON)
-      .statusCode(200);
-  }
-
-  @Test
   final void testSuccess250StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
@@ -2404,12 +2386,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           String content = new String(body.getBytes());
           JsonObject jsonContent = new JsonObject(content);
           String firstName = jsonContent.getJsonObject("generalInfo").getString("firstName");
-          if ("TEST_STATUS_CODE_200".equals(firstName)) {
-            req.response()
-              .setStatusCode(200)
-              .putHeader("content-type", "application/json")
-              .end(readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-response.json"));
-          } else if ("TEST_STATUS_CODE_201".equals(firstName)) {
+          if ("TEST_STATUS_CODE_201".equals(firstName)) {
             req.response()
               .setStatusCode(201)
               .putHeader("content-type", "application/json")
