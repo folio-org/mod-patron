@@ -140,8 +140,6 @@ public  class PatronServicesResourceImpl implements Patron {
   private CompletableFuture<Response> handlePostStagingUserSuccessResponse(org.folio.integration.http.Response response) {
     StagingUser stagingUser = Json.decodeValue(response.body, StagingUser.class);
     switch (response.statusCode) {
-      case 200:
-        return CompletableFuture.completedFuture(PostPatronResponse.respond200WithApplicationJson(stagingUser));
       case 201:
         return CompletableFuture.completedFuture(PostPatronResponse.respond201WithApplicationJson(stagingUser));
       default:
