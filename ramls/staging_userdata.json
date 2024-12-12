@@ -18,6 +18,10 @@
       "description": "whether tier-1 or tier-2",
       "enum": ["TIER-1", "TIER-2"]
     },
+    "externalSystemId": {
+      "description": "A unique ID (UUID) that corresponds to an external authority",
+      "type": "string"
+    },
     "generalInfo": {
       "type": "object",
       "description": "General info of staging user",
