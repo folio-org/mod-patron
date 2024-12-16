@@ -134,6 +134,8 @@ public  class PatronServicesResourceImpl implements Patron {
       case 422:
         Errors errors = Json.decodeValue(response.body, Errors.class);
         return CompletableFuture.completedFuture(PostPatronResponse.respond422WithApplicationJson(errors));
+      case 405:
+        return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond405WithTextPlain(response.body));
       case 500:
       default:
         return CompletableFuture.completedFuture(PostPatronResponse.respond500WithTextPlain(response.body));

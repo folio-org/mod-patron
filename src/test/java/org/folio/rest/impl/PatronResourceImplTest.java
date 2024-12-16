@@ -1502,6 +1502,25 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
+  final void testFailure404PutStagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_404");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .put("/patron/" + UUID.randomUUID().toString())
+      .then()
+      .statusCode(404)
+      .body(containsString("Staging user not found"))
+      .contentType(TEXT);
+  }
+
+  @Test
   final void testFailure422StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
@@ -1558,6 +1577,23 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .then()
       .statusCode(500)
       .contentType(TEXT);
+  }
+
+  @Test
+  final void testExceptionPutStagingUser() {
+    String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
+    JsonObject jsonObject = new JsonObject(body);
+    jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_EXCEPTIONALLY_PART");
+    given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(jsonObject.encode())
+      .when()
+      .put("/patron")
+      .then()
+      .statusCode(405);
   }
 
   static Stream<Arguments> instanceHoldsFailureCodes() {
@@ -2415,6 +2451,12 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
               .setStatusCode(400)
               .putHeader("content-type", "text/plain")
               .end("A bad exception occurred");
+          }
+          else if ("TEST_STATUS_CODE_404".equals(firstName)) {
+            req.response()
+              .setStatusCode(404)
+              .putHeader("content-type", "text/plain")
+              .end("Staging user not found");
           } else if ("TEST_STATUS_CODE_422".equals(firstName)) {
             req.response()
               .setStatusCode(422)

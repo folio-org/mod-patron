@@ -504,6 +504,12 @@ traits:
           body:
            text/plain:
             example: internal server error, contact administrator
+        405:
+          description: |
+            Internal server error, e.g. due to missing externalSystemId in the parameter
+          body:
+            text/plain:
+              example: the request's HTTP method is not supported by the server or the resource.
         404:
           description: |
            Staging user with a given externalSystemID not found
