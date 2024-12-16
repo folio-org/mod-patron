@@ -108,7 +108,7 @@ public  class PatronServicesResourceImpl implements Patron {
     final var stagingUserRepository = new StagingUserRepository(HttpClientFactory.getHttpClient(vertxContext.owner()));
 
     stagingUserRepository.createStagingUser(entity, okapiHeaders)
-      .thenCompose(this::handleCreateStagingUserResponse)
+      .thenCompose(this::handleStagingUserResponse)
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
         logger.error("postPatron:: Failed to create external patron", throwable);
@@ -117,17 +117,20 @@ public  class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private CompletableFuture<Response> handleCreateStagingUserResponse(org.folio.integration.http.Response response) {
+
+  private CompletableFuture<Response> handleStagingUserResponse(org.folio.integration.http.Response response) {
     if (!response.isSuccess()) {
-      return handlePostStagingUserErrorResponse(response);
+      return handleStagingUserErrorResponse(response);
     }
-    return handlePostStagingUserSuccessResponse(response);
+    return handleStagingUserSuccessResponse(response);
   }
 
-  private CompletableFuture<Response> handlePostStagingUserErrorResponse(org.folio.integration.http.Response response) {
+  private CompletableFuture<Response> handleStagingUserErrorResponse(org.folio.integration.http.Response response) {
     switch (response.statusCode) {
       case 400:
         return CompletableFuture.completedFuture(PostPatronResponse.respond400WithTextPlain(response.body));
+      case 404:
+        return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond404WithTextPlain(response.body));
       case 422:
         Errors errors = Json.decodeValue(response.body, Errors.class);
         return CompletableFuture.completedFuture(PostPatronResponse.respond422WithApplicationJson(errors));
@@ -137,9 +140,9 @@ public  class PatronServicesResourceImpl implements Patron {
     }
   }
 
-  private CompletableFuture<Response> handlePostStagingUserSuccessResponse(org.folio.integration.http.Response response) {
+  private CompletableFuture<Response> handleStagingUserSuccessResponse(org.folio.integration.http.Response response) {
     StagingUser stagingUser = Json.decodeValue(response.body, StagingUser.class);
-    if (response.statusCode == 201) {
+    if (response.statusCode == 201 || response.statusCode == 200) {
       return CompletableFuture.completedFuture(PostPatronResponse.respond201WithApplicationJson(stagingUser));
     }
       return CompletableFuture.completedFuture(
@@ -162,6 +165,24 @@ public  class PatronServicesResourceImpl implements Patron {
           email, throwable);
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
           .respond500WithTextPlain(throwable.getCause().getMessage())));
+        return null;
+      });
+  }
+
+  @Override
+  public void putPatronByExternalSystemId(String externalSystemId,
+                                          StagingUser entity,
+                                          Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                          Context vertxContext) {
+    logger.info("putPatronByExternalSystemId:: Trying to update staging user");
+    final var stagingUserRepository = new StagingUserRepository(HttpClientFactory.getHttpClient(vertxContext.owner()));
+
+    stagingUserRepository.updateStagingUser(externalSystemId, entity, okapiHeaders)
+      .thenCompose(this::handleStagingUserResponse)
+      .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+      .exceptionally(throwable -> {
+        logger.error("putPatronByExternalSystemId:: Failed to update external patron", throwable);
+        asyncResultHandler.handle(Future.succeededFuture(PostPatronResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
   }
@@ -456,6 +477,7 @@ public  class PatronServicesResourceImpl implements Patron {
         }
       });
   }
+
 
   @Validate
   @Override

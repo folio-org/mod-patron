@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "6.2",
+      "version": "6.3",
       "handlers": [
         {
           "methods": ["POST"],
@@ -13,6 +13,11 @@
           "modulePermissions": [
             "staging-users.item.post"
           ]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/patron/{externalSystemId}",
+          "permissionsRequired": ["patron.item.put"]
         },
         {
           "methods": ["GET"],
@@ -163,6 +168,11 @@
       "displayName" : "staging-users post",
       "description" : "Post a staging user records",
       "replaces": ["patron.staging-users.item.post"]
+    },
+    {
+      "permissionName" : "patron.item.put",
+      "displayName" : "staging-users put",
+      "description" : "Put a staging user records"
     },
     {
       "permissionName": "patron.account.item.get",

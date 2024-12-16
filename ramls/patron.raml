@@ -466,3 +466,48 @@ traits:
             text/plain:
               example: internal server error, contact administrator
 
+  /{externalSystemId}:
+    description: |
+      Updates external patron based on external system Id.
+    uriParameters:
+      externalSystemId:
+        description: The UUID of a FOLIO user
+        type: string
+        pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+    put:
+      is: [ validate ]
+      body:
+        application/json:
+          type: stagingUser
+          example: !include examples/staging_user.sample
+      responses:
+        200:
+          description: |
+           when staging user record is updated
+          body:
+           application/json:
+            type: stagingUser
+            example: !include examples/staging_user.sample
+        400:
+          description: Bad request
+          body:
+           text/plain:
+            example: unable to process request
+        422:
+          description: Validation error
+          body:
+           application/json:
+            type: errors
+        500:
+          description: |
+           Internal server error, e.g. due to misconfiguration
+          body:
+           text/plain:
+            example: internal server error, contact administrator
+        404:
+          description: |
+           Staging user with a given externalSystemID not found
+          body:
+           text/plain:
+            example: Staging user not found
+
