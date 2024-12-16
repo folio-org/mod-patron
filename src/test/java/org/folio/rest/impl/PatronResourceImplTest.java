@@ -2400,7 +2400,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
               .end("Invalid combination of query parameters");
           }
         }
-      } else if (req.method() == HttpMethod.PUT && req.uri().equals("/staging-users")) {
+      } else if (req.method() == HttpMethod.PUT && req.uri().contains("/staging-users")) {
         req.bodyHandler(body -> {
           String content = new String(body.getBytes());
           JsonObject jsonContent = new JsonObject(content);
