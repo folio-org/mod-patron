@@ -1,3 +1,7 @@
+# 6.2.4 2024-12-17
+
+* Modify extended timeouts for `POST` requests and `GET` allowed service points (MOPATRON-197)
+
 # 6.2.3 2024-12-12
 
 * Add extended timeouts for `POST` requests and `GET` allowed service points (MODPATRON-197)
