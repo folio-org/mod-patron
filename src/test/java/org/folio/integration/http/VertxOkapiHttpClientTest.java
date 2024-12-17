@@ -49,7 +49,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @AfterEach
-  void afterEach() throws InterruptedException, ExecutionException, TimeoutException {
+  void afterEach() {
     fakeWebServer.stop();
 
     stopVertx();
@@ -81,7 +81,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  void canGetJson() throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetJson() {
     final var getEndpoint = matchingFolioHeaders(get(urlPathEqualTo("/record")));
 
     fakeWebServer.stubFor(getEndpoint.willReturn(ok()
@@ -103,7 +103,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  void canGetJsonUsingQueryParameters() throws ExecutionException, InterruptedException, TimeoutException {
+  void canGetJsonUsingQueryParameters() {
     final var getEndpoint = matchingFolioHeaders(get(urlPathEqualTo("/record")))
       .withQueryParam("first-parameter", equalTo("foo"))
       .withQueryParam("second-parameter", equalTo("bar"));
@@ -129,7 +129,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  void canPostWithJson() throws ExecutionException, InterruptedException, TimeoutException {
+  void canPostWithJson() {
     final var postEndpoint = matchingFolioHeaders(post(urlPathEqualTo("/record")))
       .withHeader("Content-Type", equalTo("application/json"))
       .withRequestBody(equalToJson(dummyJsonRequestBody().encodePrettily()));
@@ -153,7 +153,7 @@ class VertxOkapiHttpClientTest {
 
   @SneakyThrows
   @Test
-  void canPutWithJson() throws ExecutionException, InterruptedException, TimeoutException {
+  void canPutWithJson() {
     final var putEndpoint = matchingFolioHeaders(put(urlPathEqualTo("/record")))
       .withHeader("Content-Type", equalTo("application/json"))
       .withRequestBody(equalToJson(dummyJsonRequestBody().encodePrettily()));
