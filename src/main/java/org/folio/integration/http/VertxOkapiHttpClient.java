@@ -20,7 +20,7 @@ public class VertxOkapiHttpClient {
   private static final Logger logger = LogManager.getLogger();
 
   private static final long DEFAULT_TIMEOUT_MS = 5000;
-  private static final long EXTENDED_TIMEOUT_MS = 20000;
+  private static final long EXTENDED_TIMEOUT_MS = 60000;
   private final WebClient client;
 
   public VertxOkapiHttpClient(WebClient client) {
