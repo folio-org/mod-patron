@@ -1516,8 +1516,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .put("/patron/" + UUID.randomUUID().toString())
       .then()
       .statusCode(404)
-      .body(containsString("Staging user not found"))
-      .contentType(TEXT);
+      .extract().response().as(Errors.class);
   }
 
   @Test

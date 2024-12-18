@@ -58,9 +58,7 @@ import java.util.stream.Stream;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.*;
 import static org.folio.rest.impl.CirculationRequestService.createItemLevelRequest;
 import static org.folio.rest.impl.CirculationRequestService.createTitleLevelRequest;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
@@ -130,7 +128,7 @@ public  class PatronServicesResourceImpl implements Patron {
       case 400:
         return CompletableFuture.completedFuture(PostPatronResponse.respond400WithTextPlain(response.body));
       case 404:
-        return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond404WithTextPlain(response.body));
+        return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond404WithApplicationJson(createError(STAGING_USER_NOT_FOUND.value(), STAGING_USER_NOT_FOUND.name())));
       case 422:
         Errors errors = Json.decodeValue(response.body, Errors.class);
         return CompletableFuture.completedFuture(PostPatronResponse.respond422WithApplicationJson(errors));
