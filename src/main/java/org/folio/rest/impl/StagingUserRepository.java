@@ -23,4 +23,11 @@ public class StagingUserRepository {
     logger.info("createStagingUser::Creating staging-user: {}", stagingUser);
     return client.post(STAGING_USERS, JsonObject.mapFrom(stagingUser), okapiHeaders);
   }
+
+  public CompletableFuture<Response> updateStagingUser(String externalSystemId ,
+                                                       StagingUser stagingUser,
+                                                       Map<String, String> okapiHeaders) {
+    logger.info("updateStagingUser::Updating staging-user: {}", stagingUser);
+    return client.put(STAGING_USERS +"/" + externalSystemId, JsonObject.mapFrom(stagingUser), okapiHeaders);
+  }
 }

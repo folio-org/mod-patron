@@ -58,9 +58,7 @@ import java.util.stream.Stream;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.*;
 import static org.folio.rest.impl.CirculationRequestService.createItemLevelRequest;
 import static org.folio.rest.impl.CirculationRequestService.createTitleLevelRequest;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
@@ -108,7 +106,7 @@ public  class PatronServicesResourceImpl implements Patron {
     final var stagingUserRepository = new StagingUserRepository(HttpClientFactory.getHttpClient(vertxContext.owner()));
 
     stagingUserRepository.createStagingUser(entity, okapiHeaders)
-      .thenCompose(this::handleCreateStagingUserResponse)
+      .thenCompose(this::handleStagingUserResponse)
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
         logger.error("postPatron:: Failed to create external patron", throwable);
@@ -117,30 +115,38 @@ public  class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private CompletableFuture<Response> handleCreateStagingUserResponse(org.folio.integration.http.Response response) {
+
+  private CompletableFuture<Response> handleStagingUserResponse(org.folio.integration.http.Response response) {
     if (!response.isSuccess()) {
-      return handlePostStagingUserErrorResponse(response);
+      return handleStagingUserErrorResponse(response);
     }
-    return handlePostStagingUserSuccessResponse(response);
+    return handleStagingUserSuccessResponse(response);
   }
 
-  private CompletableFuture<Response> handlePostStagingUserErrorResponse(org.folio.integration.http.Response response) {
+  private CompletableFuture<Response> handleStagingUserErrorResponse(org.folio.integration.http.Response response) {
     switch (response.statusCode) {
       case 400:
         return CompletableFuture.completedFuture(PostPatronResponse.respond400WithTextPlain(response.body));
+      case 404:
+        return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond404WithApplicationJson(createError(STAGING_USER_NOT_FOUND.value(), STAGING_USER_NOT_FOUND.name())));
       case 422:
         Errors errors = Json.decodeValue(response.body, Errors.class);
         return CompletableFuture.completedFuture(PostPatronResponse.respond422WithApplicationJson(errors));
+      case 405:
+        return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond405WithTextPlain(response.body));
       case 500:
       default:
         return CompletableFuture.completedFuture(PostPatronResponse.respond500WithTextPlain(response.body));
     }
   }
 
-  private CompletableFuture<Response> handlePostStagingUserSuccessResponse(org.folio.integration.http.Response response) {
+  private CompletableFuture<Response> handleStagingUserSuccessResponse(org.folio.integration.http.Response response) {
     StagingUser stagingUser = Json.decodeValue(response.body, StagingUser.class);
     if (response.statusCode == 201) {
       return CompletableFuture.completedFuture(PostPatronResponse.respond201WithApplicationJson(stagingUser));
+    }
+    else if(response.statusCode == 200){
+      return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond200WithApplicationJson(stagingUser));
     }
       return CompletableFuture.completedFuture(
         Response.status(response.statusCode).entity(response.body).build()
@@ -162,6 +168,24 @@ public  class PatronServicesResourceImpl implements Patron {
           email, throwable);
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
           .respond500WithTextPlain(throwable.getCause().getMessage())));
+        return null;
+      });
+  }
+
+  @Override
+  public void putPatronByExternalSystemId(String externalSystemId,
+                                          StagingUser entity,
+                                          Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                          Context vertxContext) {
+    logger.info("putPatronByExternalSystemId:: Trying to update staging user");
+    final var stagingUserRepository = new StagingUserRepository(HttpClientFactory.getHttpClient(vertxContext.owner()));
+
+    stagingUserRepository.updateStagingUser(externalSystemId, entity, okapiHeaders)
+      .thenCompose(this::handleStagingUserResponse)
+      .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+      .exceptionally(throwable -> {
+        logger.error("putPatronByExternalSystemId:: Failed to update external patron", throwable);
+        asyncResultHandler.handle(Future.succeededFuture(PostPatronResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
   }
@@ -456,6 +480,7 @@ public  class PatronServicesResourceImpl implements Patron {
         }
       });
   }
+
 
   @Validate
   @Override
