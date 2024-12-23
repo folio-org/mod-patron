@@ -153,24 +153,6 @@ public  class PatronServicesResourceImpl implements Patron {
       );
     }
 
-  @Override
-  public void getPatronRegistrationStatusByEmailId(String email, Map<String, String> okapiHeaders,
-                                                          Handler<AsyncResult<Response>> asyncResultHandler,
-                                                          Context vertxContext) {
-    logger.debug("getPatronAccountRegistrationStatusByEmailId:: Fetching patron details with emailId {}", email);
-    final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
-    final var userRepository = new UserRepository(httpClient);
-
-    getUserByEmailWithPatronType(email, okapiHeaders, userRepository)
-      .thenAccept(userResponse -> handleGetUserResponse(email, userResponse, asyncResultHandler))
-      .exceptionally(throwable -> {
-        logger.error("getPatronAccountRegistrationStatusByEmailId:: Failed to get patron details by email {}",
-          email, throwable);
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
-          .respond500WithTextPlain(throwable.getCause().getMessage())));
-        return null;
-      });
-  }
 
   @Override
   public void putPatronByExternalSystemId(String externalSystemId,
@@ -190,27 +172,27 @@ public  class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private void handleGetUserResponse(String email, JsonObject userResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
+  private void handleGetUserResponse(String identifier, JsonObject userResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
     final int totalRecords = userResponse.getJsonArray(USERS_FILED).size();
 
     if (totalRecords > 1) {
-      logger.warn("handleGetUserResponse:: Multiple user record found for email {}", email);
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse.
+      logger.warn("handleGetUserResponse:: Multiple user record found for identifier {}", identifier);
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse.
         respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.value(), MULTIPLE_USER_WITH_EMAIL.name()))));
     } else if (totalRecords == 1) {
       var userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
       var user = convertJsonToUser(userJson);
       if (user != null && user.getActive()) {
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
           .respond200WithApplicationJson(user)));
       } else {
-        logger.warn("handleGetUserResponse:: Inactive user record found for email {}", email);
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+        logger.warn("handleGetUserResponse:: Inactive user record found for identifier {}", identifier);
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
           .respond404WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.value(), USER_ACCOUNT_INACTIVE.name()))));
       }
     } else {
-      logger.warn("handleGetUserResponse:: user record not found for email {}", email);
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+      logger.warn("handleGetUserResponse:: user record not found for identifier {}", identifier);
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
         .respond404WithApplicationJson(createError(USER_NOT_FOUND.value(), USER_NOT_FOUND.name()))));
     }
   }
@@ -225,10 +207,21 @@ public  class PatronServicesResourceImpl implements Patron {
     }
   }
 
-  private CompletableFuture<JsonObject> getUserByEmailWithPatronType(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
-    logger.info("getUserByEmailWithPatronType:: Trying to get user by email {}", email);
-    return userRepository.getUserByCql("(personal.email==" + email + " and type==patron)", okapiHeaders);
+  private CompletableFuture<JsonObject> getUserByEmailOrESIDWithPatronType(String identifier, Map<String, String> okapiHeaders, UserRepository userRepository) {
+    logger.info("getUserByEmailOrESIDWithPatronType:: Trying to get user by identifier {}", identifier);
+
+    boolean isUuid = identifier != null && identifier.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$");
+
+    String query;
+    if (isUuid) {
+      query = "externalSystemId==" + identifier + " and type==patron";
+    } else {
+      query = "personal.email==" + identifier + " and type==patron";
+    }
+
+    return userRepository.getUserByCql(query, okapiHeaders);
   }
+
 
   @Validate
   @Override
@@ -480,6 +473,24 @@ public  class PatronServicesResourceImpl implements Patron {
         }
       });
   }
+
+  @Override
+  public void getPatronRegistrationStatusByIdentifier(String identifier, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    logger.debug("getPatronRegistrationStatusByIdentifier:: Fetching patron details with identifier {}", identifier);
+    final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    final var userRepository = new UserRepository(httpClient);
+
+    getUserByEmailOrESIDWithPatronType(identifier, okapiHeaders, userRepository)
+      .thenAccept(userResponse -> handleGetUserResponse(identifier, userResponse, asyncResultHandler))
+      .exceptionally(throwable -> {
+        logger.error("getPatronRegistrationStatusByEmailIdAndExternalSystemId:: Failed to get patron details by identifier {}",
+          identifier, throwable);
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
+          .respond500WithTextPlain(throwable.getCause().getMessage())));
+        return null;
+      });
+  }
+
 
 
   @Validate
