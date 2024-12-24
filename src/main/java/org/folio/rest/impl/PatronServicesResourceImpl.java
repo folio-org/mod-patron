@@ -214,9 +214,9 @@ public  class PatronServicesResourceImpl implements Patron {
 
     String query;
     if (isUuid) {
-      query = "externalSystemId==" + identifier + " and type==patron";
+      query = "(externalSystemId==" + identifier + " and type==patron)";
     } else {
-      query = "personal.email==" + identifier + " and type==patron";
+      query = "(personal.email==" + identifier + " and type==patron)";
     }
 
     return userRepository.getUserByCql(query, okapiHeaders);
