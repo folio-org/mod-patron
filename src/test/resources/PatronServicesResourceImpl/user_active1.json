@@ -2,7 +2,7 @@
   "users": [
     {
       "id": "cacc29d8-cade-4312-a5f2-4eeac55d8697",
-      "externalSystemId": "active@folio.com",
+      "externalSystemId": "cacc29d8-cade-4312-a5f2-4eeac55d8700",
       "active": true,
       "type": "patron",
       "patronGroup": "63f8065f-df84-4e76-a36b-3ba32dbdc9e5",

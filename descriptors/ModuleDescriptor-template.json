@@ -21,7 +21,7 @@
         },
         {
           "methods": ["GET"],
-          "pathPattern": "/patron/registration-status/{emailId}",
+          "pathPattern": "/patron/registration-status/{identifier}",
           "permissionsRequired": ["patron.registration-status.item.get"],
           "modulePermissions": [
             "users.item.get",
@@ -227,7 +227,7 @@
     {
       "permissionName": "patron.registration-status.item.get",
       "displayName": "Get patron details",
-      "description": "Get patron details by emailId"
+      "description": "Get patron details by emailId or externalSystemId"
     },
     {
       "permissionName": "patron.all",

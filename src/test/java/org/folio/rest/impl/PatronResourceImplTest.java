@@ -394,6 +394,21 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
+  final void testGetPatronRegistrationStatusByESID() {
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(patronAccountRegistrationStatus + "/cacc29d8-cade-4312-a5f2-4eeac55d8700")
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+  }
+
+  @Test
   final void testGetPatronRegistrationStatusByEmailMultipleError() {
     final Errors errors = given()
       .header(tenantHeader)
@@ -412,6 +427,24 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
+  final void testGetPatronRegistrationStatusByESIDMultipleError() {
+    final Errors errors = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(patronAccountRegistrationStatus + "/cacc29d8-cade-4312-a5f2-4eeac55d7900")
+      .then()
+      .log().all()
+      .contentType(JSON)
+      .statusCode(400)
+      .extract().response().as(Errors.class);
+
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(MULTIPLE_USER_WITH_EMAIL.value(), errors.getErrors().get(0).getMessage());
+  }
+
+  @Test
   final void testGetPatronRegistrationStatusByEmailUserNotFoundError() {
     var res = given()
       .header(tenantHeader)
@@ -419,6 +452,24 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .header(contentTypeHeader)
       .when()
       .get(patronAccountRegistrationStatus + "/notfound@folio.com")
+      .then()
+      .log().all()
+      .contentType(JSON)
+      .statusCode(404)
+      .extract().response().as(Errors.class);
+
+    assertEquals(1, res.getErrors().size());
+    assertEquals(USER_NOT_FOUND.value(), res.getErrors().get(0).getMessage());
+  }
+
+  @Test
+  final void testGetPatronRegistrationStatusByESIDUserNotFoundError() {
+    var res = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .when()
+      .get(patronAccountRegistrationStatus + "/cacc29d8-cade-4312-a5f2-4eeac55d8900")
       .then()
       .log().all()
       .contentType(JSON)
@@ -1867,16 +1918,32 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/user_active1.json"));
-        } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dinactive%40folio.com%20and%20type%3D%3Dpatron%29")) {
+        } else if (req.uri().equals("/users?query=%28externalSystemId%3D%3Dcacc29d8-cade-4312-a5f2-4eeac55d8700%20and%20type%3D%3Dpatron%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/user_active1.json"));
+        }
+        else if (req.uri().equals("/users?query=%28personal.email%3D%3Dinactive%40folio.com%20and%20type%3D%3Dpatron%29")) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/user_not_active1.json"));
+        } else if (req.uri().equals("/users?query=%28externalSystemId%3D%3Dcacc29d8-cade-4312-a5f2-4eeac55d8900%20and%20type%3D%3Dpatron%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/user_not_found.json"));
         } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dnotfound%40folio.com%20and%20type%3D%3Dpatron%29")) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/user_not_found.json"));
+        } else if (req.uri().equals("/users?query=%28externalSystemId%3D%3Dcacc29d8-cade-4312-a5f2-4eeac55d7900%20and%20type%3D%3Dpatron%29")) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/user_multiple.json"));
         } else if (req.uri().equals("/users?query=%28personal.email%3D%3Dmultiple%40folio.com%20and%20type%3D%3Dpatron%29")) {
           req.response()
             .setStatusCode(200)

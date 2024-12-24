@@ -434,15 +434,15 @@ traits:
                   body:
                     text/plain:
                       example: internal server error, contact administrator
-  /registration-status/{emailId}:
-    description: endpoint that can be used to fetch a patron details by email
+  /registration-status/{identifier}:
+    description: Endpoint to fetch patron details by email ID or external system ID (UUID).
     uriParameters:
-      emailId:
-        description: The email ID of the patron.
+      identifier:
+        description: The email ID or the external system ID of the patron.
         type: string
         required: true
     get:
-      description: Get the patron details by email ID
+      description: Get the patron details by email ID or external system ID
       responses:
         200:
           description: patron information retrieved successfully
