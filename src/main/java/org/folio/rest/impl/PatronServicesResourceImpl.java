@@ -222,7 +222,6 @@ public  class PatronServicesResourceImpl implements Patron {
     return userRepository.getUserByCql(query, okapiHeaders);
   }
 
-
   @Validate
   @Override
   public void getPatronAccountById(String id, boolean includeLoans,
@@ -490,8 +489,6 @@ public  class PatronServicesResourceImpl implements Patron {
         return null;
       });
   }
-
-
 
   @Validate
   @Override
