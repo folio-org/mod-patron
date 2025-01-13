@@ -1,3 +1,8 @@
+# 6.2.5 2025-01-13
+* Changes for the externalSystemId for external patron-registration (MODPATRON-198)
+* New API added for put /patron/{externalSystemId} (MODPATRON-202)
+* Changes for get /patron/registrationStatus/{identifier} (MODPATRON-205)
+
 # 6.2.4 2024-12-17
 
 * Modify extended timeouts for `POST` requests and `GET` allowed service points (MOPATRON-197)

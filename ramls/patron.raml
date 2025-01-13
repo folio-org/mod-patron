@@ -40,13 +40,6 @@ traits:
         type: stagingUser
         example: !include examples/staging_user.sample
     responses:
-      200:
-        description: |
-          When existing staging user record is updated
-        body:
-          application/json:
-            type: stagingUser
-            example: !include examples/staging_user.sample
       201:
         description: |
           when new staging user record is created
@@ -441,15 +434,15 @@ traits:
                   body:
                     text/plain:
                       example: internal server error, contact administrator
-  /registration-status/{emailId}:
-    description: endpoint that can be used to fetch a patron details by email
+  /registration-status/{identifier}:
+    description: Endpoint to fetch patron details by email ID or external system ID (UUID).
     uriParameters:
-      emailId:
-        description: The email ID of the patron.
+      identifier:
+        description: The email ID or the external system ID of the patron.
         type: string
         required: true
     get:
-      description: Get the patron details by email ID
+      description: Get the patron details by email ID or external system ID
       responses:
         200:
           description: patron information retrieved successfully
@@ -472,4 +465,55 @@ traits:
           body:
             text/plain:
               example: internal server error, contact administrator
+
+  /{externalSystemId}:
+    description: |
+      Updates external patron based on external system Id.
+    uriParameters:
+      externalSystemId:
+        description: The UUID of a staging user
+        type: string
+        pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+    put:
+      is: [ validate ]
+      body:
+        application/json:
+          type: stagingUser
+          example: !include examples/staging_user.sample
+      responses:
+        200:
+          description: |
+           when staging user record is updated
+          body:
+           application/json:
+            type: stagingUser
+            example: !include examples/staging_user.sample
+        400:
+          description: Bad request
+          body:
+           text/plain:
+            example: unable to process request
+        422:
+          description: Validation error
+          body:
+           application/json:
+            type: errors
+        500:
+          description: |
+           Internal server error, e.g. due to misconfiguration
+          body:
+           text/plain:
+            example: internal server error, contact administrator
+        405:
+          description: |
+            Internal server error, e.g. due to missing externalSystemId in the parameter
+          body:
+            text/plain:
+              example: the request's HTTP method is not supported by the server or the resource.
+        404:
+          description: |
+           Staging user with a given externalSystemID not found
+          body:
+            application/json:
+              type: errors
 

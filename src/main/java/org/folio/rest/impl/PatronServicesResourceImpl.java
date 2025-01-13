@@ -58,9 +58,7 @@ import java.util.stream.Stream;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.*;
 import static org.folio.rest.impl.CirculationRequestService.createItemLevelRequest;
 import static org.folio.rest.impl.CirculationRequestService.createTitleLevelRequest;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
@@ -108,7 +106,7 @@ public  class PatronServicesResourceImpl implements Patron {
     final var stagingUserRepository = new StagingUserRepository(HttpClientFactory.getHttpClient(vertxContext.owner()));
 
     stagingUserRepository.createStagingUser(entity, okapiHeaders)
-      .thenCompose(this::handleCreateStagingUserResponse)
+      .thenCompose(this::handleStagingUserResponse)
       .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
         logger.error("postPatron:: Failed to create external patron", throwable);
@@ -117,80 +115,84 @@ public  class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private CompletableFuture<Response> handleCreateStagingUserResponse(org.folio.integration.http.Response response) {
+
+  private CompletableFuture<Response> handleStagingUserResponse(org.folio.integration.http.Response response) {
     if (!response.isSuccess()) {
-      return handlePostStagingUserErrorResponse(response);
+      return handleStagingUserErrorResponse(response);
     }
-    return handlePostStagingUserSuccessResponse(response);
+    return handleStagingUserSuccessResponse(response);
   }
 
-  private CompletableFuture<Response> handlePostStagingUserErrorResponse(org.folio.integration.http.Response response) {
+  private CompletableFuture<Response> handleStagingUserErrorResponse(org.folio.integration.http.Response response) {
     switch (response.statusCode) {
       case 400:
         return CompletableFuture.completedFuture(PostPatronResponse.respond400WithTextPlain(response.body));
+      case 404:
+        return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond404WithApplicationJson(createError(STAGING_USER_NOT_FOUND.value(), STAGING_USER_NOT_FOUND.name())));
       case 422:
         Errors errors = Json.decodeValue(response.body, Errors.class);
         return CompletableFuture.completedFuture(PostPatronResponse.respond422WithApplicationJson(errors));
+      case 405:
+        return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond405WithTextPlain(response.body));
       case 500:
       default:
         return CompletableFuture.completedFuture(PostPatronResponse.respond500WithTextPlain(response.body));
     }
   }
 
-  private CompletableFuture<Response> handlePostStagingUserSuccessResponse(org.folio.integration.http.Response response) {
+  private CompletableFuture<Response> handleStagingUserSuccessResponse(org.folio.integration.http.Response response) {
     StagingUser stagingUser = Json.decodeValue(response.body, StagingUser.class);
-    switch (response.statusCode) {
-      case 200:
-        return CompletableFuture.completedFuture(PostPatronResponse.respond200WithApplicationJson(stagingUser));
-      case 201:
-        return CompletableFuture.completedFuture(PostPatronResponse.respond201WithApplicationJson(stagingUser));
-      default:
-        return CompletableFuture.completedFuture(
-          Response.status(response.statusCode).entity(response.body).build()
-        );
+    if (response.statusCode == 201) {
+      return CompletableFuture.completedFuture(PostPatronResponse.respond201WithApplicationJson(stagingUser));
     }
-  }
+    else if(response.statusCode == 200){
+      return CompletableFuture.completedFuture(PutPatronByExternalSystemIdResponse.respond200WithApplicationJson(stagingUser));
+    }
+      return CompletableFuture.completedFuture(
+        Response.status(response.statusCode).entity(response.body).build()
+      );
+    }
+
 
   @Override
-  public void getPatronRegistrationStatusByEmailId(String email, Map<String, String> okapiHeaders,
-                                                          Handler<AsyncResult<Response>> asyncResultHandler,
-                                                          Context vertxContext) {
-    logger.debug("getPatronAccountRegistrationStatusByEmailId:: Fetching patron details with emailId {}", email);
-    final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
-    final var userRepository = new UserRepository(httpClient);
+  public void putPatronByExternalSystemId(String externalSystemId,
+                                          StagingUser entity,
+                                          Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                          Context vertxContext) {
+    logger.info("putPatronByExternalSystemId:: Trying to update staging user");
+    final var stagingUserRepository = new StagingUserRepository(HttpClientFactory.getHttpClient(vertxContext.owner()));
 
-    getUserByEmailWithPatronType(email, okapiHeaders, userRepository)
-      .thenAccept(userResponse -> handleGetUserResponse(email, userResponse, asyncResultHandler))
+    stagingUserRepository.updateStagingUser(externalSystemId, entity, okapiHeaders)
+      .thenCompose(this::handleStagingUserResponse)
+      .thenAccept(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
       .exceptionally(throwable -> {
-        logger.error("getPatronAccountRegistrationStatusByEmailId:: Failed to get patron details by email {}",
-          email, throwable);
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
-          .respond500WithTextPlain(throwable.getCause().getMessage())));
+        logger.error("putPatronByExternalSystemId:: Failed to update external patron", throwable);
+        asyncResultHandler.handle(Future.succeededFuture(PostPatronResponse.respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
       });
   }
 
-  private void handleGetUserResponse(String email, JsonObject userResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
+  private void handleGetUserResponse(String identifier, JsonObject userResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
     final int totalRecords = userResponse.getJsonArray(USERS_FILED).size();
 
     if (totalRecords > 1) {
-      logger.warn("handleGetUserResponse:: Multiple user record found for email {}", email);
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse.
+      logger.warn("handleGetUserResponse:: Multiple user record found for identifier {}", identifier);
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse.
         respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.value(), MULTIPLE_USER_WITH_EMAIL.name()))));
     } else if (totalRecords == 1) {
       var userJson = userResponse.getJsonArray(USERS_FILED).getJsonObject(0);
       var user = convertJsonToUser(userJson);
       if (user != null && user.getActive()) {
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
           .respond200WithApplicationJson(user)));
       } else {
-        logger.warn("handleGetUserResponse:: Inactive user record found for email {}", email);
-        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+        logger.warn("handleGetUserResponse:: Inactive user record found for identifier {}", identifier);
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
           .respond404WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.value(), USER_ACCOUNT_INACTIVE.name()))));
       }
     } else {
-      logger.warn("handleGetUserResponse:: user record not found for email {}", email);
-      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByEmailIdResponse
+      logger.warn("handleGetUserResponse:: user record not found for identifier {}", identifier);
+      asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
         .respond404WithApplicationJson(createError(USER_NOT_FOUND.value(), USER_NOT_FOUND.name()))));
     }
   }
@@ -205,9 +207,19 @@ public  class PatronServicesResourceImpl implements Patron {
     }
   }
 
-  private CompletableFuture<JsonObject> getUserByEmailWithPatronType(String email, Map<String, String> okapiHeaders, UserRepository userRepository) {
-    logger.info("getUserByEmailWithPatronType:: Trying to get user by email {}", email);
-    return userRepository.getUserByCql("(personal.email==" + email + " and type==patron)", okapiHeaders);
+  private CompletableFuture<JsonObject> getUserByEmailOrESIDWithPatronType(String identifier, Map<String, String> okapiHeaders, UserRepository userRepository) {
+    logger.info("getUserByEmailOrESIDWithPatronType:: Trying to get user by identifier {}", identifier);
+
+    boolean isUuid = identifier != null && identifier.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$");
+
+    String query;
+    if (isUuid) {
+      query = "(externalSystemId==" + identifier + " and type==patron)";
+    } else {
+      query = "(personal.email==" + identifier + " and type==patron)";
+    }
+
+    return userRepository.getUserByCql(query, okapiHeaders);
   }
 
   @Validate
@@ -458,6 +470,23 @@ public  class PatronServicesResourceImpl implements Patron {
         } else {
           asyncResultHandler.handle(succeededFuture(respond200WithApplicationJson(holds[0])));
         }
+      });
+  }
+
+  @Override
+  public void getPatronRegistrationStatusByIdentifier(String identifier, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    logger.debug("getPatronRegistrationStatusByIdentifier:: Fetching patron details with identifier {}", identifier);
+    final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
+    final var userRepository = new UserRepository(httpClient);
+
+    getUserByEmailOrESIDWithPatronType(identifier, okapiHeaders, userRepository)
+      .thenAccept(userResponse -> handleGetUserResponse(identifier, userResponse, asyncResultHandler))
+      .exceptionally(throwable -> {
+        logger.error("getPatronRegistrationStatusByEmailIdAndExternalSystemId:: Failed to get patron details by identifier {}",
+          identifier, throwable);
+        asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
+          .respond500WithTextPlain(throwable.getCause().getMessage())));
+        return null;
       });
   }
 
