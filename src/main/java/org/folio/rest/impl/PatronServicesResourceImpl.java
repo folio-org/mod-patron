@@ -233,6 +233,7 @@ public  class PatronServicesResourceImpl implements Patron {
       Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
     logger.debug("getPatronAccountById:: Trying to get PatronAccount with parameters:  id: {}, includeLoans: {}, " +
       "includeCharges: {}, includeHolds: {}", id, includeLoans, includeCharges, includeHolds);
+
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final var userRepository = new UserRepository(httpClient);
@@ -254,7 +255,7 @@ public  class PatronServicesResourceImpl implements Patron {
               httpClient)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = getRequests(id, sortBy, limit, offset, includeHolds, okapiHeaders,
+            final CompletableFuture<Account> cf2 = getMediatedRequests(id, sortBy, limit, offset, includeHolds, okapiHeaders,
               httpClient)
                 .thenApply(body -> addHolds(account, body, includeHolds));
 
@@ -331,6 +332,18 @@ public  class PatronServicesResourceImpl implements Patron {
     queryParameters.put(QUERY, buildQueryWithUserId(id, sortBy));
 
     return httpClient.get("/accounts", queryParameters, okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody);
+  }
+
+  private CompletableFuture<JsonObject> getMediatedRequests(String id,
+    String sortBy, int limit, int offset,
+    boolean includeHolds, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+
+    Map<String, String> queryParameters = Maps.newLinkedHashMap();
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds));
+    queryParameters.put(QUERY, buildQueryWithSecureRequesterId(id, sortBy));
+
+    return httpClient.get("/requests-mediated/mediated-requests", queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
@@ -665,7 +678,7 @@ public  class PatronServicesResourceImpl implements Patron {
     account.setHolds(holds);
 
     if (totalHolds > 0 && includeHolds) {
-      final JsonArray holdsJson = body.getJsonArray("requests");
+      final JsonArray holdsJson = body.getJsonArray("mediatedRequests");
       for (Object o : holdsJson) {
         if (o instanceof JsonObject) {
           JsonObject holdJson = (JsonObject) o;
@@ -1037,6 +1050,13 @@ public  class PatronServicesResourceImpl implements Patron {
       return format("(userId==%s and status.name==Open) sortBy %s", userId, sortBy);
     }
     return format("(userId==%s and status.name==Open)", userId);
+  }
+
+  private String buildQueryWithSecureRequesterId(String requesterId, String sortBy) {
+    if(StringUtils.isNoneBlank(sortBy)) {
+      return format("(requesterId==%s and status==\"New - Awaiting confirmation\") sortBy %s", requesterId, sortBy);
+    }
+    return format("(requesterId==%s and status==\"New - Awaiting confirmation\")", requesterId);
   }
 
   private String buildQueryWithRequesterId(String requesterId, String sortBy) {
