@@ -1,15 +1,56 @@
 package org.folio.rest.impl;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Maps;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static io.vertx.core.Future.succeededFuture;
+import static java.lang.String.format;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.STAGING_USER_NOT_FOUND;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
+import static org.folio.rest.impl.CirculationRequestService.createRequest;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
+import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
+import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
+import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
+import static org.folio.rest.impl.Constants.JSON_FIELD_TOTAL_RECORDS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
+import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
+import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
+import static org.folio.rest.impl.HoldHelpers.getHold;
+import static org.folio.rest.impl.RequestObjectFactory.buildItemLevelRequest;
+import static org.folio.rest.impl.RequestObjectFactory.buildTitleLevelRequest;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH;
+import static org.folio.rest.impl.UrlPath.CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond403WithTextPlain;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +71,6 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Hold;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loan;
-import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.StagingUser;
 import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
@@ -38,57 +78,17 @@ import org.folio.util.StringUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 
-import static io.vertx.core.Future.succeededFuture;
-import static java.lang.String.format;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.folio.patron.rest.models.ExternalPatronErrorCode.*;
-import static org.folio.rest.impl.CirculationRequestService.createItemLevelRequest;
-import static org.folio.rest.impl.CirculationRequestService.createTitleLevelRequest;
-import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
-import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
-import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM;
-import static org.folio.rest.impl.Constants.JSON_FIELD_ITEM_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_NAME;
-import static org.folio.rest.impl.Constants.JSON_FIELD_PATRON_COMMENTS;
-import static org.folio.rest.impl.Constants.JSON_FIELD_PICKUP_SERVICE_POINT_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUESTER_ID;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_DATE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_EXPIRATION_DATE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_TITLE;
-import static org.folio.rest.impl.Constants.JSON_FIELD_TOTAL_RECORDS;
-import static org.folio.rest.impl.Constants.JSON_FIELD_USER_ID;
-import static org.folio.rest.impl.HoldHelpers.constructNewHoldWithCancellationFields;
-import static org.folio.rest.impl.HoldHelpers.createCancelRequest;
-import static org.folio.rest.impl.HoldHelpers.getHold;
-import static org.folio.rest.impl.UrlPath.CIRCULATION_BFF_ALLOWED_SERVICE_POINTS_URL_PATH;
-import static org.folio.rest.impl.UrlPath.CIRCULATION_REQUESTS_ALLOWED_SERVICE_POINTS_URL_PATH;
-import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountHoldCancelByIdAndHoldIdResponse.respond200WithApplicationJson;
-import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond201WithApplicationJson;
-import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond401WithTextPlain;
-import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond403WithTextPlain;
-import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain;
-import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
-import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public  class PatronServicesResourceImpl implements Patron {
   private static final Logger logger = LogManager.getLogger();
@@ -389,61 +389,23 @@ public  class PatronServicesResourceImpl implements Patron {
 
   @Validate
   @Override
-  public void postPatronAccountItemHoldByIdAndItemId(String id, String itemId,
-      Hold entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
+  public void postPatronAccountItemHoldByIdAndItemId(String patronId, String itemId,
+    Hold entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler, Context vertxContext) {
 
+    JsonObject request = buildItemLevelRequest(entity, patronId, itemId);
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
-    RequestObjectFactory requestFactory = new RequestObjectFactory(httpClient, okapiHeaders);
-
-    new EcsTlrSettingsService()
-      .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
-      .thenCompose(isEcsTlrFeatureEnabled -> requestFactory.createRequestByItem(isEcsTlrFeatureEnabled, id, itemId, entity))
-      .whenComplete((context, throwable) -> {
-        if (throwable != null) {
-          Throwable cause = throwable.getCause();
-          if (cause instanceof ValidationException) {
-            asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(
-              ((ValidationException) cause).getErrors())));
-          } else {
-            asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(cause
-              .getMessage())));
-          }
-        } else {
-          try {
-            if (context == null) {
-              final Errors errors = new Errors()
-                .withErrors(Collections.singletonList(
-                  new Error()
-                    .withMessage("Cannot find a valid request type for this item")
-                    .withCode("CANNOT_FIND_VALID_REQUEST_FOR_ITEM")
-                    .withParameters(Collections.singletonList(
-                      new Parameter().withKey("itemId")
-                        .withValue(itemId)
-                    ))
-                ));
-
-              asyncResultHandler.handle(succeededFuture(respond422WithApplicationJson(errors)));
-              return;
-            }
-
-            createItemLevelRequest(context.isEcsTlrFeatureEnabled(), context.getHoldRequest(), httpClient, okapiHeaders)
-              .thenApply(ResponseInterpreter::verifyAndExtractBody)
-              .thenAccept(body -> {
-                final Item item = getItem(body);
-                final Hold hold = getHold(body, item);
-                asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
-              })
-              .exceptionally(e -> {
-
-                asyncResultHandler.handle(handleItemHoldPOSTError(e));
-                return null;
-              });
-          } catch (Exception e) {
-            asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(e.getMessage())));
-          }
-        }
+    createRequest(request, httpClient, okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody)
+      .thenAccept(body -> {
+        final Item item = getItem(body);
+        final Hold hold = getHold(body, item);
+        asyncResultHandler.handle(succeededFuture(respond201WithApplicationJson(hold)));
+      })
+      .exceptionally(e -> {
+        asyncResultHandler.handle(handleItemHoldPOSTError(e));
+        return null;
       });
   }
 
@@ -492,28 +454,16 @@ public  class PatronServicesResourceImpl implements Patron {
 
   @Validate
   @Override
-  public void postPatronAccountInstanceHoldByIdAndInstanceId(String id,
-      String instanceId, Hold entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
-      Context vertxContext) {
+  public void postPatronAccountInstanceHoldByIdAndInstanceId(String patronId,
+    String instanceId, Hold entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<javax.ws.rs.core.Response>> asyncResultHandler,
+    Context vertxContext) {
+
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
-
-    final JsonObject holdJSON = new JsonObject()
-      .put(JSON_FIELD_INSTANCE_ID, instanceId)
-      .put(JSON_FIELD_REQUESTER_ID, id)
-      .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
-      .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
-      .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
-
-    if (entity.getExpirationDate() != null) {
-      holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
-          new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
-    }
+    JsonObject request = buildTitleLevelRequest(patronId, instanceId, entity);
 
     try {
-      new EcsTlrSettingsService()
-        .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
-        .thenCompose(isEcsTlrFeatureEnabled -> createTitleLevelRequest(isEcsTlrFeatureEnabled, holdJSON, httpClient, okapiHeaders))
+      createRequest(request, httpClient, okapiHeaders)
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenAccept(body -> {
           logger.info("postPatronAccountInstanceHoldByIdAndInstanceId:: body: {}", body);
