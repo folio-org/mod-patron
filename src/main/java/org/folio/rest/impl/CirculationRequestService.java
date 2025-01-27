@@ -10,17 +10,14 @@ import org.folio.integration.http.VertxOkapiHttpClient;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILLMENT_PREFERENCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_LEVEL;
 import static org.folio.rest.impl.Constants.JSON_FIELD_REQUEST_TYPE;
 import static org.folio.rest.impl.Constants.JSON_VALUE_HOLD_SHELF;
+import static org.folio.rest.impl.PatronUtils.isTenantSecure;
 
 public class CirculationRequestService {
   private static final Logger log = LogManager.getLogger();
-  private static final String OKAPI_TENANT = "x-okapi-tenant";
-  private static final String SECURE_TENANT_ID = "SECURE_TENANT_ID";
-
   private CirculationRequestService() {
   }
 
@@ -77,14 +74,5 @@ public class CirculationRequestService {
     log.info("defineUrlForRequest:: ECS request feature is disabled. URL is {}", url);
 
     return url;
-  }
-
-  private static boolean isTenantSecure(Map<String, String> okapiHeaders) {
-    String secureTenantId = System.getenv().getOrDefault(SECURE_TENANT_ID, EMPTY);
-    log.info("isTenantSecure:: SECURE_TENANT_ID: {}", secureTenantId);
-    String tenantFromHeaders = okapiHeaders.get(OKAPI_TENANT);
-    log.info("isTenantSecure:: tenantFromHeaders: {}", tenantFromHeaders);
-
-    return secureTenantId.equals(tenantFromHeaders);
   }
 }
