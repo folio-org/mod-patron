@@ -6,6 +6,7 @@
   "requestExpirationDate": "3000-01-30T08:16:30Z",
   "requesterId": "bec20636-fb68-41fd-84ea-2cf910673599",
   "status": "Open - Not yet filled",
+  "ecsRequestPhase": "Primary",
   "instanceId": "23611f0b-35cc-4f40-af09-75907d7cc421",
   "holdingsRecordId": "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19",
   "patronComments": "I need this book. Item level comment.",
