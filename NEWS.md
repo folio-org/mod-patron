@@ -1,3 +1,7 @@
+# 6.2.7 2025-02-06
+
+* Add mapping for ecsRequestPhase field (MODPATRON-216)
+
 # 6.2.6 2025-01-22
 
 * Add missing required interfaces (MODPATRON-208)

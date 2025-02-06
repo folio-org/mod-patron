@@ -6,6 +6,7 @@ import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_DATE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_REASON_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CANCELLATION_USER_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_ECS_REQUEST_PHASE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILLMENT_PREFERENCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
@@ -113,6 +114,7 @@ class HoldHelpers {
     JsonObject cancelRequest = new JsonObject()
       .put("id", body.getString(JSON_FIELD_ID))
       .put("requestLevel", body.getString(JSON_FIELD_REQUEST_LEVEL))
+      .put("ecsRequestPhase", body.getString(JSON_FIELD_ECS_REQUEST_PHASE))
       .put("requestType", body.getString(JSON_FIELD_REQUEST_TYPE))
       .put("requestDate", body.getString(JSON_FIELD_REQUEST_DATE))
       .put("requesterId", body.getString(JSON_FIELD_REQUESTER_ID))
