@@ -31,7 +31,7 @@ public class EcsTlrSettingsService {
   public CompletableFuture<Boolean> isEcsTlrFeatureEnabled(VertxOkapiHttpClient httpClient,
     Map<String, String> okapiHeaders) {
 
-    logger.debug("isEcsTlrFeatureEnabled:: trying to get isEcsTlrFeatureEnabled from mod-tlr");
+    logger.info("isEcsTlrFeatureEnabled:: trying to get isEcsTlrFeatureEnabled from mod-tlr");
     return httpClient.get(ECS_TLR_SETTINGS_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .exceptionally(this::handleEcsTlrSettingsFetchingError)
@@ -41,8 +41,8 @@ public class EcsTlrSettingsService {
 
   private JsonObject handleEcsTlrSettingsFetchingError(Throwable throwable) {
     if (throwable.getCause() instanceof HttpException) {
-      logger.warn("handleErrorFromModTlr:: failed to fetch ECS TLR settings from mod-tlr",
-        throwable);
+      logger.warn("handleErrorFromModTlr:: failed to fetch ECS TLR settings from mod-tlr: {}",
+        throwable.getMessage());
       return null;
     }
     logger.error(throwable);
@@ -53,21 +53,25 @@ public class EcsTlrSettingsService {
   private CompletableFuture<Boolean> getEcsTlrFeatureValue(JsonObject body,
     VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
 
-    return Objects.nonNull(body) && body.containsKey(ECS_TLR_FEATURE_KEY) ?
-      completedFuture(body.getBoolean(ECS_TLR_FEATURE_KEY)) :
-      getCirculationStorageEcsTlrFeatureValue(client, okapiHeaders);
+    return Objects.nonNull(body) && body.containsKey(ECS_TLR_FEATURE_KEY)
+      ? completedFuture(body.getBoolean(ECS_TLR_FEATURE_KEY))
+      : getCirculationStorageEcsTlrFeatureValue(client, okapiHeaders);
   }
 
   private CompletableFuture<Boolean> getCirculationStorageEcsTlrFeatureValue(
     VertxOkapiHttpClient client, Map<String, String> okapiHeaders) {
 
-    logger.debug("getCirculationStorageEcsTlrFeatureValue:: trying to get isEcsTlrFeatureEnabled");
+    logger.info("getCirculationStorageEcsTlrFeatureValue:: trying to get isEcsTlrFeatureEnabled");
     return client.get(CIRCULATION_SETTINGS_STORAGE_URL_PATH, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(this::getCirculationStorageEcsTlrFeatureValue);
   }
 
   private Boolean getCirculationStorageEcsTlrFeatureValue(JsonObject body) {
+    logger.info("getCirculationStorageEcsTlrFeatureValue:: body: {}", () -> body);
+    if (body.isEmpty()) {
+      return false;
+    }
     Boolean result = Optional.ofNullable(body)
       .map(json -> json.getJsonArray(CIRCULATION_SETTINGS_KEY))
       .map(json -> json.getJsonObject(FIRST_POSITION_INDEX))
