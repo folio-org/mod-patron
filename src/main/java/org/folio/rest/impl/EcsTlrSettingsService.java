@@ -71,9 +71,10 @@ public class EcsTlrSettingsService {
     logger.info("getCirculationStorageEcsTlrFeatureValue:: body: {}", () -> body);
     Boolean result = Optional.ofNullable(body)
       .map(json -> json.getJsonArray(CIRCULATION_SETTINGS_KEY))
-      .flatMap(jsonArray -> Optional.ofNullable(jsonArray.getJsonObject(FIRST_POSITION_INDEX)))
-      .flatMap(json -> Optional.ofNullable(json.getJsonObject(VALUE_KEY)))
-      .map(jsonObject -> jsonObject.getBoolean(ENABLED_KEY))
+      .filter(jsonArray -> !jsonArray.isEmpty())
+      .map(json -> json.getJsonObject(FIRST_POSITION_INDEX))
+      .map(json -> json.getJsonObject(VALUE_KEY))
+      .map(json -> json.getBoolean(ENABLED_KEY))
       .orElse(false);
     logger.debug("getCirculationStorageEcsTlrFeatureValue:: result = {}", result);
     return result;
