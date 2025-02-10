@@ -67,16 +67,17 @@ public class EcsTlrSettingsService {
       .thenApply(this::getCirculationStorageEcsTlrFeatureValue);
   }
 
-  private Boolean getCirculationStorageEcsTlrFeatureValue(JsonObject body) {
+  private boolean getCirculationStorageEcsTlrFeatureValue(JsonObject body) {
     logger.info("getCirculationStorageEcsTlrFeatureValue:: body: {}", () -> body);
-    Boolean result = Optional.ofNullable(body)
+    boolean isEcsFeatureEnabled = Optional.ofNullable(body)
       .map(json -> json.getJsonArray(CIRCULATION_SETTINGS_KEY))
       .filter(jsonArray -> !jsonArray.isEmpty())
       .map(json -> json.getJsonObject(FIRST_POSITION_INDEX))
       .map(json -> json.getJsonObject(VALUE_KEY))
       .map(json -> json.getBoolean(ENABLED_KEY))
       .orElse(false);
-    logger.debug("getCirculationStorageEcsTlrFeatureValue:: result = {}", result);
-    return result;
+    logger.debug("getCirculationStorageEcsTlrFeatureValue:: result = {}", isEcsFeatureEnabled);
+
+    return isEcsFeatureEnabled;
   }
 }
