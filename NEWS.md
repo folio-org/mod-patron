@@ -1,3 +1,7 @@
+# 6.2.8 2025-02-11
+
+* Fix IndexOutOfBounds exception for single tenant environment (MODPATRON-219)
+
 # 6.2.7 2025-02-06
 
 * Add mapping for ecsRequestPhase field (MODPATRON-216)
