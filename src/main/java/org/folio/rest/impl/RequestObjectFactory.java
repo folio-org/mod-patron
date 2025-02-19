@@ -46,12 +46,8 @@ class RequestObjectFactory {
   }
 
   CompletableFuture<RequestContext> createRequestByItem(boolean isEcsTlrFeatureEnabled, String patronId, String itemId, Hold entity) {
-
     return completedFuture(new RequestContext(isEcsTlrFeatureEnabled, patronId, itemId, entity))
-      .thenCompose(this::fetchItem)
-      .thenCompose(this::fetchInstanceId)
-      .thenCompose(this::fetchUser)
-      .thenCompose(this::fetchRequestType)
+      .thenCompose(this::resolveRequestType)
       .thenApply(context -> {
         if (context.getRequestType() == RequestType.NONE) {
           return null;
@@ -77,6 +73,19 @@ class RequestObjectFactory {
       });
   }
 
+  private CompletableFuture<RequestContext> resolveRequestType(RequestContext context) {
+    if (context.isEcsTlrFeatureEnabled()) {
+      context.setRequestType(RequestType.PAGE);
+      return completedFuture(context);
+    }
+
+    return completedFuture(context)
+      .thenCompose(this::fetchItem)
+      .thenCompose(this::fetchInstanceId)
+      .thenCompose(this::fetchUser)
+      .thenCompose(this::fetchRequestType);
+  }
+
   private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
     return itemRepository.getItem(requestContext.getItemId(), okapiHeaders)
       .thenApply(requestContext::setItem);
@@ -98,7 +107,7 @@ class RequestObjectFactory {
     if (requestContext.isEcsTlrFeatureEnabled()) {
       requestContext.setRequestType(RequestType.PAGE);
     }
-    return CompletableFuture.completedFuture(createRequestPolicyIdCriteria(requestContext))
+    return completedFuture(createRequestPolicyIdCriteria(requestContext))
       .thenCompose(this::lookupRequestPolicyId)
       .thenCompose(this::getRequestPolicy)
       .thenApply(context -> RequestPolicy.from(context.getRequestPolicyId()))

@@ -61,12 +61,8 @@ public class CirculationRequestService {
       isTitleLevel);
 
     if (isEcsTlrFeatureEnabled) {
-      String url = isTenantSecure
-        ? UrlPath.CREATE_MEDIATED_REQUEST_URL
-        : UrlPath.CIRCULATION_BFF_CREATE_ECS_REQUEST_EXTERNAL;
-
+      String url = UrlPath.CIRCULATION_BFF_CREATE_ECS_REQUEST_EXTERNAL;
       log.info("defineUrlForRequest:: ECS request feature is enabled. URL is {}", url);
-
       return url;
     }
 
