@@ -133,7 +133,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @BeforeEach
-  public void setUp(Vertx vertx, VertxTestContext context) {
+  void setUp(Vertx vertx, VertxTestContext context) {
     setUpConnectionForTest(vertx, context);
     final Checkpoint mockOkapiStarted = context.checkpoint(1);
     final String host = "localhost";
@@ -143,7 +143,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @AfterEach
-  public void tearDown(Vertx vertx, VertxTestContext context) {
+  void tearDown(Vertx vertx, VertxTestContext context) {
     closeConnectionForTest(vertx, context);
   }
 
