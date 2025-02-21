@@ -46,12 +46,8 @@ class RequestObjectFactory {
   }
 
   CompletableFuture<RequestContext> createRequestByItem(boolean isEcsTlrFeatureEnabled, String patronId, String itemId, Hold entity) {
-
     return completedFuture(new RequestContext(isEcsTlrFeatureEnabled, patronId, itemId, entity))
-      .thenCompose(this::fetchItem)
-      .thenCompose(this::fetchInstanceId)
-      .thenCompose(this::fetchUser)
-      .thenCompose(this::fetchRequestType)
+      .thenCompose(this::resolveRequestType)
       .thenApply(context -> {
         if (context.getRequestType() == RequestType.NONE) {
           return null;
@@ -60,8 +56,6 @@ class RequestObjectFactory {
           .put(JSON_FIELD_REQUEST_LEVEL, "Item")
           .put(JSON_FIELD_INSTANCE_ID, context.getInstanceId())
           .put(JSON_FIELD_ITEM_ID, itemId)
-          .put(JSON_FIELD_HOLDINGS_RECORD_ID,
-            context.getItem().getString(JSON_FIELD_HOLDINGS_RECORD_ID))
           .put(JSON_FIELD_REQUESTER_ID, patronId)
           .put(JSON_FIELD_REQUEST_TYPE, context.getRequestType().getValue())
           .put(JSON_FIELD_REQUEST_DATE, new DateTime(entity.getRequestDate(), DateTimeZone.UTC).toString())
@@ -69,12 +63,30 @@ class RequestObjectFactory {
           .put(JSON_FIELD_PICKUP_SERVICE_POINT_ID, entity.getPickupLocationId())
           .put(JSON_FIELD_PATRON_COMMENTS, entity.getPatronComments());
 
+        if (context.getItem() != null) {
+          holdJSON.put(JSON_FIELD_HOLDINGS_RECORD_ID,
+            context.getItem().getString(JSON_FIELD_HOLDINGS_RECORD_ID));
+        }
+
         if (entity.getExpirationDate() != null) {
           holdJSON.put(JSON_FIELD_REQUEST_EXPIRATION_DATE,
             new DateTime(entity.getExpirationDate(), DateTimeZone.UTC).toString());
         }
         return context.setHoldRequest(holdJSON);
       });
+  }
+
+  private CompletableFuture<RequestContext> resolveRequestType(RequestContext context) {
+    if (context.isEcsTlrFeatureEnabled()) {
+      context.setRequestType(RequestType.PAGE);
+      return completedFuture(context);
+    }
+
+    return completedFuture(context)
+      .thenCompose(this::fetchItem)
+      .thenCompose(this::fetchInstanceId)
+      .thenCompose(this::fetchUser)
+      .thenCompose(this::fetchRequestType);
   }
 
   private CompletableFuture<RequestContext> fetchItem(RequestContext requestContext) {
@@ -98,7 +110,7 @@ class RequestObjectFactory {
     if (requestContext.isEcsTlrFeatureEnabled()) {
       requestContext.setRequestType(RequestType.PAGE);
     }
-    return CompletableFuture.completedFuture(createRequestPolicyIdCriteria(requestContext))
+    return completedFuture(createRequestPolicyIdCriteria(requestContext))
       .thenCompose(this::lookupRequestPolicyId)
       .thenCompose(this::getRequestPolicy)
       .thenApply(context -> RequestPolicy.from(context.getRequestPolicyId()))

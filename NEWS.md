@@ -1,3 +1,7 @@
+# 6.2.9 2025-02-21
+
+* Delegate creation of mediated requests to mod-circulation-bff (MODPATRON-212)
+
 # 6.2.8 2025-02-11
 
 * Fix IndexOutOfBounds exception for single tenant environment (MODPATRON-219)

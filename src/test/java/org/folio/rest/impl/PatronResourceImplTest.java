@@ -2573,47 +2573,43 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           String requestLevel = request.getString("requestLevel");
           String requestType = request.getString("requestType");
 
-          if (REQUEST_TYPE_PAGE.equals(requestType)) {
+          if (TENANT.equals(System.getenv(SECURE_TENANT_VARIABLE))) {
             if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
               req.response()
                 .setStatusCode(201)
                 .putHeader("content-type", "application/json")
-                .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_page.json"));
+                .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_itemLevel_hold_response.json"));
             } else if (REQUEST_LEVEL_TITLE.equals(requestLevel)) {
               req.response()
                 .setStatusCode(201)
                 .putHeader("content-type", "application/json")
-                .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_titleLevel_page.json"));
+                .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_titleLevel_hold.json"));
             }
-          }
-          if (REQUEST_TYPE_HOLD.equals(requestType)) {
-            if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
-              req.response()
-                .setStatusCode(201)
-                .putHeader("content-type", "application/json")
-                .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_hold.json"));
+          } else {
+            if (REQUEST_TYPE_PAGE.equals(requestType)) {
+              if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
+                req.response()
+                  .setStatusCode(201)
+                  .putHeader("content-type", "application/json")
+                  .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_page.json"));
+              } else if (REQUEST_LEVEL_TITLE.equals(requestLevel)) {
+                req.response()
+                  .setStatusCode(201)
+                  .putHeader("content-type", "application/json")
+                  .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_titleLevel_page.json"));
+              }
             }
-          }
-        });
-      } else if (req.method() == HttpMethod.POST && req.uri().equals("/requests-mediated/mediated-requests")) {
-        req.bodyHandler(buffer -> {
-          JsonObject request  = new JsonObject(buffer);
-          String requestLevel = request.getString("requestLevel");
-
-          if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
-            req.response()
-              .setStatusCode(201)
-              .putHeader("content-type", "application/json")
-              .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_itemLevel_hold_response.json"));
-          } else if (REQUEST_LEVEL_TITLE.equals(requestLevel)) {
-            req.response()
-              .setStatusCode(201)
-              .putHeader("content-type", "application/json")
-              .end(readMockFile(MOCK_DATA_FOLDER + "/mediatedRequest_titleLevel_hold.json"));
+            if (REQUEST_TYPE_HOLD.equals(requestType)) {
+              if (REQUEST_LEVEL_ITEM.equals(requestLevel)) {
+                req.response()
+                  .setStatusCode(201)
+                  .putHeader("content-type", "application/json")
+                  .end(readMockFile(MOCK_DATA_FOLDER + "/primaryEcsTlrRequest_itemLevel_hold.json"));
+              }
+            }
           }
         });
       }
-
       else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
