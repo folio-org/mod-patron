@@ -65,11 +65,11 @@
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
     <jacco-maven-plugin.version>0.8.7</jacco-maven-plugin.version>
     <aspectj-maven-plugin.version>1.14</aspectj-maven-plugin.version>
+    <properties-maven-plugin.version>1.0.0</properties-maven-plugin.version>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
     <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
-    <properties-maven-plugin.version>1.0.0</properties-maven-plugin.version>
     <exec-maven-plugin.version>3.5.0</exec-maven-plugin.version>
     <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
