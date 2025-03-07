@@ -63,7 +63,7 @@
 
     <!--Plugin properties-->
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
-    <jacco-maven-plugin.version>0.8.7</jacco-maven-plugin.version>
+    <jacco-maven-plugin.version>0.8.12</jacco-maven-plugin.version>
     <aspectj-maven-plugin.version>1.14</aspectj-maven-plugin.version>
     <properties-maven-plugin.version>1.0.0</properties-maven-plugin.version>
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
