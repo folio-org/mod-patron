@@ -1,3 +1,9 @@
+# 6.3.1 2025-04-16
+
+* Fix circulation-bff-ecs-request-external and holdings-storage dependencies (MODPATRON-229)
+* Add missing permission staging-users.item.put (MODPATRON-230)
+* Fix version of required interface circulation-bff-request-external (MODPATRON-225)
+
 # 6.3.0 2025-03-13
 
 * Update to Java 21 and RMB 35.4.0 (MODPATRON-223)
