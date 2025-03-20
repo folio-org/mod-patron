@@ -1,3 +1,7 @@
+# 6.2.10 2025-03-20
+
+* Fix version of required interface `circulation-bff-request-external` (MODPATRON-225)
+
 # 6.2.9 2025-02-21
 
 * Delegate creation of mediated requests to mod-circulation-bff (MODPATRON-212)
