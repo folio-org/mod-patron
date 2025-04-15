@@ -50,6 +50,8 @@
             "inventory.items.item.get",
             "inventory.instances.item.get",
             "inventory.instances.collection.get",
+            "inventory-storage.holdings.item.get",
+            "inventory-storage.holdings.collection.get",
             "feefines.item.get"
           ]
         },
