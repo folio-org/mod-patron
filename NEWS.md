@@ -1,3 +1,8 @@
+# 6.2.11 2025-04-16
+
+* Fix circulation-bff-ecs-request-external and holdings-storage dependencies (MODPATRON-229)
+* Add missing permission `staging-users.item.put` (MODPATRON-230)
+
 # 6.2.10 2025-03-20
 
 * Fix version of required interface `circulation-bff-request-external` (MODPATRON-225)
