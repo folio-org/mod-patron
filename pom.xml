@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.folio</groupId>
   <artifactId>mod-patron</artifactId>
-  <version>6.3.1-SNAPSHOT</version>
+  <version>6.3.1</version>
   <name>Patron Services</name>
   <description>Discovery service initiated patron services for FOLIO</description>
   <inceptionYear>2018</inceptionYear>
@@ -21,7 +21,7 @@
     <url>https://github.com/folio-org/mod-patron.git</url>
     <connection>scm:git:git://github.com/folio-org/mod-patron.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-patron.git</developerConnection>
-    <tag>v6.3.0</tag>
+    <tag>v6.3.1</tag>
   </scm>
   <issueManagement>
     <system>JIRA</system>
