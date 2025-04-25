@@ -1,12 +1,15 @@
 {
   "allowedServicePoints" : [ {
     "id" : "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
-    "name" : "Circ Desk 1"
+    "name" : "Circ Desk 1",
+    "discoveryName" : "Circ Desk 1"
   }, {
     "id" : "c4c90014-c8c9-4ade-8f24-b5e313319f4b",
-    "name" : "Circ Desk 2"
+    "name" : "Circ Desk 2",
+    "discoveryName" : "Circ Desk 2"
   }, {
     "id" : "7c5abc9f-f3d7-4856-b8d7-6712462ca007",
-    "name" : "Online"
+    "name" : "Online",
+    "discoveryName" : "Online"
   } ]
 }

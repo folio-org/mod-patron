@@ -16,6 +16,10 @@
       "name": {
         "type": "string",
         "description": "Service point name"
+      },
+      "discoveryName": {
+        "type": "string",
+        "description": "discoveryDisplayName of Service point"
       }
     },
     "required": [
