@@ -1,13 +1,16 @@
 {
   "Hold" : [ {
     "id" : "3a40852d-49fd-4df2-a1f9-6e2641a61111",
-    "name" : "Circ Desk 1"
+    "name" : "Circ Desk 1",
+    "discoveryDisplayName" : "Circ Desk 1"
   }, {
     "id" : "c4c90014-c8c9-4ade-8f24-b5e313312222",
-    "name" : "Circ Desk 2"
+    "name" : "Circ Desk 2",
+    "discoveryDisplayName" : "Circ Desk 2"
   } ],
   "Recall" : [ {
     "id" : "7c5abc9f-f3d7-4856-b8d7-6712462c3333",
-    "name" : "Online"
+    "name" : "Online",
+    "discoveryDisplayName" : "Online"
   } ]
 }
