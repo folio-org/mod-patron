@@ -787,7 +787,8 @@ public  class PatronServicesResourceImpl implements Patron {
       .map(JsonObject.class::cast)
       .map(sp -> new AllowedServicePoint()
         .withId(sp.getString("id"))
-        .withName(sp.getString("name")))
+        .withName(sp.getString("name"))
+        .withDiscoveryName(sp.getString("discoveryDisplayName")))
       .filter(distinctBy(AllowedServicePoint::getId))
       .collect(Collectors.toSet());
 

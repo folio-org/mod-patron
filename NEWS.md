@@ -1,3 +1,7 @@
+# 6.2.12 2025-05-07
+
+* [LOC Locate requirement] Allowed Service points should return discovery display name. (MODPATRON-233)
+
 # 6.2.11 2025-04-16
 
 * Fix circulation-bff-ecs-request-external and holdings-storage dependencies (MODPATRON-229)
