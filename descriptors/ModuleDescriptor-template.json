@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "6.4",
+      "version": "6.5",
       "handlers": [
         {
           "methods": ["POST"],
