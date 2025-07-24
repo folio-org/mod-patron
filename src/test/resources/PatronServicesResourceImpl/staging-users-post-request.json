@@ -1,6 +1,7 @@
 {
   "isEmailVerified": false,
   "status": "TIER-1",
+  "minor": true,
   "generalInfo": {
     "firstName": "TEST_STATUS_CODE_200",
     "middleName": "www",
