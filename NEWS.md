@@ -1,3 +1,6 @@
+# 6.4.0 2025-XX-XX
+* Extend the POST /patron and PUT /patron/{id} APIs to support an optional "minor" Boolean property. (MODPATRON-241)
+
 # 6.3.0 2025-03-13
 
 * Update to Java 21 and RMB 35.4.0 (MODPATRON-223)
