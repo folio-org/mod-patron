@@ -13,6 +13,10 @@
       "description": "A flag to determine if a patron is activated.",
       "type": "boolean"
     },
+    "minor": {
+      "description": "An optional flag If true, the user will be assigned to the 'Basic -- Minor (INTERNAL)' patron group upon creation; otherwise if false or null, the 'Remote Non-circulating' group is assigned.",
+      "type": "boolean"
+    },
     "status": {
       "type": "string",
       "description": "whether tier-1 or tier-2",

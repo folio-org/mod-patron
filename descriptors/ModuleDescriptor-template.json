@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "6.3",
+      "version": "6.5",
       "handlers": [
         {
           "methods": ["POST"],
@@ -146,7 +146,7 @@
     },
     {
       "id": "staging-users",
-      "version": "1.1"
+      "version": "1.2"
     },
     {
       "id": "holdings-storage",
@@ -243,11 +243,14 @@
       "displayName": "patron - all permissions",
       "description": "Entire set of permissions needed to use patron",
       "subPermissions": [
+        "patron.item.post",
+        "patron.item.put",
         "patron.account.item.get",
         "patron.account.item.put",
         "patron.account-by-email.item.put",
         "patron.account.collection.get",
         "patron.account-renew.item.post",
+        "patron.renew.item.post",
         "patron.account.item-hold.item.post",
         "patron.account.instance-hold.item.post",
         "patron.account.hold-cancel.item.post",
