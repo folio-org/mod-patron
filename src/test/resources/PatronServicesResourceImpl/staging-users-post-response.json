@@ -2,6 +2,7 @@
   "id": "http_status_200",
   "isEmailVerified": true,
   "status": "TIER-1",
+  "minor": true,
   "externalSystemId": "9eb67301-6f6e-468f-9b1a-6134dc39a684",
   "generalInfo": {
     "firstName": "test1",
