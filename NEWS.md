@@ -1,3 +1,6 @@
+# 6.3.2 2025-08-28
+* Extend the POST /patron and PUT /patron/{id} APIs to support an optional "minor" Boolean property. (MODPATRON-241)
+
 # 6.3.1 2025-04-16
 
 * Fix circulation-bff-ecs-request-external and holdings-storage dependencies (MODPATRON-229)
