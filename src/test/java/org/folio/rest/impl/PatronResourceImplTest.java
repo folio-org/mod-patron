@@ -312,8 +312,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         .get(accountPath)
       .then()
         .log().all()
-      .statusCode(200)
-      .contentType(ContentType.JSON)
+        .contentType(ContentType.JSON)
+        .statusCode(200)
         .extract().response();
 
     final String body = response.getBody().asString();
@@ -525,8 +525,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         .get(accountPath)
       .then()
         .log().all()
-      .statusCode(200)
-      .contentType(ContentType.JSON)
+        .contentType(ContentType.JSON)
+        .statusCode(200)
         .extract().response();
 
     final String body = r.getBody().asString();
