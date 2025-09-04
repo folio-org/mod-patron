@@ -312,8 +312,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         .get(accountPath)
       .then()
         .log().all()
-        .contentType(ContentType.JSON)
-        .statusCode(200)
+      .statusCode(200)
+      .contentType(ContentType.JSON)
         .extract().response();
 
     final String body = response.getBody().asString();
@@ -525,8 +525,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         .get(accountPath)
       .then()
         .log().all()
-        .contentType(ContentType.JSON)
-        .statusCode(200)
+      .statusCode(200)
+      .contentType(ContentType.JSON)
         .extract().response();
 
     final String body = r.getBody().asString();
@@ -2431,7 +2431,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/requestPolicy_page.json"));
-      } else if (req.path().contains("/configurations/entries")) {
+      } else if (req.path().contains("/settings/entries")) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")

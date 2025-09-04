@@ -44,8 +44,8 @@
           "pathPattern": "/patron/account/{accountId}",
           "permissionsRequired": ["patron.account.item.get"],
           "modulePermissions": [
-            "configuration.entries.item.get",
-            "configuration.entries.collection.get",
+            "mod-settings.entries.item.get",
+            "mod-settings.entries.collection.get",
             "users.item.get",
             "circulation.loans.collection.get",
             "circulation.requests.collection.get",
@@ -125,8 +125,8 @@
   ],
   "requires": [
     {
-      "id":"configuration",
-      "version":"2.0"
+      "id": "settings",
+      "version": "1.2"
     },
     {
       "id": "users",

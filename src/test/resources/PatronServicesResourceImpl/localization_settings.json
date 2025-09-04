@@ -1,23 +1,18 @@
 {
-  "configs": [
-      {
-          "id": "d467435b-2faa-4dc8-a82c-644d2df60c44",
-          "module": "ORG",
-          "configName": "localeSettings",
-          "enabled": true,
-          "value": "{\"locale\":\"en-US\",\"timezone\":\"Pacific/Wallis\",\"currency\":\"UYU\"}",
-          "metadata": {
-              "createdDate": "2022-10-05T18:54:53.290+00:00",
-              "createdByUserId": "f6ff553a-f79b-54c6-864d-48eb25c501f5",
-              "updatedDate": "2022-10-05T18:55:11.518+00:00",
-              "updatedByUserId": "f6ff553a-f79b-54c6-864d-48eb25c501f5"
-          }
+  "items": [
+    {
+      "id": "d467435b-2faa-4dc8-a82c-644d2df60c44",
+      "scope": "stripes-core.prefs.manage",
+      "key": "tenantLocaleSettings",
+      "value": {
+        "locale": "en-US",
+        "currency": "UYU",
+        "timezone": "Pacific/Wallis"
       }
+    }
   ],
-  "totalRecords": 1,
   "resultInfo": {
-      "totalRecords": 1,
-      "facets": [],
-      "diagnostics": []
+    "totalRecords": 1,
+    "diagnostics": []
   }
 }

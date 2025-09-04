@@ -46,6 +46,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -300,26 +301,19 @@ public  class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<String> getCurrencyCode(Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
-    String path = "/configurations/entries";
+    String path = "/settings/entries";
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
-    queryParameters.put(QUERY, "(module==ORG and configName==localeSettings)");
+    queryParameters.put(QUERY, "(scope==stripes-core.prefs.manage and key==tenantLocaleSettings)");
+
     return httpClient.get(path, queryParameters, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
-      .thenApply(response -> {
-        String currencyType = "USD";
-        Integer numOfResults = Integer.parseInt(response.getString(TOTAL_RECORDS));
-        if (numOfResults == 1) {
-          String value = response
-            .getJsonArray("configs")
-            .getJsonObject(0)
-            .getString(VALUE_KEY);
-          JsonObject settings = new JsonObject(value);
-          if (settings.containsKey("currency")) {
-            currencyType = settings.getString("currency");
-          }
-        }
-        return currencyType;
-      });
+      .thenApply(response -> Optional.ofNullable(response)
+        .map(json -> json.getJsonArray("items"))
+        .filter(items -> !items.isEmpty())
+        .map(arr -> arr.getJsonObject(0))
+        .map(obj -> obj.getJsonObject(VALUE_KEY))
+        .map(value -> value.getString("currency"))
+        .orElse("USD"));
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id,
