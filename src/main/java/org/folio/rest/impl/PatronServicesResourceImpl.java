@@ -93,7 +93,6 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 
 public  class PatronServicesResourceImpl implements Patron {
   private static final Logger logger = LogManager.getLogger();
-  private static final String TOTAL_RECORDS = "totalRecords";
   private static final String QUERY = "query";
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String USERS_FILED = "users";
