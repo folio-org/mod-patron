@@ -2431,7 +2431,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/requestPolicy_page.json"));
-      } else if (req.path().contains("/configurations/entries")) {
+      } else if (req.path().contains("/settings/entries")) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
