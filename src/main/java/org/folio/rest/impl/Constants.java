@@ -1,6 +1,6 @@
 package org.folio.rest.impl;
 
-class Constants {
+public class Constants {
 
   private Constants(){}
 
@@ -34,4 +34,5 @@ class Constants {
   static final String JSON_FIELD_REQUESTER_ID = "requesterId";
   static final String JSON_FIELD_FULFILLMENT_PREFERENCE = "fulfillmentPreference";
   static final String MULTIPLE_USER_ERROR = "Multiple users found with the same email";
+  public static final String JSON_FIELD_BATCH_REQUEST_ID = "batchId";
 }

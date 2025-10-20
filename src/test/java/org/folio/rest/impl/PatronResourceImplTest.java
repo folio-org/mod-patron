@@ -1319,6 +1319,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     // Test done
     logger.info("Test done");
   }
+
   @Test
   final void allowedServicePointsForItemShouldSucceed() {
     logger.info("Testing allowed service points for Item");
@@ -1343,6 +1344,118 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
       "/allowed_sp_mod_patron_expected_response.json"));
     verifyAllowedServicePoints(expectedJson, new JsonObject(response));
+    logger.info("Test done");
+  }
+
+  @Test
+  final void allowedServicePointsPerItemsShouldSucceed() {
+    logger.info("Testing POST allowed service points for Items");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/allowed_service_points_for_items_request.json"))
+      .when()
+      .contentType(ContentType.JSON)
+      .post(accountPath + instancePath + allowedServicePointsPath)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/allowed_items_sp_mod_patron_expected_response.json"));
+    verifyAllowedServicePointsForItems(expectedJson, new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void createMultiItemBatchRequestShouldSucceed() {
+    logger.info("Testing POST Multi-Item Batch Request");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/batch_request.json"))
+      .when()
+      .contentType(ContentType.JSON)
+      .post(accountPath + instancePath + BATCH_REQUEST_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/batch_request_expected_response.json"));
+    assertEquals(expectedJson, new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void createMultiItemBatchRequestWithProvidedIdShouldSucceed() {
+    logger.info("Testing POST Multi-Item Batch Request with provided id");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/batch_request_with_id.json"))
+      .when()
+      .contentType(ContentType.JSON)
+      .post(accountPath + instancePath + BATCH_REQUEST_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/batch_request_expected_response.json"));
+    assertEquals(expectedJson, new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void getMultiItemBatchRequestStatusShouldSucceed() {
+    logger.info("Testing Get Batch Request Status");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", goodInstanceId)
+      .pathParams("batchId", BATCH_REQUEST_ID)
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + BATCH_REQUEST_STATUS_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/batch_request_status_expected_response.json"));
+    assertEquals(expectedJson, new JsonObject(response));
+
     logger.info("Test done");
   }
 
@@ -1830,7 +1943,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     assertEquals(expectedAllowedServicePointsArray.size(), actualAllowedServicePointsArray.size());
 
-    expectedAllowedServicePoints.getJsonArray("allowedServicePoints").stream()
+    expectedAllowedServicePointsArray.stream()
       .map(JsonObject.class::cast)
       .forEach(e -> {
         boolean match = actualAllowedServicePointsArray.stream()
@@ -1839,6 +1952,29 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .anyMatch(aid -> aid.equals(e.getString("id")));
         assertTrue(match);
       });
+  }
+
+  public static void verifyAllowedServicePointsForItems(JsonObject expectedAllowedServicePoints,
+                                                        JsonObject actualAllowedServicePoints) {
+
+    JsonArray expectedAllowedServicePointsArray = expectedAllowedServicePoints
+      .getJsonArray("allowedServicePointsPerItem");
+    JsonArray actualAllowedServicePointsArray = actualAllowedServicePoints
+      .getJsonArray("allowedServicePointsPerItem");
+
+    assertEquals(expectedAllowedServicePointsArray.size(), actualAllowedServicePointsArray.size());
+
+    for (int i = 0; i < expectedAllowedServicePointsArray.size(); i++) {
+      var expectedFirstItemObj = expectedAllowedServicePointsArray.getJsonObject(i);
+      var actualFirstItemObj = expectedAllowedServicePointsArray.getJsonObject(i);
+      var expectedItemServicePoints =
+        new JsonObject().put("allowedServicePoints", expectedFirstItemObj.getJsonArray("allowedServicePoints"));
+      var actualItemServicePoints =
+        new JsonObject().put("allowedServicePoints", actualFirstItemObj.getJsonArray("allowedServicePoints"));
+
+      verifyAllowedServicePoints(expectedItemServicePoints, actualItemServicePoints);
+      assertEquals(expectedFirstItemObj.getString("itemId"), actualFirstItemObj.getString("itemId"));
+    }
   }
 
   public void mockData(HttpServerRequest req) {
@@ -2398,6 +2534,26 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/renew_create.json"));
         }
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + BATCH_REQUEST_ID)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
+      } else if (req.path().equals("/inventory/instances/" + goodInstanceId)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/inventory_instance_response.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + BATCH_REQUEST_ID + "/details")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
       } else if (req.path().equals("/circulation/rules/request-policy")) {
         // These checks require that the query string parameters be produced in a specific order
         if (rulesParametersMatch(req, materialTypeId1)) {

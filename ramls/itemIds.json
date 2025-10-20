@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of Item IDs to get allowed service points for",
+  "type": "object",
+  "properties": {
+    "itemIds": {
+      "description": "A UUID of the item",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "$ref": "raml-util/schemas/uuid.schema"
+      }
+    }
+  },
+  "required": [
+    "itemIds"
+  ]
+}
