@@ -19,7 +19,6 @@ import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.models.BatchRequestDetailsDto;
 import org.folio.patron.rest.models.BatchRequestDto;
 import org.folio.patron.rest.models.BatchRequestPostDto;
-import org.folio.patron.rest.models.Metadata;
 import org.folio.repository.MediatedRequestsRepository;
 import org.folio.rest.impl.InstanceRepository;
 import org.folio.rest.jaxrs.model.BatchRequest;
@@ -29,6 +28,7 @@ import org.folio.rest.jaxrs.model.ItemRequestsStats;
 import org.folio.rest.jaxrs.model.ItemsCompletedDetail;
 import org.folio.rest.jaxrs.model.ItemsFailedDetail;
 import org.folio.rest.jaxrs.model.ItemsPendingDetail;
+import org.folio.rest.jaxrs.model.Metadata;
 
 
 public class MediatedRequestsService {
@@ -73,7 +73,8 @@ public class MediatedRequestsService {
 
         if (BatchRequestStatus.Status.COMPLETED.value().equals(batchRequestDto.getMediatedRequestStatus())) {
           batchStatus.setStatus(BatchRequestStatus.Status.COMPLETED);
-          getMetadataUpdatedDate(batchRequestDto.getMetadata())
+          Optional.ofNullable(batchRequestDto.getMetadata())
+            .map(Metadata::getUpdatedDate)
             .ifPresent(batchStatus::setCompletedAt);
           Optional.ofNullable(batchRequestDto.getItemRequestsStats())
             .ifPresent(stats -> {
@@ -87,13 +88,6 @@ public class MediatedRequestsService {
         }
         return batchStatus;
       });
-  }
-
-  private Optional<Date> getMetadataUpdatedDate(Metadata metadata) {
-    return Optional.ofNullable(metadata)
-      .map(Metadata::getUpdatedDate)
-      .map(Instant::parse)
-      .map(Date::from);
   }
 
   private CompletableFuture<BatchRequestStatus> getBatchDetailsAndUpdateStatus(BatchRequestStatus batchStatus,
@@ -219,12 +213,10 @@ public class MediatedRequestsService {
       .ifPresent(metadata -> {
         var batchMetadata = new org.folio.rest.jaxrs.model.Metadata()
           .withCreatedByUserId(metadata.getCreatedByUserId())
-          .withCreatedDate(Date.from(Instant.parse(metadata.getCreatedDate())))
+          .withCreatedDate(metadata.getCreatedDate())
           .withCreatedByUsername(metadata.getCreatedByUsername())
           .withUpdatedByUserId(metadata.getUpdatedByUserId())
-          .withUpdatedDate(
-            metadata.getUpdatedDate() != null ? Date.from(Instant.parse(metadata.getUpdatedDate())) : null
-          )
+          .withUpdatedDate(metadata.getUpdatedDate())
           .withUpdatedByUsername(metadata.getUpdatedByUsername());
         result.setMetadata(batchMetadata);
       });

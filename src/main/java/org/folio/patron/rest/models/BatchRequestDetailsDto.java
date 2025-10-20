@@ -2,6 +2,7 @@ package org.folio.patron.rest.models;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import org.folio.rest.jaxrs.model.Metadata;
 
 /**
  * DTO for Mediated Batch Request Detail
