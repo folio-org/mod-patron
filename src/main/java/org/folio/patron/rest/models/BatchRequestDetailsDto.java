@@ -40,8 +40,6 @@ public class BatchRequestDetailsDto {
 
   private Metadata metadata;
 
-  public BatchRequestDetailsDto() {}
-
   public String getBatchId() {
     return batchId;
   }

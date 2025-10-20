@@ -94,19 +94,5 @@ public class BatchRequestDto {
   public void setMetadata(Metadata metadata) {
     this.metadata = metadata;
   }
-
-  @Override
-  public String toString() {
-    return "BatchRequestDto{" +
-      "batchId='" + batchId + '\'' +
-      ", requesterId='" + requesterId + '\'' +
-      ", mediatedRequestStatus='" + mediatedRequestStatus + '\'' +
-      ", requestDate='" + requestDate + '\'' +
-      ", itemRequestsStats=" + itemRequestsStats +
-      ", patronComments='" + patronComments + '\'' +
-      ", mediatedWorkflow='" + mediatedWorkflow + '\'' +
-      ", metadata=" + metadata +
-      '}';
-  }
 }
 

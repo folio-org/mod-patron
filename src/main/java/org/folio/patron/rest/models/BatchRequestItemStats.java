@@ -13,16 +13,6 @@ public class BatchRequestItemStats {
 
   private int failed;
 
-  public BatchRequestItemStats() {}
-
-  public BatchRequestItemStats(int total, int pending, int inProgress, int completed, int failed) {
-    this.total = total;
-    this.pending = pending;
-    this.inProgress = inProgress;
-    this.completed = completed;
-    this.failed = failed;
-  }
-
   public int getTotal() {
     return total;
   }
@@ -61,16 +51,5 @@ public class BatchRequestItemStats {
 
   public void setFailed(int failed) {
     this.failed = failed;
-  }
-
-  @Override
-  public String toString() {
-    return "BatchRequestItemStats{" +
-      "total=" + total +
-      ", pending=" + pending +
-      ", inProgress=" + inProgress +
-      ", completed=" + completed +
-      ", failed=" + failed +
-      '}';
   }
 }
