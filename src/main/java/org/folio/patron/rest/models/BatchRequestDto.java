@@ -2,11 +2,13 @@ package org.folio.patron.rest.models;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 import org.folio.rest.jaxrs.model.Metadata;
 
 /**
  * DTO for Batch Request
  */
+@Data
 public class BatchRequestDto {
 
   @NotNull
@@ -31,69 +33,5 @@ public class BatchRequestDto {
   private String mediatedWorkflow;
 
   private Metadata metadata;
-
-  public String getBatchId() {
-    return batchId;
-  }
-
-  public void setBatchId(String batchId) {
-    this.batchId = batchId;
-  }
-
-  public String getRequesterId() {
-    return requesterId;
-  }
-
-  public void setRequesterId(String requesterId) {
-    this.requesterId = requesterId;
-  }
-
-  public String getMediatedRequestStatus() {
-    return mediatedRequestStatus;
-  }
-
-  public void setMediatedRequestStatus(String mediatedRequestStatus) {
-    this.mediatedRequestStatus = mediatedRequestStatus;
-  }
-
-  public String getRequestDate() {
-    return requestDate;
-  }
-
-  public void setRequestDate(String requestDate) {
-    this.requestDate = requestDate;
-  }
-
-  public BatchRequestItemStats getItemRequestsStats() {
-    return itemRequestsStats;
-  }
-
-  public void setItemRequestsStats(BatchRequestItemStats itemRequestsStats) {
-    this.itemRequestsStats = itemRequestsStats;
-  }
-
-  public String getPatronComments() {
-    return patronComments;
-  }
-
-  public void setPatronComments(String patronComments) {
-    this.patronComments = patronComments;
-  }
-
-  public String getMediatedWorkflow() {
-    return mediatedWorkflow;
-  }
-
-  public void setMediatedWorkflow(String mediatedWorkflow) {
-    this.mediatedWorkflow = mediatedWorkflow;
-  }
-
-  public Metadata getMetadata() {
-    return metadata;
-  }
-
-  public void setMetadata(Metadata metadata) {
-    this.metadata = metadata;
-  }
 }
 

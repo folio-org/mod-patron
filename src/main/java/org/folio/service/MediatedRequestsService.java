@@ -13,8 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import io.vertx.core.json.JsonObject;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.models.BatchRequestDetailsDto;
 import org.folio.patron.rest.models.BatchRequestDto;
@@ -30,10 +29,8 @@ import org.folio.rest.jaxrs.model.ItemsFailedDetail;
 import org.folio.rest.jaxrs.model.ItemsPendingDetail;
 import org.folio.rest.jaxrs.model.Metadata;
 
-
+@Slf4j
 public class MediatedRequestsService {
-
-  private static final Logger logger = LogManager.getLogger();
 
   private static final String MEDIATED_BATCH_WORKFLOW = "Multi-Item request";
 
@@ -127,7 +124,7 @@ public class MediatedRequestsService {
   private List<BatchRequestDetailsDto> mapBatchRequestDetailsJsonToDto(JsonObject detailsJson, String batchId) {
     var requestDetails = detailsJson.getJsonArray("mediatedBatchRequestDetails");
     if (requestDetails == null || requestDetails.isEmpty()) {
-      logger.warn("mapBatchRequestDetailsJsonToDto:: No request details found for batchId: {}", batchId);
+      log.warn("mapBatchRequestDetailsJsonToDto:: No request details found for batchId: {}", batchId);
       return List.of();
     }
 

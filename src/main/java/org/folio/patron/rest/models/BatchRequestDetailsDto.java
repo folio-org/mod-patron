@@ -2,11 +2,13 @@ package org.folio.patron.rest.models;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.Data;
 import org.folio.rest.jaxrs.model.Metadata;
 
 /**
  * DTO for Mediated Batch Request Detail
  */
+@Data
 public class BatchRequestDetailsDto {
 
   @NotNull
@@ -40,93 +42,5 @@ public class BatchRequestDetailsDto {
   private String patronComments;
 
   private Metadata metadata;
-
-  public String getBatchId() {
-    return batchId;
-  }
-
-  public void setBatchId(String batchId) {
-    this.batchId = batchId;
-  }
-
-  public String getItemId() {
-    return itemId;
-  }
-
-  public void setItemId(String itemId) {
-    this.itemId = itemId;
-  }
-
-  public String getRequesterId() {
-    return requesterId;
-  }
-
-  public void setRequesterId(String requesterId) {
-    this.requesterId = requesterId;
-  }
-
-  public String getPickupServicePointId() {
-    return pickupServicePointId;
-  }
-
-  public void setPickupServicePointId(String pickupServicePointId) {
-    this.pickupServicePointId = pickupServicePointId;
-  }
-
-  public String getMediatedRequestStatus() {
-    return mediatedRequestStatus;
-  }
-
-  public void setMediatedRequestStatus(String mediatedRequestStatus) {
-    this.mediatedRequestStatus = mediatedRequestStatus;
-  }
-
-  public String getRequestStatus() {
-    return requestStatus;
-  }
-
-  public void setRequestStatus(String requestStatus) {
-    this.requestStatus = requestStatus;
-  }
-
-  public String getConfirmedRequestId() {
-    return confirmedRequestId;
-  }
-
-  public void setConfirmedRequestId(String confirmedRequestId) {
-    this.confirmedRequestId = confirmedRequestId;
-  }
-
-  public String getErrorCode() {
-    return errorCode;
-  }
-
-  public void setErrorCode(String errorCode) {
-    this.errorCode = errorCode;
-  }
-
-  public String getErrorDetails() {
-    return errorDetails;
-  }
-
-  public void setErrorDetails(String errorDetails) {
-    this.errorDetails = errorDetails;
-  }
-
-  public String getPatronComments() {
-    return patronComments;
-  }
-
-  public void setPatronComments(String patronComments) {
-    this.patronComments = patronComments;
-  }
-
-  public Metadata getMetadata() {
-    return metadata;
-  }
-
-  public void setMetadata(Metadata metadata) {
-    this.metadata = metadata;
-  }
 }
 
