@@ -4,12 +4,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
-import lombok.Getter;
 
 /**
  * DTO for creating Mediated Batch Request
  */
-@Getter
 public class BatchRequestPostDto {
 
   @Pattern(regexp = "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$")
@@ -34,6 +32,34 @@ public class BatchRequestPostDto {
     this.itemRequests = itemRequests;
   }
 
+  public String getBatchId() {
+    return batchId;
+  }
+
+  public void setBatchId(String batchId) {
+    this.batchId = batchId;
+  }
+
+  public String getRequesterId() {
+    return requesterId;
+  }
+
+  public String getMediatedWorkflow() {
+    return mediatedWorkflow;
+  }
+
+  public List<BatchItemRequests> getItemRequests() {
+    return itemRequests;
+  }
+
+  public String getPatronComments() {
+    return patronComments;
+  }
+
+  public void setPatronComments(String patronComments) {
+    this.patronComments = patronComments;
+  }
+
   public BatchRequestPostDto batchId(String batchId) {
     this.batchId = batchId;
     return this;
@@ -44,7 +70,6 @@ public class BatchRequestPostDto {
     return this;
   }
 
-  @Getter
   public static class BatchItemRequests {
 
     @NotNull
@@ -58,6 +83,14 @@ public class BatchRequestPostDto {
     public BatchItemRequests(String itemId, String pickupServicePointId) {
       this.itemId = itemId;
       this.pickupServicePointId = pickupServicePointId;
+    }
+
+    public String getItemId() {
+      return itemId;
+    }
+
+    public String getPickupServicePointId() {
+      return pickupServicePointId;
     }
   }
 }
