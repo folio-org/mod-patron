@@ -2,14 +2,10 @@ package org.folio.patron.rest.models;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * DTO for Mediated Batch Request Detail
  */
-@Data
-@NoArgsConstructor
 public class BatchRequestDetailsDto {
 
   @NotNull
@@ -44,60 +40,94 @@ public class BatchRequestDetailsDto {
 
   private Metadata metadata;
 
+  public BatchRequestDetailsDto() {}
 
-  public BatchRequestDetailsDto batchId(String batchId) {
+  public String getBatchId() {
+    return batchId;
+  }
+
+  public void setBatchId(String batchId) {
     this.batchId = batchId;
-    return this;
   }
 
-  public BatchRequestDetailsDto itemId(String itemId) {
+  public String getItemId() {
+    return itemId;
+  }
+
+  public void setItemId(String itemId) {
     this.itemId = itemId;
-    return this;
   }
 
-  public BatchRequestDetailsDto requesterId(String requesterId) {
+  public String getRequesterId() {
+    return requesterId;
+  }
+
+  public void setRequesterId(String requesterId) {
     this.requesterId = requesterId;
-    return this;
   }
 
-  public BatchRequestDetailsDto pickupServicePointId(String pickupServicePointId) {
+  public String getPickupServicePointId() {
+    return pickupServicePointId;
+  }
+
+  public void setPickupServicePointId(String pickupServicePointId) {
     this.pickupServicePointId = pickupServicePointId;
-    return this;
   }
 
-  public BatchRequestDetailsDto mediatedRequestStatus(String mediatedRequestStatus) {
+  public String getMediatedRequestStatus() {
+    return mediatedRequestStatus;
+  }
+
+  public void setMediatedRequestStatus(String mediatedRequestStatus) {
     this.mediatedRequestStatus = mediatedRequestStatus;
-    return this;
   }
 
-  public BatchRequestDetailsDto requestStatus(String requestStatus) {
+  public String getRequestStatus() {
+    return requestStatus;
+  }
+
+  public void setRequestStatus(String requestStatus) {
     this.requestStatus = requestStatus;
-    return this;
   }
 
-  public BatchRequestDetailsDto confirmedRequestId(String confirmedRequestId) {
+  public String getConfirmedRequestId() {
+    return confirmedRequestId;
+  }
+
+  public void setConfirmedRequestId(String confirmedRequestId) {
     this.confirmedRequestId = confirmedRequestId;
-    return this;
   }
 
-  public BatchRequestDetailsDto errorCode(String errorCode) {
+  public String getErrorCode() {
+    return errorCode;
+  }
+
+  public void setErrorCode(String errorCode) {
     this.errorCode = errorCode;
-    return this;
   }
 
-  public BatchRequestDetailsDto errorDetails(String errorDetails) {
+  public String getErrorDetails() {
+    return errorDetails;
+  }
+
+  public void setErrorDetails(String errorDetails) {
     this.errorDetails = errorDetails;
-    return this;
   }
 
-  public BatchRequestDetailsDto patronComments(String patronComments) {
+  public String getPatronComments() {
+    return patronComments;
+  }
+
+  public void setPatronComments(String patronComments) {
     this.patronComments = patronComments;
-    return this;
   }
 
-  public BatchRequestDetailsDto metadata(Metadata metadata) {
+  public Metadata getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(Metadata metadata) {
     this.metadata = metadata;
-    return this;
   }
 }
 
