@@ -19,7 +19,7 @@ import org.folio.patron.rest.models.BatchRequestDetailsDto;
 import org.folio.patron.rest.models.BatchRequestDto;
 import org.folio.patron.rest.models.BatchRequestPostDto;
 import org.folio.repository.MediatedRequestsRepository;
-import org.folio.rest.impl.InstanceRepository;
+import org.folio.repository.InstanceRepository;
 import org.folio.rest.jaxrs.model.BatchRequest;
 import org.folio.rest.jaxrs.model.BatchRequestStatus;
 import org.folio.rest.jaxrs.model.BatchRequestSubmitResult;

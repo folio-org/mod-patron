@@ -1,4 +1,4 @@
-package org.folio.rest.impl;
+package org.folio.repository;
 
 import static org.folio.rest.impl.Constants.JSON_FIELD_INSTANCE_ID;
 

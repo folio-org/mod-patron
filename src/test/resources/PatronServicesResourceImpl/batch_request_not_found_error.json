@@ -1,0 +1,8 @@
+{
+  "errors": [
+    {
+      "code": "NOT_FOUND",
+      "message": "Batch Request with given ID Not Found"
+    }
+  ]
+}
