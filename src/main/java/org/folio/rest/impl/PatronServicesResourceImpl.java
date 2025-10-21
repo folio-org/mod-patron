@@ -720,7 +720,7 @@ public  class PatronServicesResourceImpl implements Patron {
 
     final var itemRepository = new ItemRepository(httpClient);
 
-    return itemRepository.getItem(charge.getItem().getItemId(), okapiHeaders)
+    return itemRepository.getItemNoThrow(charge.getItem().getItemId(), okapiHeaders)
         .thenCompose(item -> getInstance(item, okapiHeaders, httpClient))
         .thenApply(instance -> getItem(charge, instance))
         .thenApply(item -> updateItem(charge, item, account));

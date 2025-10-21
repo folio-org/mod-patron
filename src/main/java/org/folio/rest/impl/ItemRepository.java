@@ -17,6 +17,7 @@ import org.folio.rest.jaxrs.model.Parameter;
 import io.vertx.core.json.JsonObject;
 
 public class ItemRepository {
+  private static final String INVENTORY_ITEMS_URL = "/inventory/items/";
   private final VertxOkapiHttpClient client;
 
   public ItemRepository(VertxOkapiHttpClient client) {
@@ -26,7 +27,7 @@ public class ItemRepository {
   public CompletableFuture<JsonObject> getItem(String itemId,
     Map<String, String> okapiHeaders) {
 
-    return client.get("/inventory/items/" + itemId, Map.of(), okapiHeaders)
+    return client.get(INVENTORY_ITEMS_URL + itemId, Map.of(), okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(result -> {
         if (result == null) {
@@ -39,5 +40,12 @@ public class ItemRepository {
         }
         return result;
       });
+  }
+
+  public CompletableFuture<JsonObject> getItemNoThrow(String itemId,
+    Map<String, String> okapiHeaders) {
+
+    return client.get(INVENTORY_ITEMS_URL + itemId, Map.of(), okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBodyNoThrow);
   }
 }

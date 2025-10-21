@@ -15,15 +15,25 @@ public class ResponseInterpreter {
   private ResponseInterpreter() {}
 
   public static JsonObject verifyAndExtractBody(Response response) {
-    log.info("verifyAndExtractBody:: statusCode: {}", response.statusCode);
-    if (!response.isSuccess()) {
-      throw new CompletionException(new HttpException(response.statusCode,
-        response.body));
-    }
+    return extractBody(response, true);
+  }
 
-    // Parsing an empty body to JSON causes an exception
+  public static JsonObject verifyAndExtractBodyNoThrow(Response response) {
+    return extractBody(response, false);
+  }
+
+  private static JsonObject extractBody(Response response, boolean throwOnError) {
+    log.info("extractBody:: statusCode: {}", response.statusCode);
+    if (!response.isSuccess()) {
+      if (throwOnError) {
+        throw new CompletionException(new HttpException(response.statusCode, response.body));
+      } else {
+        log.error("extractBody:: response is not successful. statusCode: {}, body: {}",
+          response.statusCode, response.body);
+      }
+    }
     if (isBlank(response.body)) {
-      log.info("verifyAndExtractBody:: response is empty");
+      log.info("extractBody:: response is empty");
       return null;
     }
     return new JsonObject(response.body);

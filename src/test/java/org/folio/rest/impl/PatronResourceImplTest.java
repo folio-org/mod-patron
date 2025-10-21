@@ -920,6 +920,38 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     logger.info("Test done");
   }
 
+  @Test
+  public void testGetPatronAccountByIdWithMissingItem() {
+    logger.info("Testing GET patron account with a charge referencing a non-existent item");
+
+    final Response r = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("includeLoans", "true")
+      .queryParam("includeHolds", "true")
+      .queryParam("includeCharges", "true")
+      .when()
+      .get(accountPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    assertTrue(json.containsKey("charges"), "Response should contain charges block");
+    JsonArray charges = json.getJsonArray("charges");
+    assertTrue(charges.size() > 0, "Charges array should not be empty");
+    JsonObject charge = charges.getJsonObject(0);
+    assertTrue(!charge.containsKey("item") || charge.getValue("item") == null, "Item block should be missing or null for missing item");
+
+    logger.info("Test done");
+  }
+
+
   /*
   This test checks the negative case of not being able to place a request due to request policy and whitelist restrictions
    */
