@@ -20,6 +20,11 @@ types:
   user: !include userdata.json
   stagingUser: !include staging_userdata.json
   allowedServicePoints: !include allowed-service-points-response.json
+  itemIds: !include itemIds.json
+  batchRequest: !include batch-request.json
+  batchRequestSubmitResult: !include batch-request-response.json
+  batchRequestStatus: !include batch-request-status-response.json
+  allowedServicePointsPerItems: !include allowed-service-points-per-item-response.json
   errors: !include raml-util/schemas/errors.schema
   error: !include raml-util/schemas/error.schema
   parameters: !include raml-util/schemas/parameters.schema
@@ -350,6 +355,39 @@ traits:
           /allowed-service-points:
             displayName: Allowed service points
             description: Services that provides a list of allowed pickup service points
+            post:
+              description: |
+                Returns a list of pickup service points allowed for a particular patron and instance's items
+              is: [ validate ]
+              body:
+                application/json:
+                  type: itemIds
+                  example: !include examples/itemIds.json
+              responses:
+                200:
+                  description: |
+                    Returns an allowed service points per item
+                  body:
+                    application/json:
+                      type: allowedServicePointsPerItems
+                      example: !include examples/allowed-service-points-per-item-response.json
+                400:
+                  description: Bad request
+                  body:
+                    text/plain:
+                      example: |
+                        unable to process request -- constraint violation
+                422:
+                  description: Validation error
+                  body:
+                    application/json:
+                      type: errors
+                500:
+                  description: |
+                    Internal server error, e.g. due to misconfiguration
+                  body:
+                    text/plain:
+                      example: internal server error, contact administrator
             get:
               description: |
                 Returns a list of pickup service points allowed for a particular patron and instance
@@ -373,6 +411,76 @@ traits:
                   body:
                     text/plain:
                       example: internal server error, contact administrator
+          /batch-request:
+            displayName: Multi-Item Request
+            description: Services that provide multi-item request management
+            post:
+              description: |
+                Submits a batch multi-item request for a particular patron and instance's items
+              is: [ validate ]
+              body:
+                application/json:
+                  type: batchRequest
+                  example: !include examples/batch-request.json
+              responses:
+                200:
+                  description: |
+                    Returns multi-item request submission result
+                  body:
+                    application/json:
+                      type: batchRequestSubmitResult
+                      example: !include examples/batch-request-response.json
+                400:
+                  description: Bad request
+                  body:
+                    text/plain:
+                      example: |
+                        unable to process request -- constraint violation
+                422:
+                  description: Validation error
+                  body:
+                    application/json:
+                      type: errors
+                500:
+                  description: |
+                    Internal server error, e.g. due to misconfiguration
+                  body:
+                    text/plain:
+                      example: internal server error, contact administrator
+            /{batchRequestId}:
+              uriParameters:
+                batchRequestId:
+                  description: The UUID of a batch request
+                  type: string
+                  pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+              /status:
+                get:
+                  description: |
+                    Returns the status of a batch multi-item request
+                  responses:
+                    200:
+                      description: |
+                        Successfully returns the status of a batch request
+                      body:
+                        application/json:
+                          type: batchRequestStatus
+                          example: !include examples/batch-request-status-response.json
+                    404:
+                      description: Batch request with a given ID not found
+                      body:
+                        text/plain:
+                          example: Multi-Item request not found
+                    422:
+                      description: Validation error
+                      body:
+                        application/json:
+                          type: errors
+                    500:
+                      description: |
+                        Internal server error, e.g. due to misconfiguration
+                      body:
+                        text/plain:
+                          example: internal server error, contact administrator
       /hold:
         displayName: Hold Management
         description: Services that provide hold management

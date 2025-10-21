@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Multi-Item Request Schema",
+  "type": "object",
+  "description": "Account schema for patron portal integration",
+  "additionalProperties": false,
+  "properties": {
+    "batchRequestId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "The UUID id of the batch request"
+    },
+    "requests": {
+      "description": "Physical addresses associated with the user",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "description": "UUID of the item",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          },
+          "pickUpLocationId": {
+            "description": "UUID of the pickup location",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          }
+        },
+        "required":[
+          "itemId",
+          "pickUpLocationId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "patronComments": {
+      "description": "Patron comments to be included with each request",
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "requests"
+  ]
+}

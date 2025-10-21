@@ -1,0 +1,14 @@
+{
+  "batchRequestId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+  "requests": [
+    {
+      "itemId": "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+      "pickUpLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8"
+    },
+    {
+      "itemId": "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+      "pickUpLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8"
+    }
+  ],
+  "patronComments": "patron comment"
+}

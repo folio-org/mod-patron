@@ -1,0 +1,18 @@
+{
+  "batchId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+  "requesterId": "9a171a89-baca-4f1a-b2c4-d7253854864e",
+  "mediatedRequestStatus": "In progress",
+  "itemRequestsStats": {
+    "total": 100,
+    "pending": 5,
+    "inProgress": 95,
+    "completed": 0,
+    "failed": 0
+  },
+  "metadata": {
+    "createdByUserId": "9a171a89-baca-4f1a-b2c4-d7253854864e",
+    "createdDate": "2024-06-01T12:00:00Z",
+    "updatedByUserId": "9a171a89-baca-4f1a-b2c4-d7253854864e",
+    "updatedDate": "2024-06-01T12:00:00Z"
+  }
+}

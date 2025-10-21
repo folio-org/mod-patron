@@ -1,0 +1,30 @@
+{
+  "allowedServicePointsPerItem": [
+    {
+      "itemId": "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+      "allowedServicePoints": [
+        {
+          "id": "be6cdc85-1202-4c48-99fa-56af591f5a3a",
+          "name": "One good service point"
+        },
+        {
+          "id": "650b2d28-dc05-4177-9dc3-c45316fe5aa6",
+          "name": "Main circ college"
+        }
+      ]
+    },
+    {
+      "itemId": "9631dd19-63e4-570d-a50c-de0665de3b44",
+      "allowedServicePoints": [
+        {
+          "id": "f297326f-60ea-5d8c-8e8f-9b0179421d10",
+          "name": "Another good service point"
+        },
+        {
+          "id": "650b2d28-dc05-4177-9dc3-c45316fe5aa6",
+          "name": "Main circ college"
+        }
+      ]
+    }
+  ]
+}

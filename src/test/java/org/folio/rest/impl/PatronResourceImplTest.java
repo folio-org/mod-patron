@@ -74,7 +74,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private final String badUserId = "3ed07e77-a5c9-47c8-bb0b-381099e10a42";
   private final String goodItemId = "32e5757d-6566-466e-b69d-994eb33d2b62";
   private final String badItemId = "3dda4eb9-a156-474c-829f-bd5a386f382c";
-  private final String badInstanceId = "68cb9692-aa5f-459d-8791-f79486c11225";
+  private static final String BAD_INSTANCE_ID = "68cb9692-aa5f-459d-8791-f79486c11225";
+  private static final String INVALID_INSTANCE_ID = "68cb9692-aa5f-459d-8791-f79486c11226";
   private final String goodCancelHoldId = "dd238b5b-01fc-4205-83b8-888888888888";
   private final String badCancelHoldId = "dd238b5b-01fc-4205-83b8-999999999999";
   private final String missingHoldingsRecordId = "dd238b5b-01fc-4205-83b8-777777777999";
@@ -1125,7 +1126,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     final var hold = given()
         .headers(headers)
-        .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
+        .and().pathParams("accountId", goodUserId, "instanceId", GOOD_INSTANCE_ID)
         .and().body(readMockFile(MOCK_DATA_FOLDER
             + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
       .when()
@@ -1169,7 +1170,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     given()
       .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
           new Header("x-okapi-bad-data", codeString)))
-      .and().pathParams("accountId", goodUserId, "instanceId", goodInstanceId)
+      .and().pathParams("accountId", goodUserId, "instanceId", GOOD_INSTANCE_ID)
       .and().body(readMockFile(MOCK_DATA_FOLDER
           + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
     .when()
@@ -1190,9 +1191,9 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     final var holdErrorResponse = given()
         .headers(new Headers(tenantHeader, urlHeader, contentTypeHeader,
-            new Header("x-okapi-bad-instance-id", badInstanceId),
+            new Header("x-okapi-bad-instance-id", BAD_INSTANCE_ID),
             new Header(okapiBadDataHeader, "422")))
-        .and().pathParams("accountId", goodUserId, "instanceId", badInstanceId)
+        .and().pathParams("accountId", goodUserId, "instanceId", BAD_INSTANCE_ID)
         .and().body(readMockFile(MOCK_DATA_FOLDER
         + "/request_testPostPatronAccountByIdInstanceByInstanceIdHold.json"))
       .when()
@@ -1319,6 +1320,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     // Test done
     logger.info("Test done");
   }
+
   @Test
   final void allowedServicePointsForItemShouldSucceed() {
     logger.info("Testing allowed service points for Item");
@@ -1332,7 +1334,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .log().all()
       .when()
       .contentType(ContentType.JSON)
-      .get(accountPath + itemPath + allowedServicePointsPath)
+      .get(accountPath + itemPath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .log().all()
       .and().assertThat().contentType(ContentType.JSON)
@@ -1343,6 +1345,146 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
       "/allowed_sp_mod_patron_expected_response.json"));
     verifyAllowedServicePoints(expectedJson, new JsonObject(response));
+    logger.info("Test done");
+  }
+
+  @Test
+  final void testPostAllowedServicePointsPerItemsShouldSucceed() {
+    logger.info("Testing POST allowed service points for Items");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/allowed_service_points_for_items_request.json"))
+      .when()
+      .contentType(ContentType.JSON)
+      .post(accountPath + instancePath + ALLOWED_SERVICE_POINTS_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/allowed_items_sp_mod_patron_expected_response.json"));
+    verifyAllowedServicePointsForItems(expectedJson, new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void testPostMultiItemBatchRequestShouldSucceed() {
+    logger.info("Testing POST Multi-Item Batch Request");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/batch_request.json"))
+      .when()
+      .contentType(ContentType.JSON)
+      .post(accountPath + instancePath + BATCH_REQUEST_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/batch_request_expected_response.json"));
+    assertEquals(expectedJson, new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @Test
+  final void testPostMultiItemBatchRequestWithProvidedIdShouldSucceed() {
+    logger.info("Testing POST Multi-Item Batch Request with provided id");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
+      .body(readMockFile(MOCK_DATA_FOLDER + "/batch_request_with_id.json"))
+      .when()
+      .contentType(ContentType.JSON)
+      .post(accountPath + instancePath + BATCH_REQUEST_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
+      "/batch_request_expected_response.json"));
+    assertEquals(expectedJson, new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchRequestStatus")
+  final void testGetMultiItemBatchRequestStatusShouldSucceed(String expectedResponseFile, String batchId) {
+    logger.info("Testing Get Completed Batch Request Status");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
+      .pathParams("batchId", batchId)
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + BATCH_REQUEST_STATUS_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER + "/" + expectedResponseFile));
+    assertEquals(expectedJson, new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @ParameterizedTest
+  @MethodSource("failedBatchRequestStatus")
+  final void getMultiItemBatchRequestStatusShouldFailInvalidFetchedRecords(int expectedStatus, String expectedResponseFile,
+                                                                           String instanceId, String batchId) {
+    logger.info("Testing Get Batch Request Status for invalid fetched records");
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", instanceId)
+      .pathParams("batchId", batchId)
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + BATCH_REQUEST_STATUS_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().statusCode(expectedStatus)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER + "/" + expectedResponseFile));
+    assertEquals(expectedJson, new JsonObject(response));
+
     logger.info("Test done");
   }
 
@@ -1360,7 +1502,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .log().all()
       .when()
       .contentType(ContentType.JSON)
-      .get(accountPath + itemPath + allowedServicePointsPath)
+      .get(accountPath + itemPath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .log().all()
       .and().assertThat().contentType(TEXT)
@@ -1385,7 +1527,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .log().all()
       .when()
       .contentType(ContentType.JSON)
-      .get(accountPath + itemPath + allowedServicePointsPath)
+      .get(accountPath + itemPath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .log().all()
       .and().assertThat().contentType(JSON)
@@ -1408,11 +1550,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .header(urlHeader)
       .header(contentTypeHeader)
       .pathParam("accountId", goodUserId)
-      .pathParam("instanceId", goodInstanceId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
       .log().all()
       .when()
       .contentType(ContentType.JSON)
-      .get(accountPath + instancePath + allowedServicePointsPath)
+      .get(accountPath + instancePath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .log().all()
       .and().assertThat().contentType(ContentType.JSON)
@@ -1436,11 +1578,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .header(contentTypeHeader)
       .header(new Header(okapiBadDataHeader, "500"))
       .pathParam("accountId", goodUserId)
-      .pathParam("instanceId", goodInstanceId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
       .log().all()
       .when()
       .contentType(ContentType.JSON)
-      .get(accountPath + instancePath + allowedServicePointsPath)
+      .get(accountPath + instancePath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .log().all()
       .and().assertThat().contentType(TEXT)
@@ -1461,11 +1603,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .header(contentTypeHeader)
       .header(new Header(okapiBadDataHeader, "422"))
       .pathParam("accountId", goodUserId)
-      .pathParam("instanceId", goodInstanceId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
       .log().all()
       .when()
       .contentType(ContentType.JSON)
-      .get(accountPath + instancePath + allowedServicePointsPath)
+      .get(accountPath + instancePath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .log().all()
       .and().assertThat().contentType(JSON)
@@ -1664,6 +1806,20 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         Arguments.of("500", 500, TEXT));
   }
 
+  static Stream<Arguments> failedBatchRequestStatus() {
+    return Stream.of(
+      Arguments.of(404, "instance_not_found_error.json", BAD_INSTANCE_ID, BATCH_REQUEST_ID),
+      Arguments.of(422, "instance_invalid_error.json", INVALID_INSTANCE_ID, BATCH_REQUEST_ID),
+      Arguments.of(404, "batch_request_not_found_error.json", GOOD_INSTANCE_ID, NON_EXISTING_BATCH_REQUEST_ID),
+      Arguments.of(422, "batch_request_invalid_error.json", GOOD_INSTANCE_ID, INVALID_BATCH_REQUEST_ID));
+  }
+
+  static Stream<Arguments> batchRequestStatus() {
+    return Stream.of(
+      Arguments.of("batch_request_status_expected_response.json", BATCH_REQUEST_ID),
+      Arguments.of("batch_request_completed_status_expected_response.json", COMPLETED_BATCH_REQUEST_ID));
+  }
+
   static Stream<Arguments> renewFailureCodes() {
     return Stream.of(
         // Even though we receive a 400, we need to return a 500 since there is nothing the client
@@ -1830,7 +1986,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     assertEquals(expectedAllowedServicePointsArray.size(), actualAllowedServicePointsArray.size());
 
-    expectedAllowedServicePoints.getJsonArray("allowedServicePoints").stream()
+    expectedAllowedServicePointsArray.stream()
       .map(JsonObject.class::cast)
       .forEach(e -> {
         boolean match = actualAllowedServicePointsArray.stream()
@@ -1839,6 +1995,29 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .anyMatch(aid -> aid.equals(e.getString("id")));
         assertTrue(match);
       });
+  }
+
+  public static void verifyAllowedServicePointsForItems(JsonObject expectedAllowedServicePoints,
+                                                        JsonObject actualAllowedServicePoints) {
+
+    JsonArray expectedAllowedServicePointsArray = expectedAllowedServicePoints
+      .getJsonArray("allowedServicePointsPerItem");
+    JsonArray actualAllowedServicePointsArray = actualAllowedServicePoints
+      .getJsonArray("allowedServicePointsPerItem");
+
+    assertEquals(expectedAllowedServicePointsArray.size(), actualAllowedServicePointsArray.size());
+
+    for (int i = 0; i < expectedAllowedServicePointsArray.size(); i++) {
+      var expectedFirstItemObj = expectedAllowedServicePointsArray.getJsonObject(i);
+      var actualFirstItemObj = expectedAllowedServicePointsArray.getJsonObject(i);
+      var expectedItemServicePoints =
+        new JsonObject().put("allowedServicePoints", expectedFirstItemObj.getJsonArray("allowedServicePoints"));
+      var actualItemServicePoints =
+        new JsonObject().put("allowedServicePoints", actualFirstItemObj.getJsonArray("allowedServicePoints"));
+
+      verifyAllowedServicePoints(expectedItemServicePoints, actualItemServicePoints);
+      assertEquals(expectedFirstItemObj.getString("itemId"), actualFirstItemObj.getString("itemId"));
+    }
   }
 
   public void mockData(HttpServerRequest req) {
@@ -2398,6 +2577,56 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/renew_create.json"));
         }
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + BATCH_REQUEST_ID)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + COMPLETED_BATCH_REQUEST_ID)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_response.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + NON_EXISTING_BATCH_REQUEST_ID)) {
+        req.response()
+          .setStatusCode(404)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_not_found_error.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + INVALID_BATCH_REQUEST_ID)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end("");
+      } else if (req.path().equals("/inventory/instances/" + GOOD_INSTANCE_ID)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/inventory_instance_response.json"));
+      } else if (req.path().equals("/inventory/instances/" + BAD_INSTANCE_ID)) {
+        req.response()
+          .setStatusCode(404)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/instance_not_found_error.json"));
+      } else if (req.path().equals("/inventory/instances/" + INVALID_INSTANCE_ID)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end("");
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + BATCH_REQUEST_ID + "/details")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + COMPLETED_BATCH_REQUEST_ID + "/details")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_details_response.json"));
       } else if (req.path().equals("/circulation/rules/request-policy")) {
         // These checks require that the query string parameters be produced in a specific order
         if (rulesParametersMatch(req, materialTypeId1)) {
@@ -2481,7 +2710,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         } else {
           if ("create".equals(req.getParam("operation"))
             && goodUserId.equals(req.getParam("requesterId"))
-            && goodInstanceId.equals(req.getParam("instanceId"))) {
+            && GOOD_INSTANCE_ID.equals(req.getParam("instanceId"))) {
             req.response()
               .setStatusCode(200)
               .putHeader("content-type", "application/json")
