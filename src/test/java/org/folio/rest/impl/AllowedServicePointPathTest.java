@@ -107,7 +107,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
       .pathParam(INSTANCE_ID_PATH_PARAM_KEY, GOOD_INSTANCE_ID)
       .log().all()
       .when()
-      .get(accountPath + instancePath + allowedServicePointsPath)
+      .get(accountPath + instancePath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .extract()
       .asString();
@@ -129,7 +129,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
       .pathParam(INSTANCE_ID_PATH_PARAM_KEY, GOOD_INSTANCE_ID)
       .log().all()
       .when()
-      .get(accountPath + instancePath + allowedServicePointsPath)
+      .get(accountPath + instancePath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .and().assertThat().statusCode(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt())
       .and().assertThat().statusLine(INTERNAL_SERVER_ERROR_STATUS_LINE)
@@ -150,7 +150,7 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
       .pathParam(INSTANCE_ID_PATH_PARAM_KEY, GOOD_INSTANCE_ID)
       .log().all()
       .when()
-      .get(accountPath + instancePath + allowedServicePointsPath)
+      .get(accountPath + instancePath + ALLOWED_SERVICE_POINTS_PATH)
       .then()
       .extract()
       .asString();

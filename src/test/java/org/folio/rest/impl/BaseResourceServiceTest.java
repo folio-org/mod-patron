@@ -23,13 +23,12 @@ public abstract class BaseResourceServiceTest {
     serverPort);
   protected final Header contentTypeHeader =
     new Header("Content-Type", "application/json");
-  protected final Header tenantHeader = new Header("X-Okapi-Tenant",
-    "patronresourceimpltest");
+  protected final Header tenantHeader = new Header("X-Okapi-Tenant","patronresourceimpltest");
   protected final String goodUserId = "1ec54964-70f0-44cc-bd19-2a892ea0d336";
   protected static final String GOOD_INSTANCE_ID = "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5";
   protected final String accountPath = "/patron/account/{accountId}";
   protected final String instancePath = "/instance/{instanceId}";
-  protected static final String allowedServicePointsPath = "/allowed-service-points";
+  protected static final String ALLOWED_SERVICE_POINTS_PATH = "/allowed-service-points";
   protected static final String BATCH_REQUEST_PATH = "/batch-request";
   protected static final String BATCH_REQUEST_STATUS_PATH = "/batch-request/{batchId}/status";
   protected static final String BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51c";
