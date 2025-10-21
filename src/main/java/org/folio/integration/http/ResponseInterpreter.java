@@ -30,6 +30,7 @@ public class ResponseInterpreter {
       } else {
         log.error("extractBody:: response is not successful. statusCode: {}, body: {}",
           response.statusCode, response.body);
+        return null; // Return null immediately to avoid JSON parsing error
       }
     }
     if (isBlank(response.body)) {
