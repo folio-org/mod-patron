@@ -24,9 +24,9 @@ import org.folio.rest.jaxrs.model.BatchRequest;
 import org.folio.rest.jaxrs.model.BatchRequestStatus;
 import org.folio.rest.jaxrs.model.BatchRequestSubmitResult;
 import org.folio.rest.jaxrs.model.ItemRequestsStats;
-import org.folio.rest.jaxrs.model.ItemsCompletedDetail;
 import org.folio.rest.jaxrs.model.ItemsFailedDetail;
 import org.folio.rest.jaxrs.model.ItemsPendingDetail;
+import org.folio.rest.jaxrs.model.ItemsRequestedDetail;
 import org.folio.rest.jaxrs.model.Metadata;
 
 @Slf4j
@@ -100,7 +100,7 @@ public class MediatedRequestsService {
         batchStatus.setItemsFailedDetails(failedItemsDetails);
 
         var completedItemsDetails = extractCompletedItemsDetails(detailsDtoList, instanceId);
-        batchStatus.setItemsCompletedDetails(completedItemsDetails);
+        batchStatus.setItemsRequestedDetails(completedItemsDetails);
 
         if (batchStatus.getStatus() == BatchRequestStatus.Status.IN_PROGRESS) {
           // if batch request processing is still in progress, then data from /details is the most up-to-date
@@ -114,7 +114,7 @@ public class MediatedRequestsService {
       .thenApply(instanceJson -> instanceJson.getString("title"))
       .thenApply(title -> {
         batchStatus.getItemsPendingDetails().forEach(detail -> detail.setTitle(title));
-        batchStatus.getItemsCompletedDetails().forEach(detail -> detail.setTitle(title));
+        batchStatus.getItemsRequestedDetails().forEach(detail -> detail.setTitle(title));
         batchStatus.getItemsFailedDetails().forEach(detail -> detail.setTitle(title));
 
         return batchStatus;
@@ -129,7 +129,7 @@ public class MediatedRequestsService {
     }
 
     return requestDetails.stream()
-      .map(obj -> (JsonObject) obj)
+      .map(JsonObject.class::cast)
       .map(jsobObj -> jsobObj.mapTo(BatchRequestDetailsDto.class))
       .toList();
   }
@@ -157,12 +157,12 @@ public class MediatedRequestsService {
       .toList();
   }
 
-  private List<ItemsCompletedDetail> extractCompletedItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
+  private List<ItemsRequestedDetail> extractCompletedItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
                                                                   String instanceId) {
     return detailsDtoList.stream()
       .filter(detail -> COMPLETED.getValue().equals(detail.getMediatedRequestStatus()))
       .filter(detail -> Objects.nonNull(detail.getConfirmedRequestId()))
-      .map(detail -> new ItemsCompletedDetail()
+      .map(detail -> new ItemsRequestedDetail()
         .withItemId(detail.getItemId())
         .withPickUpLocationId(detail.getPickupServicePointId())
         .withInstanceId(instanceId)

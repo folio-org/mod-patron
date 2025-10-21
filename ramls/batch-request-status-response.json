@@ -106,7 +106,7 @@
         }
       }
     },
-    "itemsCompletedDetails": {
+    "itemsRequestedDetails": {
       "type": "array",
       "description": "Collection of processed and created items requests details",
       "items": {

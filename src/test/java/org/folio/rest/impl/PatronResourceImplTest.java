@@ -1349,7 +1349,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void allowedServicePointsPerItemsShouldSucceed() {
+  final void testPostAllowedServicePointsPerItemsShouldSucceed() {
     logger.info("Testing POST allowed service points for Items");
 
     var response = given()
@@ -1377,7 +1377,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void createMultiItemBatchRequestShouldSucceed() {
+  final void testPostMultiItemBatchRequestShouldSucceed() {
     logger.info("Testing POST Multi-Item Batch Request");
 
     var response = given()
@@ -1405,7 +1405,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void createMultiItemBatchRequestWithProvidedIdShouldSucceed() {
+  final void testPostMultiItemBatchRequestWithProvidedIdShouldSucceed() {
     logger.info("Testing POST Multi-Item Batch Request with provided id");
 
     var response = given()
@@ -1432,9 +1432,10 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     logger.info("Test done");
   }
 
-  @Test
-  final void getMultiItemBatchRequestStatusShouldSucceed() {
-    logger.info("Testing Get Batch Request Status");
+  @ParameterizedTest
+  @MethodSource("batchRequestStatus")
+  final void testGetMultiItemBatchRequestStatusShouldSucceed(String expectedResponseFile, String batchId) {
+    logger.info("Testing Get Completed Batch Request Status");
 
     var response = given()
       .header(tenantHeader)
@@ -1442,7 +1443,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .header(contentTypeHeader)
       .pathParam("accountId", goodUserId)
       .pathParam("instanceId", GOOD_INSTANCE_ID)
-      .pathParams("batchId", BATCH_REQUEST_ID)
+      .pathParams("batchId", batchId)
       .when()
       .contentType(ContentType.JSON)
       .get(accountPath + instancePath + BATCH_REQUEST_STATUS_PATH)
@@ -1453,8 +1454,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .extract()
       .asString();
 
-    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
-      "/batch_request_status_expected_response.json"));
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER + "/" + expectedResponseFile));
     assertEquals(expectedJson, new JsonObject(response));
 
     logger.info("Test done");
@@ -1482,35 +1482,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .extract()
       .asString();
 
-    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
-      "/" + expectedResponseFile));
-    assertEquals(expectedJson, new JsonObject(response));
-
-    logger.info("Test done");
-  }
-
-  @Test
-  void getMultiItemBatchRequestStatusShouldFailNonExistingBatch() {
-    logger.info("Testing Get Batch Request Status for non-existing batch request");
-
-    var response = given()
-      .header(tenantHeader)
-      .header(urlHeader)
-      .header(contentTypeHeader)
-      .pathParam("accountId", goodUserId)
-      .pathParam("instanceId", BAD_INSTANCE_ID)
-      .pathParams("batchId", NON_EXISTING_BATCH_REQUEST_ID)
-      .when()
-      .contentType(ContentType.JSON)
-      .get(accountPath + instancePath + BATCH_REQUEST_STATUS_PATH)
-      .then()
-      .log().all()
-      .and().assertThat().statusCode(404)
-      .extract()
-      .asString();
-
-    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER +
-      "/batch_request_not_found_error.json"));
+    final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER + "/" + expectedResponseFile));
     assertEquals(expectedJson, new JsonObject(response));
 
     logger.info("Test done");
@@ -1840,6 +1812,12 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       Arguments.of(422, "instance_invalid_error.json", INVALID_INSTANCE_ID, BATCH_REQUEST_ID),
       Arguments.of(404, "batch_request_not_found_error.json", GOOD_INSTANCE_ID, NON_EXISTING_BATCH_REQUEST_ID),
       Arguments.of(422, "batch_request_invalid_error.json", GOOD_INSTANCE_ID, INVALID_BATCH_REQUEST_ID));
+  }
+
+  static Stream<Arguments> batchRequestStatus() {
+    return Stream.of(
+      Arguments.of("batch_request_status_expected_response.json", BATCH_REQUEST_ID),
+      Arguments.of("batch_request_completed_status_expected_response.json", COMPLETED_BATCH_REQUEST_ID));
   }
 
   static Stream<Arguments> renewFailureCodes() {
@@ -2609,6 +2587,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + COMPLETED_BATCH_REQUEST_ID)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_response.json"));
       } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + NON_EXISTING_BATCH_REQUEST_ID)) {
         req.response()
           .setStatusCode(404)
@@ -2639,6 +2622,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
+      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + COMPLETED_BATCH_REQUEST_ID + "/details")) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_details_response.json"));
       } else if (req.path().equals("/circulation/rules/request-policy")) {
         // These checks require that the query string parameters be produced in a specific order
         if (rulesParametersMatch(req, materialTypeId1)) {

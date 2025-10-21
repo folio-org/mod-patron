@@ -33,6 +33,7 @@ public abstract class BaseResourceServiceTest {
   protected static final String BATCH_REQUEST_PATH = "/batch-request";
   protected static final String BATCH_REQUEST_STATUS_PATH = "/batch-request/{batchId}/status";
   protected static final String BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51c";
+  protected static final String COMPLETED_BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51f";
   protected static final String NON_EXISTING_BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51d";
   protected static final String INVALID_BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51e";
   private final Logger logger = LogManager.getLogger();
