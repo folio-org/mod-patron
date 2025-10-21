@@ -99,7 +99,7 @@ public class MediatedRequestsService {
         var failedItemsDetails = extractFailedItemsDetails(detailsDtoList, instanceId);
         batchStatus.setItemsFailedDetails(failedItemsDetails);
 
-        var completedItemsDetails = extractCompletedItemsDetails(detailsDtoList, instanceId);
+        var completedItemsDetails = extractRequestedItemsDetails(detailsDtoList, instanceId);
         batchStatus.setItemsRequestedDetails(completedItemsDetails);
 
         if (batchStatus.getStatus() == BatchRequestStatus.Status.IN_PROGRESS) {
@@ -110,7 +110,7 @@ public class MediatedRequestsService {
           batchStatus.setItemsPending(pendingItemsDetails.size());
         }
       })
-      .thenCompose(V -> instanceRepository.getInstance(instanceId, okapiHeaders))
+      .thenCompose(voidArg -> instanceRepository.getInstance(instanceId, okapiHeaders))
       .thenApply(instanceJson -> instanceJson.getString("title"))
       .thenApply(title -> {
         batchStatus.getItemsPendingDetails().forEach(detail -> detail.setTitle(title));
@@ -157,7 +157,7 @@ public class MediatedRequestsService {
       .toList();
   }
 
-  private List<ItemsRequestedDetail> extractCompletedItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
+  private List<ItemsRequestedDetail> extractRequestedItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
                                                                   String instanceId) {
     return detailsDtoList.stream()
       .filter(detail -> COMPLETED.getValue().equals(detail.getMediatedRequestStatus()))
