@@ -223,14 +223,17 @@
         <configuration>
           <release>${java.version}</release>
           <encoding>UTF-8</encoding>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
         <executions>
           <execution>
             <id>default-compile</id>
-            <phase>process-sources</phase>
-          </execution>
-          <execution>
-            <id>build-generated-code</id>
             <phase>compile</phase>
             <goals>
               <goal>compile</goal>
@@ -279,19 +282,25 @@
         <version>${aspectj-maven-plugin.version}</version>
         <configuration>
           <verbose>true</verbose>
-          <showWeaveInfo>false</showWeaveInfo>
-          <release>${java.version}</release>
-          <XaddSerialVersionUID>true</XaddSerialVersionUID>
           <showWeaveInfo>true</showWeaveInfo>
+          <complianceLevel>${java.version}</complianceLevel>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
           <aspectLibraries>
             <aspectLibrary>
               <groupId>org.folio</groupId>
               <artifactId>domain-models-api-aspects</artifactId>
             </aspectLibrary>
           </aspectLibraries>
+          <forceAjcCompile>true</forceAjcCompile>
+          <sources/>
+          <weaveDirectories>
+            <weaveDirectory>${project.build.outputDirectory}</weaveDirectory>
+          </weaveDirectories>
         </configuration>
         <executions>
           <execution>
+            <phase>process-classes</phase>
             <goals>
               <goal>compile</goal>
             </goals>
@@ -566,6 +575,7 @@
         <version>${folio-module-descriptor-validator.version}</version>
         <executions>
           <execution>
+            <phase>process-classes</phase>
             <goals>
               <goal>validate</goal>
             </goals>

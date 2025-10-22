@@ -1,0 +1,13 @@
+{
+  "errors": [
+    {
+      "message": "null response returned to get instance by id from GET /inventory/instances",
+      "parameters": [
+        {
+          "key": "instanceId",
+          "value": "68cb9692-aa5f-459d-8791-f79486c11226"
+        }
+      ]
+    }
+  ]
+}

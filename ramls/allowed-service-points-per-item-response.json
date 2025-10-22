@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Allowed pickup service points per item",
+  "type": "object",
+  "properties": {
+    "allowedServicePointsPerItem": {
+      "description": "List of allowed pickup service points per each item ID",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "description": "A UUID of the item",
+            "type": "string",
+            "$ref": "raml-util/schemas/uuid.schema"
+          },
+          "allowedServicePoints": {
+            "description": "Item's Allowed pickup service point IDs",
+            "type": "array",
+            "$ref": "allowed-service-point.json"
+          }
+        },
+        "required": [
+          "itemId",
+          "allowedServicePoints"
+        ]
+      }
+    }
+  },
+  "required": [
+    "allowedServicePointsPerItem"
+  ]
+}

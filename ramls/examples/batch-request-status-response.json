@@ -1,0 +1,45 @@
+{
+  "batchRequestId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+  "status": "Completed",
+  "submittedAt": "2025-09-08T12:27:33.822+00:00",
+  "completedAt": "2025-09-08T12:30:33.822+00:00",
+  "itemsTotal": 3,
+  "itemsRequested": 1,
+  "itemsPending": 1,
+  "itemsPendingDetails": [
+    {
+      "instanceId": "9d1b77e4-f02e-4b7f-b296-3f2042ddac54",
+      "itemId": "0faa1eec-bdef-4d5e-a458-bceca8e04855",
+      "title": "100 banned books: censorship histories of world literature / Nicholas J. Karolides, Margaret Bald, and Dawn B. Sova; introduction by Ken Wachsberger.",
+      "pickupLocationId": "650b2d28-dc05-4177-9dc3-c45316fe5aa6"
+    }
+  ],
+  "itemsFailed": 1,
+  "itemsFailedDetails": [
+    {
+    "instanceId": "9d1b77e4-f02e-4b7f-b296-3f2042ddac54",
+    "itemId": "0738aade-23ce-4177-8c6e-f5f13572c827",
+    "title": "100 banned books: censorship histories of world literature / Nicholas J. Karolides, Margaret Bald, and Dawn B. Sova; introduction by Ken Wachsberger.",
+    "pickupLocationId": "650b2d28-dc05-4177-9dc3-c45316fe5aa6",
+    "errorCode": "This failed because of some internal issue",
+    "errorDetails": "This failed because of some internal issue"
+    },
+    {
+    "instanceId": "9d1b77e4-f02e-4b7f-b296-3f2042ddac54",
+    "itemId": "0faa1eec-bdef-4d5e-a458-bceca8e04855",
+    "title": "Something else, pt.2",
+    "pickupLocationId": "650b2d28-dc05-4177-9dc3-c45316fe5aa6",
+    "errorCode": "This failed because of some internal issue",
+    "errorDetails": "Everything failed here, and no one knows why"
+    }
+  ],
+  "itemsCompletedDetails": [
+    {
+      "instanceId": "9d1b77e4-f02e-4b7f-b296-3f2042ddac54",
+      "itemId": "0faa1eec-bdef-4d5e-a458-bceca8e04855",
+      "title": "100 banned books: censorship histories of world literature / Nicholas J. Karolides, Margaret Bald, and Dawn B. Sova; introduction by Ken Wachsberger.",
+      "pickupLocationId": "650b2d28-dc05-4177-9dc3-c45316fe5aa6",
+      "confirmedRequestId": "8d1b77e4-f02e-4b7f-b296-3f2042ddac57"
+    }
+  ]
+}
