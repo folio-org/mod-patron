@@ -922,7 +922,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public void testGetPatronAccountByIdWithMissingItem() {
+  void testGetPatronAccountByIdWithMissingItem() {
     logger.info("Testing GET patron account with a charge referencing a non-existent item");
 
     final Response r = given()
@@ -953,7 +953,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public void testChargeWithMissingItemSetsItemToNull() {
+  void testChargeWithMissingItemSetsItemToNull() {
     logger.info("Testing charge referencing missing item sets item to null");
 
     final Response r = given()
