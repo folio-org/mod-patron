@@ -716,7 +716,7 @@ public  class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> lookupItem(Charge charge, Account account,
-                                                Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+    Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
 
     final var itemRepository = new ItemRepository(httpClient);
 
