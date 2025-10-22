@@ -22,7 +22,7 @@ public class ResponseInterpreter {
     return extractBody(response, false);
   }
 
-  static JsonObject extractBody(Response response, boolean throwOnError) {
+  private static JsonObject extractBody(Response response, boolean throwOnError) {
     log.info("extractBody:: statusCode: {}", response.statusCode);
     if (!response.isSuccess()) {
       if (throwOnError) {
@@ -30,7 +30,7 @@ public class ResponseInterpreter {
       } else {
         log.error("extractBody:: response is not successful. statusCode: {}, body: {}",
           response.statusCode, response.body);
-        return null; // Return null immediately to avoid JSON parsing error
+        return null;
       }
     }
     if (isBlank(response.body)) {
