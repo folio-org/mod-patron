@@ -22,7 +22,7 @@ public class ResponseInterpreter {
     return extractBody(response, false);
   }
 
-  private static JsonObject extractBody(Response response, boolean throwOnError) {
+  static JsonObject extractBody(Response response, boolean throwOnError) {
     log.info("extractBody:: statusCode: {}", response.statusCode);
     if (!response.isSuccess()) {
       if (throwOnError) {
