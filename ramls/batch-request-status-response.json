@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Multi-Item Request Processing Status",
+  "type": "object",
+  "properties": {
+    "batchRequestId": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "The UUID id of the batch request"
+    },
+    "status": {
+      "description": "Status of the submitted batch request",
+      "type": "string",
+      "enum": [
+        "In progress",
+        "Completed"
+      ]
+    },
+    "submittedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The date when the request was made"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The date when the request was completed"
+    },
+    "itemsTotal": {
+      "type": "integer",
+      "description": "Total number of items to be requested in batch"
+    },
+    "itemsRequested": {
+      "type": "integer",
+      "description": "Number of items successfully requested"
+    },
+    "itemsPending": {
+      "type": "integer",
+      "description": "Number of items still pending to be requested"
+    },
+    "itemsFailed": {
+      "type": "integer",
+      "description": "Number of items that failed to be requested"
+    },
+    "itemsPendingDetails": {
+      "type": "array",
+      "description": "Collection of items request details that are still pending to be processed",
+      "items": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            "description": "The UUID id of the instance"
+          },
+          "itemId": {
+            "description": "UUID of the item",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          },
+          "title": {
+            "description": "Title of the item",
+            "type": "string"
+          },
+          "pickUpLocationId": {
+            "description": "UUID of the pickup location",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          }
+        }
+      }
+    },
+    "itemsFailedDetails": {
+      "type": "array",
+      "description": "Collection of items request details that are failed on processing and creating requests",
+      "items": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            "description": "The UUID id of the instance"
+          },
+          "itemId": {
+            "description": "UUID of the item",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          },
+          "title": {
+            "description": "Title of the item",
+            "type": "string"
+          },
+          "pickUpLocationId": {
+            "description": "UUID of the pickup location",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          },
+          "errorCode": {
+            "description": "Error code indicating the reason for failure",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Detailed message describing the failure",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "itemsRequestedDetails": {
+      "type": "array",
+      "description": "Collection of processed and created items requests details",
+      "items": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            "description": "The UUID id of the instance"
+          },
+          "itemId": {
+            "description": "UUID of the item",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          },
+          "title": {
+            "description": "Title of the item",
+            "type": "string"
+          },
+          "pickUpLocationId": {
+            "description": "UUID of the pickup location",
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          },
+          "confirmedRequestId": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            "description": "The UUID id of created item request"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "batchRequestId",
+    "status",
+    "submittedAt"
+  ]
+}

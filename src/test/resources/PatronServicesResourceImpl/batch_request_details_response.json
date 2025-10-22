@@ -1,0 +1,37 @@
+{
+  "mediatedBatchRequestDetails": [
+    {
+      "batchId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+      "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "mediatedRequestStatus": "Pending",
+      "itemId": "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+      "pickupServicePointId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
+      "patronComments": "comment 1",
+      "metadata": {
+        "createdDate": "2025-09-08T12:27:33.822+00:00",
+        "createdByUserId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+        "createdByUsername": "patron",
+        "updatedDate": "2025-09-08T12:27:33.822+00:00",
+        "updatedByUserId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+        "updatedByUsername": "patron"
+      }
+    },
+    {
+      "batchId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+      "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "mediatedRequestStatus": "Failed",
+      "itemId": "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+      "pickupServicePointId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
+      "patronComments": "comment 1",
+      "errorDetails": "Failed due to some internal issue",
+      "metadata": {
+        "createdDate": "2025-09-08T12:27:33.822+00:00",
+        "createdByUserId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+        "createdByUsername": "patron",
+        "updatedDate": "2025-09-08T12:27:33.822+00:00",
+        "updatedByUserId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+        "updatedByUsername": "patron"
+      }
+    }
+  ]
+}

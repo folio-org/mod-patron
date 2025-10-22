@@ -1,0 +1,29 @@
+{
+  "batchRequestId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+  "status": "In progress",
+  "submittedAt": "2025-09-08T12:27:33.822+00:00",
+  "itemsTotal": 2,
+  "itemsRequested": 0,
+  "itemsPending": 1,
+  "itemsFailed": 1,
+  "itemsPendingDetails": [
+    {
+      "instanceId": "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5",
+      "itemId": "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+      "title": "100 banned books",
+      "pickUpLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8"
+    }
+  ],
+  "itemsFailedDetails": [
+    {
+      "instanceId": "f39fd3ca-e3fb-4cd9-8cf9-48e7e2c494e5",
+      "itemId": "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+      "title": "100 banned books",
+      "pickUpLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
+      "errorDetails": "Failed due to some internal issue"
+    }
+  ],
+  "itemsRequestedDetails": [
+
+  ]
+}
