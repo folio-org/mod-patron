@@ -352,13 +352,13 @@ traits:
                   body:
                     text/plain:
                       example: internal server error, contact administrator
-          /allowed-service-points:
+          /allowed-service-points-multi-item:
             displayName: Allowed service points
-            description: Services that provides a list of allowed pickup service points
+            description: Services that provides a list of allowed pickup service points for multiple items
             post:
               description: |
-                Returns a list of pickup service points allowed for a particular patron and instance's items
-              is: [ validate ]
+                Returns a list of pickup service points allowed for a particular patron and instance's multiple items
+              is: [validate]
               body:
                 application/json:
                   type: itemIds
@@ -388,6 +388,9 @@ traits:
                   body:
                     text/plain:
                       example: internal server error, contact administrator
+          /allowed-service-points:
+            displayName: Allowed service points
+            description: Services that provides a list of allowed pickup service points
             get:
               description: |
                 Returns a list of pickup service points allowed for a particular patron and instance

@@ -29,6 +29,7 @@ public abstract class BaseResourceServiceTest {
   protected final String accountPath = "/patron/account/{accountId}";
   protected final String instancePath = "/instance/{instanceId}";
   protected static final String ALLOWED_SERVICE_POINTS_PATH = "/allowed-service-points";
+  protected static final String ALLOWED_SERVICE_POINTS_MULTI_ITEM_PATH = "/allowed-service-points-multi-item";
   protected static final String BATCH_REQUEST_PATH = "/batch-request";
   protected static final String BATCH_REQUEST_STATUS_PATH = "/batch-request/{batchId}/status";
   protected static final String BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51c";
