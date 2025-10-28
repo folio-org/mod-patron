@@ -534,11 +534,10 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   @Override
-  public void postPatronAccountInstanceAllowedServicePointsByIdAndInstanceId(String requesterId, String instanceId,
-                                                                             ItemIds entity,
-                                                                             Map<String, String> okapiHeaders,
-                                                                             Handler<AsyncResult<Response>> asyncResultHandler,
-                                                                             Context vertxContext) {
+  public void postPatronAccountInstanceAllowedServicePointsMultiItemByIdAndInstanceId(String requesterId, String instanceId, ItemIds entity,
+                                                                                      Map<String, String> okapiHeaders,
+                                                                                      Handler<AsyncResult<Response>> asyncResultHandler,
+                                                                                      Context vertxContext) {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     new EcsTlrSettingsService()
@@ -551,8 +550,8 @@ public class PatronServicesResourceImpl implements Patron {
           asyncResultHandler.handle(handleAllowedServicePointsPostError(throwable));
         } else {
           asyncResultHandler.handle(succeededFuture(
-          PostPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
-            .respond200WithApplicationJson(new AllowedServicePointsPerItems().withAllowedServicePointsPerItem(allowedServicePointsPerItems))));
+            PostPatronAccountInstanceAllowedServicePointsMultiItemByIdAndInstanceIdResponse
+              .respond200WithApplicationJson(new AllowedServicePointsPerItems().withAllowedServicePointsPerItem(allowedServicePointsPerItems))));
         }
       });
   }
@@ -1202,15 +1201,14 @@ public class PatronServicesResourceImpl implements Patron {
       if (code == 422) {
         final Errors errors = Json.decodeValue(message, Errors.class);
         result = succeededFuture(
-          PostPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
-            .respond422WithApplicationJson(errors));
+          PostPatronAccountInstanceAllowedServicePointsMultiItemByIdAndInstanceIdResponse.respond422WithApplicationJson(errors));
       } else {
         result = succeededFuture(
-          PostPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
+          PostPatronAccountInstanceAllowedServicePointsMultiItemByIdAndInstanceIdResponse
             .respond500WithTextPlain(message));
       }
     } else {
-      result = succeededFuture(PostPatronAccountInstanceAllowedServicePointsByIdAndInstanceIdResponse
+      result = succeededFuture(PostPatronAccountInstanceAllowedServicePointsMultiItemByIdAndInstanceIdResponse
         .respond500WithTextPlain(throwable.getMessage()));
     }
 

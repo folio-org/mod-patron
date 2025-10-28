@@ -1429,7 +1429,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .body(readMockFile(MOCK_DATA_FOLDER + "/allowed_service_points_for_items_request.json"))
       .when()
       .contentType(ContentType.JSON)
-      .post(accountPath + instancePath + ALLOWED_SERVICE_POINTS_PATH)
+      .post(accountPath + instancePath + ALLOWED_SERVICE_POINTS_MULTI_ITEM_PATH)
       .then()
       .log().all()
       .and().assertThat().contentType(ContentType.JSON)
