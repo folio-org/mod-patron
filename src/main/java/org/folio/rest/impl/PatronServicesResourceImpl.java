@@ -814,11 +814,20 @@ public class PatronServicesResourceImpl implements Patron {
 
     final var itemRepository = new ItemRepository(httpClient);
 
-    return itemRepository.getItem(charge.getItem().getItemId(), okapiHeaders)
-        .thenCompose(item -> getInstance(item, okapiHeaders, httpClient))
-        .thenApply(instance -> getItem(charge, instance))
-        .thenApply(item -> updateItem(charge, item, account));
+    return itemRepository.getItemNoThrow(charge.getItem().getItemId(), okapiHeaders)
+      .thenCompose(item -> {
+        if (item == null) {
+          logger.warn("lookupItem:: Item not found for itemId: {}, setting item to null in charge",
+            charge.getItem().getItemId());
+          charge.setItem(null);
+          return completedFuture(account);
+        }
+        return getInstance(item, okapiHeaders, httpClient)
+          .thenApply(instance -> getItem(charge, instance))
+          .thenApply(itemObj -> updateItem(charge, itemObj, account));
+      });
   }
+
 
   private CompletableFuture<JsonObject> getInstance(
     JsonObject item, Map<String, String> okapiHeaders,
