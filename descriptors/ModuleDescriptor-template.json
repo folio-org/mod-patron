@@ -113,6 +113,32 @@
           ]
         },
         {
+          "methods": ["POST"],
+          "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/allowed-service-points-multi-item",
+          "permissionsRequired": ["patron.account.instance-allowed-service-points-multi-item.collection.post"],
+          "modulePermissions": [
+            "circulation.requests.allowed-service-points.get",
+            "circulation-bff.requests.allowed-service-points.get"
+          ]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/batch-request",
+          "permissionsRequired": ["patron.account.instance-batch-request.item.post"],
+          "modulePermissions": [
+            "requests-mediated.batch-mediated-requests.item.post"
+          ]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/patron/account/{accountId}/instance/{instanceId}/batch-request/{batchRequestId}/status",
+          "permissionsRequired": ["patron.account.instance-batch-request-status.item.get"],
+          "modulePermissions": [
+            "requests-mediated.batch-mediated-requests.item.get",
+            "requests-mediated.batch-mediated-requests.details.collection.get"
+          ]
+        },
+        {
           "methods": ["GET"],
           "pathPattern": "/patron/account/{accountId}/item/{itemId}/allowed-service-points",
           "permissionsRequired": ["patron.account.item-allowed-service-points.item.get"],
@@ -151,6 +177,10 @@
     {
       "id": "holdings-storage",
       "version": "8.0"
+    },
+    {
+      "id": "requests-mediated-batch",
+      "version": "1.0"
     }
   ],
   "optional": [
@@ -173,6 +203,10 @@
     {
       "id": "allowed-service-points",
       "version": "1.2"
+    },
+    {
+      "id": "requests-mediated-batch",
+      "version": "1.0"
     }
   ],
   "permissionSets": [
@@ -243,6 +277,21 @@
       "description": "Get patron details by emailId or externalSystemId"
     },
     {
+      "permissionName": "patron.account.instance-allowed-service-points-multi-item.collection.post",
+      "displayName": "Get a list of allowed service points for multiple items of an instance",
+      "description": "Get a list of allowed service points for each given list of items of an instance"
+    },
+    {
+      "permissionName": "patron.account.instance-batch-request.item.post",
+      "displayName": "Create a batch request for a collection of items of an instance",
+      "description": "Create requests for a collection of items of an instance"
+    },
+    {
+      "permissionName": "patron.account.instance-batch-request-status.item.get",
+      "displayName": "Get multi-item batch request status",
+      "description": "Get status of a multi-item batch request"
+    },
+    {
       "permissionName": "patron.all",
       "displayName": "patron - all permissions",
       "description": "Entire set of permissions needed to use patron",
@@ -260,7 +309,10 @@
         "patron.account.hold-cancel.item.post",
         "patron.account.item-allowed-service-points.item.get",
         "patron.account.instance-allowed-service-points.item.get",
-        "patron.registration-status.item.get"
+        "patron.registration-status.item.get",
+        "patron.account.instance-allowed-service-points-multi-item.collection.post",
+        "patron.account.instance-batch-request.item.post",
+        "patron.account.instance-batch-request-status.item.get"
       ]
     }
   ],
