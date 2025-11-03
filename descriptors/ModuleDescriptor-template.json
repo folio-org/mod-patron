@@ -177,10 +177,6 @@
     {
       "id": "holdings-storage",
       "version": "8.0"
-    },
-    {
-      "id": "requests-mediated-batch",
-      "version": "1.0"
     }
   ],
   "optional": [
