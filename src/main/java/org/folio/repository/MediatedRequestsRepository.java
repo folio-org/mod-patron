@@ -19,10 +19,10 @@ import org.folio.rest.jaxrs.model.Parameter;
 
 public class MediatedRequestsRepository {
 
-  private static final String MEDIATED_BATCH_REQUEST = "/requests-mediated/batch-mediated-requests";
-
   private static final Logger logger = LogManager.getLogger();
   private final VertxOkapiHttpClient client;
+
+  public static final String CIRCULATION_BFF_BATCH_REQUESTS = "/circulation-bff/batch-requests";
 
   public MediatedRequestsRepository(VertxOkapiHttpClient client) {
     this.client = client;
@@ -31,11 +31,11 @@ public class MediatedRequestsRepository {
   public CompletableFuture<JsonObject> createBatchRequest(BatchRequestPostDto postDto, Map<String, String> okapiHeaders) {
     logger.info("createBatchRequest:: Creating Batch Request");
 
-    return client.post(MEDIATED_BATCH_REQUEST, JsonObject.mapFrom(postDto), okapiHeaders)
+    return client.post(CIRCULATION_BFF_BATCH_REQUESTS, JsonObject.mapFrom(postDto), okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(result -> {
         if (result == null) {
-          logger.warn("createBatchRequest:: null response received from POST {}", MEDIATED_BATCH_REQUEST);
+          logger.warn("createBatchRequest:: null response received from POST {}", CIRCULATION_BFF_BATCH_REQUESTS);
           throw new ValidationException(
             buildErrors("POST Batch Multi-Item request returned null response", List.of()));
         }
@@ -48,7 +48,7 @@ public class MediatedRequestsRepository {
   public CompletableFuture<JsonObject> getBatchRequestById(String batchId, Map<String, String> okapiHeaders) {
     logger.info("getBatchRequestById:: Retrieving Batch Request for batchId: {}", batchId);
 
-    var endpoint = MEDIATED_BATCH_REQUEST + "/" + batchId;
+    var endpoint = CIRCULATION_BFF_BATCH_REQUESTS + "/" + batchId;
     return client.get(endpoint, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(result -> {
@@ -67,7 +67,7 @@ public class MediatedRequestsRepository {
   public CompletableFuture<JsonObject> getBatchRequestDetails(String batchId, Map<String, String> okapiHeaders) {
     logger.info("getBatchRequestDetails:: Retrieving Batch Request Details for batchId: {}", batchId);
 
-    var endpoint = MEDIATED_BATCH_REQUEST + "/" + batchId + "/details";
+    var endpoint = CIRCULATION_BFF_BATCH_REQUESTS + "/" + batchId + "/details";
     return client.get(endpoint, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(result -> {

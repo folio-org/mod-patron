@@ -45,6 +45,7 @@ import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
+import static org.folio.repository.MediatedRequestsRepository.CIRCULATION_BFF_BATCH_REQUESTS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -2645,27 +2646,27 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/renew_create.json"));
         }
-      } else if (req.path().equals("/requests-mediated/batch-mediated-requests")) {
+      } else if (req.path().equals(CIRCULATION_BFF_BATCH_REQUESTS)) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
-      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + BATCH_REQUEST_ID)) {
+      } else if (req.path().equals("%s/%s".formatted(CIRCULATION_BFF_BATCH_REQUESTS, BATCH_REQUEST_ID))) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
-      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + COMPLETED_BATCH_REQUEST_ID)) {
+      } else if (req.path().equals("%s/%s".formatted(CIRCULATION_BFF_BATCH_REQUESTS, COMPLETED_BATCH_REQUEST_ID))) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_response.json"));
-      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + NON_EXISTING_BATCH_REQUEST_ID)) {
+      } else if (req.path().equals("%s/%s".formatted(CIRCULATION_BFF_BATCH_REQUESTS, NON_EXISTING_BATCH_REQUEST_ID))) {
         req.response()
           .setStatusCode(404)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_not_found_error.json"));
-      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + INVALID_BATCH_REQUEST_ID)) {
+      } else if (req.path().equals("%s/%s".formatted(CIRCULATION_BFF_BATCH_REQUESTS, INVALID_BATCH_REQUEST_ID))) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
@@ -2685,12 +2686,12 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end("");
-      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + BATCH_REQUEST_ID + "/details")) {
+      } else if (req.path().equals("%s/%s/details".formatted(CIRCULATION_BFF_BATCH_REQUESTS, BATCH_REQUEST_ID))) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
-      } else if (req.path().equals("/requests-mediated/batch-mediated-requests/" + COMPLETED_BATCH_REQUEST_ID + "/details")) {
+      } else if (req.path().equals("%s/%s/details".formatted(CIRCULATION_BFF_BATCH_REQUESTS, COMPLETED_BATCH_REQUEST_ID))) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
