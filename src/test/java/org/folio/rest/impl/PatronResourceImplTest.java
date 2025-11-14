@@ -1886,7 +1886,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   static Stream<Arguments> batchRequestStatus() {
     return Stream.of(
       Arguments.of("batch_request_status_expected_response.json", BATCH_REQUEST_ID),
-      Arguments.of("batch_request_completed_status_expected_response.json", COMPLETED_BATCH_REQUEST_ID));
+      Arguments.of("batch_request_completed_status_expected_response.json", COMPLETED_BATCH_REQUEST_ID),
+      Arguments.of("batch_request_completed_with_fail_status_expected_response.json", FAILED_BATCH_REQUEST_ID));
   }
 
   static Stream<Arguments> renewFailureCodes() {
@@ -2646,31 +2647,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
             .putHeader("content-type", "application/json")
             .end(readMockFile(MOCK_DATA_FOLDER + "/renew_create.json"));
         }
-      } else if (req.path().equals(CIRCULATION_BFF_BATCH_REQUESTS)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
-      } else if (req.path().equals("%s/%s".formatted(CIRCULATION_BFF_BATCH_REQUESTS, BATCH_REQUEST_ID))) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
-      } else if (req.path().equals("%s/%s".formatted(CIRCULATION_BFF_BATCH_REQUESTS, COMPLETED_BATCH_REQUEST_ID))) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_response.json"));
-      } else if (req.path().equals("%s/%s".formatted(CIRCULATION_BFF_BATCH_REQUESTS, NON_EXISTING_BATCH_REQUEST_ID))) {
-        req.response()
-          .setStatusCode(404)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_not_found_error.json"));
-      } else if (req.path().equals("%s/%s".formatted(CIRCULATION_BFF_BATCH_REQUESTS, INVALID_BATCH_REQUEST_ID))) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end("");
+      } else if (req.path().startsWith(CIRCULATION_BFF_BATCH_REQUESTS)) {
+        mockBatchRequestsEndpoints(req);
       } else if (req.path().equals("/inventory/instances/" + GOOD_INSTANCE_ID)) {
         req.response()
           .setStatusCode(200)
@@ -2686,16 +2664,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end("");
-      } else if (req.path().equals("%s/%s/details".formatted(CIRCULATION_BFF_BATCH_REQUESTS, BATCH_REQUEST_ID))) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
-      } else if (req.path().equals("%s/%s/details".formatted(CIRCULATION_BFF_BATCH_REQUESTS, COMPLETED_BATCH_REQUEST_ID))) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_details_response.json"));
       } else if (req.path().equals("/circulation/rules/request-policy")) {
         // These checks require that the query string parameters be produced in a specific order
         if (rulesParametersMatch(req, materialTypeId1)) {
@@ -2911,5 +2879,39 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
+  }
+
+  private void mockBatchRequestsEndpoints(HttpServerRequest req) {
+    var response = req.response()
+      .setStatusCode(200)
+      .putHeader("content-type", "application/json");
+
+    if (req.path().equals(CIRCULATION_BFF_BATCH_REQUESTS)) {
+      response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
+    }
+
+    var pathWithoutPrefix = req.path().replaceAll(CIRCULATION_BFF_BATCH_REQUESTS + "/", "");
+    if (req.path().endsWith("/details")) {
+      if (pathWithoutPrefix.startsWith(BATCH_REQUEST_ID)) {
+        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
+      } else if (pathWithoutPrefix.startsWith(COMPLETED_BATCH_REQUEST_ID)) {
+        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_details_response.json"));
+      } else if (pathWithoutPrefix.startsWith(FAILED_BATCH_REQUEST_ID)) {
+        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_failed_details_response.json"));
+      }
+      return;
+    }
+
+    switch (pathWithoutPrefix) {
+      case BATCH_REQUEST_ID -> response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
+      case COMPLETED_BATCH_REQUEST_ID ->
+        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_response.json"));
+      case FAILED_BATCH_REQUEST_ID ->
+        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_failed_response.json"));
+      case NON_EXISTING_BATCH_REQUEST_ID ->
+        response.setStatusCode(404).end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_not_found_error.json"));
+      case INVALID_BATCH_REQUEST_ID -> response.end("");
+      default -> response.end("invalid batch request response");
+    }
   }
 }

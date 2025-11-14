@@ -33,6 +33,7 @@ import org.folio.rest.jaxrs.model.Metadata;
 public class MediatedRequestsService {
 
   private static final String MEDIATED_BATCH_WORKFLOW = "Multi-Item request";
+  private static final List<String> COMPLETED_MEDIATED_BATCH_REQUEST_STATUSES = List.of("Completed", "Failed");
 
   private final MediatedRequestsRepository repository;
   private final InstanceRepository instanceRepository;
@@ -68,7 +69,7 @@ public class MediatedRequestsService {
           .withBatchRequestId(batchId)
           .withSubmittedAt(Date.from(Instant.parse(batchRequestDto.getRequestDate())));
 
-        if (BatchRequestStatus.Status.COMPLETED.value().equals(batchRequestDto.getMediatedRequestStatus())) {
+        if (COMPLETED_MEDIATED_BATCH_REQUEST_STATUSES.contains(batchRequestDto.getMediatedRequestStatus())) {
           batchStatus.setStatus(BatchRequestStatus.Status.COMPLETED);
           Optional.ofNullable(batchRequestDto.getMetadata())
             .map(Metadata::getUpdatedDate)
