@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.apache.commons.lang3.StringUtils.firstNonBlank;
 import static org.folio.rest.impl.Constants.JSON_FIELD_FULFILLMENT_PREFERENCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_ID;
@@ -123,7 +124,10 @@ class RequestObjectFactory {
     JsonObject itemJson = requestContext.getItem();
     RequestTypeParameters requestTypeParams = new RequestTypeParameters();
     requestTypeParams.setItemMaterialTypeId(getJsonObjectProperty(itemJson, "materialType", JSON_FIELD_ID));
-    requestTypeParams.setItemLoanTypeId(getJsonObjectProperty(itemJson, "permanentLoanType", JSON_FIELD_ID));
+    requestTypeParams.setItemLoanTypeId(firstNonBlank(
+      getJsonObjectProperty(itemJson, "temporaryLoanType", JSON_FIELD_ID),
+      getJsonObjectProperty(itemJson, "permanentLoanType", JSON_FIELD_ID)
+    ));
     requestTypeParams.setItemLocationId(getJsonObjectProperty(itemJson, "effectiveLocation", JSON_FIELD_ID));
     requestTypeParams.setPatronGroupId(requestContext.getUser().getString(JSON_FIELD_PATRON_GROUP));
     requestTypeParams.setItemStatus(ItemStatus.from(getJsonObjectProperty(itemJson, "status", JSON_FIELD_NAME)));
