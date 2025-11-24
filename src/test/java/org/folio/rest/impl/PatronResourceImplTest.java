@@ -109,6 +109,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private final String materialTypeId2 = "1a54b431-2e4f-452d-9cae-9cee66c99992";
   private final String materialTypeId3 = "1a54b431-2e4f-452d-9cae-9cee66c99999";
   private final String loanTypeId1 = "2b94c631-fca9-4892-a730-03ee529ffe27";
+  private final String loanTypeId2 = "1daf9a74-1e54-4bb1-b3bc-724ff6dd6af0";
   private final String patronGroupId1 = "3684a786-6671-4268-8ed0-9db82ebca60b";
   private final String effectiveLocation1 = "fcd64ce1-6995-48f0-840e-89ffa2288371";
   private final String intransitItemId = "32e5757d-6566-466e-b69d-994eb33d2c98";
@@ -217,10 +218,14 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   private boolean rulesParametersMatch(HttpServerRequest request, String materialTypeId) {
+    return rulesParametersMatch(request, materialTypeId, loanTypeId1);
+  }
+
+  private boolean rulesParametersMatch(HttpServerRequest request, String materialTypeId, String loanTypeId) {
     final var queryString = request.query();
 
     return queryString.contains("item_type_id=" + materialTypeId)
-      && queryString.contains("loan_type_id=" + loanTypeId1)
+      && queryString.contains("loan_type_id=" + loanTypeId)
       && queryString.contains("patron_type_id=" + patronGroupId1)
       && queryString.contains("location_id=" + effectiveLocation1);
   }
@@ -2666,7 +2671,12 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .end("");
       } else if (req.path().equals("/circulation/rules/request-policy")) {
         // These checks require that the query string parameters be produced in a specific order
-        if (rulesParametersMatch(req, materialTypeId1)) {
+        if (rulesParametersMatch(req, materialTypeId1, loanTypeId2)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/requestPolicyId_none.json"));
+        } else if (rulesParametersMatch(req, materialTypeId1)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")

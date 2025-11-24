@@ -7,8 +7,12 @@
     "name": "book"
   },
   "permanentLoanType": {
-    "id": "2b94c631-fca9-4892-a730-03ee529ffe27",
+    "id": "1daf9a74-1e54-4bb1-b3bc-724ff6dd6af0",
     "name": "Can circulate"
+  },
+  "temporaryLoanType": {
+    "id": "2b94c631-fca9-4892-a730-03ee529ffe27",
+    "name": "Temporary loan type"
   },
   "effectiveLocation": {
     "id": "fcd64ce1-6995-48f0-840e-89ffa2288371",
