@@ -137,7 +137,7 @@ class RequestObjectFactory {
   }
 
   private String getJsonObjectProperty(JsonObject jsonObject, String objectName, String propertyName) {
-    return Optional.of(jsonObject.getJsonObject(objectName))
+    return Optional.ofNullable(jsonObject.getJsonObject(objectName))
       .map(entries -> entries.getString(propertyName))
       .orElse(null);
   }

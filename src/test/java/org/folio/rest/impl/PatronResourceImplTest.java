@@ -1,43 +1,5 @@
 package org.folio.rest.impl;
 
-import io.restassured.http.ContentType;
-import io.restassured.http.Header;
-import io.restassured.http.Headers;
-import io.restassured.response.Response;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServer;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.Checkpoint;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
-import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
-import uk.org.webcompere.systemstubs.jupiter.SystemStub;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.folio.okapi.common.UrlDecoder;
-import org.folio.rest.jaxrs.model.Error;
-import org.folio.rest.jaxrs.model.Errors;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Stream;
-
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
@@ -55,6 +17,44 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Stream;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.UrlDecoder;
+import org.folio.rest.jaxrs.model.Error;
+import org.folio.rest.jaxrs.model.Errors;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import io.restassured.http.ContentType;
+import io.restassured.http.Header;
+import io.restassured.http.Headers;
+import io.restassured.response.Response;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.Checkpoint;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 @ExtendWith({VertxExtension.class, SystemStubsExtension.class})
 public class PatronResourceImplTest extends BaseResourceServiceTest {
@@ -109,6 +109,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private final String materialTypeId2 = "1a54b431-2e4f-452d-9cae-9cee66c99992";
   private final String materialTypeId3 = "1a54b431-2e4f-452d-9cae-9cee66c99999";
   private final String loanTypeId1 = "2b94c631-fca9-4892-a730-03ee529ffe27";
+  private final String loanTypeId2 = "1daf9a74-1e54-4bb1-b3bc-724ff6dd6af0";
   private final String patronGroupId1 = "3684a786-6671-4268-8ed0-9db82ebca60b";
   private final String effectiveLocation1 = "fcd64ce1-6995-48f0-840e-89ffa2288371";
   private final String intransitItemId = "32e5757d-6566-466e-b69d-994eb33d2c98";
@@ -217,10 +218,14 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   private boolean rulesParametersMatch(HttpServerRequest request, String materialTypeId) {
+    return rulesParametersMatch(request, materialTypeId, loanTypeId1);
+  }
+
+  private boolean rulesParametersMatch(HttpServerRequest request, String materialTypeId, String loanTypeId) {
     final var queryString = request.query();
 
     return queryString.contains("item_type_id=" + materialTypeId)
-      && queryString.contains("loan_type_id=" + loanTypeId1)
+      && queryString.contains("loan_type_id=" + loanTypeId)
       && queryString.contains("patron_type_id=" + patronGroupId1)
       && queryString.contains("location_id=" + effectiveLocation1);
   }
@@ -2666,7 +2671,12 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .end("");
       } else if (req.path().equals("/circulation/rules/request-policy")) {
         // These checks require that the query string parameters be produced in a specific order
-        if (rulesParametersMatch(req, materialTypeId1)) {
+        if (rulesParametersMatch(req, materialTypeId1, loanTypeId2)) {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/requestPolicyId_none.json"));
+        } else if (rulesParametersMatch(req, materialTypeId1)) {
           req.response()
             .setStatusCode(200)
             .putHeader("content-type", "application/json")
