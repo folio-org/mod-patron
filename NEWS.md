@@ -1,3 +1,6 @@
+# 6.3.3 2025-12-03
+* Evaluate item's temporary loan type when placing holds (MODPATRON-249)
+
 # 6.3.2 2025-08-28
 * Extend the POST /patron and PUT /patron/{id} APIs to support an optional "minor" Boolean property. (MODPATRON-241)
 
