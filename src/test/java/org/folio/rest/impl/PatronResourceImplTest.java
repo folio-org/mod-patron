@@ -11,7 +11,6 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
@@ -26,7 +25,6 @@ import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -136,18 +134,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @BeforeEach
-  public void setUp(Vertx vertx, VertxTestContext context) {
-    setUpConnectionForTest(vertx, context);
-    final Checkpoint mockOkapiStarted = context.checkpoint(1);
-    final String host = "localhost";
+  void setUp(Vertx vertx, VertxTestContext context) {
     final HttpServer server = vertx.createHttpServer();
     server.requestHandler(this::mockData);
-    server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
-  }
-
-  @AfterEach
-  public void tearDown(Vertx vertx, VertxTestContext context) {
-    closeConnectionForTest(vertx, context);
+    server.listen(serverPort, "localhost");
+    context.completeNow();
   }
 
   private boolean accountParametersMatchForInvalidStatusRequest(HttpServerRequest request) {

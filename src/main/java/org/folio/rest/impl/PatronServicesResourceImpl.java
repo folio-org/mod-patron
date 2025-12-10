@@ -38,7 +38,10 @@ import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.StagingUser;
 import org.folio.rest.jaxrs.model.TotalCharges;
 import org.folio.rest.jaxrs.resource.Patron;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.utils.TenantTool;
 import org.folio.service.MediatedRequestsService;
+import org.folio.service.PatronSettingsService;
 import org.folio.util.StringUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -69,6 +72,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.*;
 import static org.folio.rest.impl.CirculationRequestService.createItemLevelRequest;
 import static org.folio.rest.impl.CirculationRequestService.createTitleLevelRequest;
+import static org.folio.rest.impl.Constants.JSON_FIELD_BATCH_REQUEST_INFO;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
@@ -97,6 +101,7 @@ import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldById
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond404WithTextPlain;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.Patron.PostPatronAccountItemHoldByIdAndItemIdResponse.respond500WithTextPlain;
+import static org.folio.service.PatronSettingsService.MULTI_ITEM_REQUESTING_FEATURE_SETTING_KEY;
 
 public class PatronServicesResourceImpl implements Patron {
   private static final Logger logger = LogManager.getLogger();
@@ -110,7 +115,7 @@ public class PatronServicesResourceImpl implements Patron {
 
   @Override
   public void postPatron(StagingUser entity, Map<String, String> okapiHeaders,
-                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     logger.info("postPatron:: Trying to create staging user");
     final var stagingUserRepository = new StagingUserRepository(HttpClientFactory.getHttpClient(vertxContext.owner()));
 
@@ -237,7 +242,7 @@ public class PatronServicesResourceImpl implements Patron {
       boolean includeCharges, boolean includeHolds,
       String sortBy,
       int offset,
-      int limit,
+      int limit, boolean includeBatches,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     logger.debug("getPatronAccountById:: Trying to get PatronAccount with parameters:  id: {}, includeLoans: {}, " +
@@ -245,6 +250,10 @@ public class PatronServicesResourceImpl implements Patron {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
     final var userRepository = new UserRepository(httpClient);
+    var tenantId = TenantTool.tenantId(okapiHeaders);
+    var postgresClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+    var patronSettingsService = new PatronSettingsService(postgresClient);
+    var mediatedRequestsService = new MediatedRequestsService(httpClient);
 
     try {
       // Look up the user to ensure that the user exists and is enabled
@@ -263,9 +272,10 @@ public class PatronServicesResourceImpl implements Patron {
               httpClient)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            final CompletableFuture<Account> cf2 = getRequests(id, sortBy, limit, offset, includeHolds, okapiHeaders,
-              httpClient)
-                .thenApply(body -> addHolds(account, body, includeHolds));
+            Map<String, String> queryParameters = buildRequestsGetQueryParams(id, sortBy, limit, offset, includeHolds);
+            final CompletableFuture<Account> cf2 = getRequests(queryParameters, includeBatches, patronSettingsService, okapiHeaders, httpClient)
+              .thenApply(requestsResponse -> addHolds(account, requestsResponse, includeHolds))
+              .thenCompose(requestsResponse -> addBatchRequestsStatuses(account, requestsResponse, includeBatches, mediatedRequestsService, okapiHeaders));
 
             final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges, code))
@@ -336,16 +346,40 @@ public class PatronServicesResourceImpl implements Patron {
       .thenApply(ResponseInterpreter::verifyAndExtractBody);
   }
 
-  private CompletableFuture<JsonObject> getRequests(String id,
-    String sortBy, int limit, int offset,
-    boolean includeHolds, Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+  private CompletableFuture<JsonObject> getRequests(Map<String, String> queryParameters, boolean includeBatches,
+                                                    PatronSettingsService patronSettingsService,
+                                                    Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+    if (!includeBatches) {
+      return httpClient.get("/circulation/requests", queryParameters, okapiHeaders)
+        .thenApply(ResponseInterpreter::verifyAndExtractBody);
+    }
 
+    return getRequestsWithBatchInfoEnriched(queryParameters, patronSettingsService, okapiHeaders, httpClient);
+  }
+
+  private CompletableFuture<JsonObject> getRequestsWithBatchInfoEnriched(Map<String, String> queryParameters, PatronSettingsService patronSettingsService,
+                                                                         Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+    return patronSettingsService.isMultiItemRequestingFeatureEnabled()
+      .thenCompose(isMultiItemRequestingEnabled -> {
+        if (Boolean.FALSE.equals(isMultiItemRequestingEnabled)) {
+          var errors = new Errors()
+            .withErrors(List.of(new Error()
+              .withMessage("Patron setting %s is not enabled".formatted(MULTI_ITEM_REQUESTING_FEATURE_SETTING_KEY))
+              .withParameters(List.of(new Parameter().withKey(MULTI_ITEM_REQUESTING_FEATURE_SETTING_KEY).withValue("false"))))
+            );
+          throw new ValidationException(errors);
+        }
+
+        return httpClient.get("/circulation-bff/requests", queryParameters, okapiHeaders)
+          .thenApply(ResponseInterpreter::verifyAndExtractBody);
+      });
+  }
+
+  private Map<String, String> buildRequestsGetQueryParams(String id, String sortBy, int limit, int offset, boolean includeHolds) {
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds));
     queryParameters.put(QUERY, buildQueryWithRequesterId(id, sortBy));
-
-    return httpClient.get("/circulation/requests", queryParameters, okapiHeaders)
-      .thenApply(ResponseInterpreter::verifyAndExtractBody);
+    return queryParameters;
   }
 
   private CompletableFuture<JsonObject> getLoans(String id,
@@ -604,7 +638,9 @@ public class PatronServicesResourceImpl implements Patron {
                                                                                            Context vertxContext) {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
     var service = new MediatedRequestsService(httpClient);
-    service.getBatchRequestStatus(batchRequestId, instanceId, okapiHeaders)
+    var instance = new JsonObject()
+      .put(JSON_FIELD_INSTANCE_ID, instanceId);
+    service.getBatchRequestStatus(batchRequestId, instance, okapiHeaders)
       .whenComplete((submitResult, throwable) -> {
         if (throwable != null) {
           asyncResultHandler.handle(handleBatchRequestStatusGetError(throwable));
@@ -744,15 +780,15 @@ public class PatronServicesResourceImpl implements Patron {
         .withLoanDate(new DateTime(loan.getString("loanDate"), DateTimeZone.UTC).toDate());
   }
 
-  private Account addHolds(Account account, JsonObject body, boolean includeHolds) {
-    final int totalHolds = body.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
+  private JsonObject addHolds(Account account, JsonObject requestsJsonBody, boolean includeHolds) {
+    final int totalHolds = requestsJsonBody.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Hold> holds = new ArrayList<>();
 
     account.setTotalHolds(totalHolds);
     account.setHolds(holds);
 
     if (totalHolds > 0 && includeHolds) {
-      final JsonArray holdsJson = body.getJsonArray("requests");
+      final JsonArray holdsJson = requestsJsonBody.getJsonArray("requests");
       for (Object o : holdsJson) {
         if (o instanceof JsonObject) {
           JsonObject holdJson = (JsonObject) o;
@@ -763,7 +799,42 @@ public class PatronServicesResourceImpl implements Patron {
       }
     }
 
-    return account;
+    return requestsJsonBody;
+  }
+
+  private CompletableFuture<Account> addBatchRequestsStatuses(Account account, JsonObject requestsJson, boolean includeBatches,
+                                                              MediatedRequestsService mediatedRequestsService,
+                                                              Map<String, String> okapiHeaders) {
+    if (requestsJson == null || requestsJson.getJsonArray("requests") == null || !includeBatches) {
+      return CompletableFuture.completedFuture(account);
+    }
+
+    var futures = requestsJson.getJsonArray("requests").stream()
+      .map(obj -> (JsonObject) obj)
+      .filter(jsonRequest -> jsonRequest.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO) != null)
+      .map(jsonRequest -> {
+        var batchRequestInfo = jsonRequest.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO);
+        var batchRequestId = batchRequestInfo.getString("batchRequestId");
+        var instanceId = jsonRequest.getString(JSON_FIELD_INSTANCE_ID);
+        var title = Optional.ofNullable(jsonRequest.getJsonObject(JSON_FIELD_INSTANCE))
+          .map(jsonInstance -> jsonInstance.getString(JSON_FIELD_TITLE))
+          .orElse(null);
+        var instance = new JsonObject()
+          .put(JSON_FIELD_INSTANCE_ID, instanceId)
+          .put(JSON_FIELD_TITLE, title);
+
+        return mediatedRequestsService.getBatchRequestStatus(batchRequestId, instance, okapiHeaders);
+      })
+      .toList();
+
+    return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]))
+      .thenApply(v -> futures.stream()
+        .map(future -> future.join())
+        .toList())
+      .thenApply(batchRequestStatuses -> {
+        account.setBatchRequestStatuses(batchRequestStatuses);
+        return account;
+      });
   }
 
   private Account addCharges(Account account, JsonObject body, boolean includeCharges, String currencyCode) {
@@ -777,8 +848,7 @@ public class PatronServicesResourceImpl implements Patron {
     if (totalCharges > 0) {
       final JsonArray accountsJson = body.getJsonArray("accounts");
       for (Object o : accountsJson) {
-        if (o instanceof JsonObject) {
-          final JsonObject accountJson = (JsonObject) o;
+        if (o instanceof JsonObject accountJson) {
           Charge charge = getCharge(accountJson, currencyCode);
           if (accountJson.getString(JSON_FIELD_ITEM_ID) != null) {
             final Item item = new Item().withItemId(accountJson.getString(JSON_FIELD_ITEM_ID));

@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.stream.Stream;
 
 import org.folio.HttpStatus;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +20,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 
@@ -78,18 +76,12 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   public static final String EMPTY_STUB_RESPONSE = "null";
 
   @BeforeEach
-  public void setUp(Vertx vertx, VertxTestContext context) {
-    setUpConnectionForTest(vertx, context);
-    final Checkpoint mockOkapiStarted = context.checkpoint(1);
+  void setUp(Vertx vertx, VertxTestContext context) {
     final String host = "localhost";
     final HttpServer server = vertx.createHttpServer();
     server.requestHandler(this::mockData);
-    server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
-  }
-
-  @AfterEach
-  public void tearDown(Vertx vertx, VertxTestContext context) {
-    closeConnectionForTest(vertx, context);
+    server.listen(serverPort, host);
+    context.completeNow();
   }
 
   @ParameterizedTest

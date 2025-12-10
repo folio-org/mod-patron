@@ -52,12 +52,11 @@ public class MediatedRequestsService {
       .thenApply(this::mapToBatchRequestSubmitResult);
   }
 
-  public CompletableFuture<BatchRequestStatus> getBatchRequestStatus(String batchId,
-                                                                    String instanceId,
+  public CompletableFuture<BatchRequestStatus> getBatchRequestStatus(String batchId, JsonObject instance,
                                                                     Map<String, String> okapiHeaders) {
     return getStatusFromBatchRequest(batchId, okapiHeaders)
       .thenCompose(batchStatus ->
-        getBatchDetailsAndUpdateStatus(batchStatus, batchId, instanceId, okapiHeaders));
+        getBatchDetailsAndUpdateStatus(batchStatus, batchId, instance, okapiHeaders));
   }
 
   private CompletableFuture<BatchRequestStatus> getStatusFromBatchRequest(String batchId,
@@ -89,18 +88,22 @@ public class MediatedRequestsService {
   }
 
   private CompletableFuture<BatchRequestStatus> getBatchDetailsAndUpdateStatus(BatchRequestStatus batchStatus,
-                                                                               String batchId, String instanceId,
+                                                                               String batchId, JsonObject instance,
                                                                                Map<String, String> okapiHeaders) {
+    var instanceId = Optional.ofNullable(instance.getString("instanceId"))
+      .orElseThrow(() -> new IllegalArgumentException(
+        "Instance ID is missing for the provided batch request with ID: " + batchId));
+    var title = instance.getString("title");
     return repository.getBatchRequestDetails(batchId, okapiHeaders)
       .thenApply(detailsJson -> mapBatchRequestDetailsJsonToDto(detailsJson, batchId))
       .thenAccept(detailsDtoList -> {
-        var pendingItemsDetails = extractPendingItemsDetails(detailsDtoList, instanceId);
+        var pendingItemsDetails = extractPendingItemsDetails(detailsDtoList, instanceId, title);
         batchStatus.setItemsPendingDetails(pendingItemsDetails);
 
-        var failedItemsDetails = extractFailedItemsDetails(detailsDtoList, instanceId);
+        var failedItemsDetails = extractFailedItemsDetails(detailsDtoList, instanceId, title);
         batchStatus.setItemsFailedDetails(failedItemsDetails);
 
-        var completedItemsDetails = extractRequestedItemsDetails(detailsDtoList, instanceId);
+        var completedItemsDetails = extractRequestedItemsDetails(detailsDtoList, instanceId, title);
         batchStatus.setItemsRequestedDetails(completedItemsDetails);
 
         if (batchStatus.getStatus() == BatchRequestStatus.Status.IN_PROGRESS) {
@@ -111,14 +114,19 @@ public class MediatedRequestsService {
           batchStatus.setItemsPending(pendingItemsDetails.size());
         }
       })
-      .thenCompose(voidArg -> instanceRepository.getInstance(instanceId, okapiHeaders))
-      .thenApply(instanceJson -> instanceJson.getString("title"))
-      .thenApply(title -> {
-        batchStatus.getItemsPendingDetails().forEach(detail -> detail.setTitle(title));
-        batchStatus.getItemsRequestedDetails().forEach(detail -> detail.setTitle(title));
-        batchStatus.getItemsFailedDetails().forEach(detail -> detail.setTitle(title));
+      .thenCompose(voidArg -> {
+        if (title == null) {
+          return instanceRepository.getInstance(instanceId, okapiHeaders)
+            .thenApply(instanceJson -> instanceJson.getString("title"))
+            .thenApply(fetchedTitle -> {
+              batchStatus.getItemsPendingDetails().forEach(detail -> detail.setTitle(fetchedTitle));
+              batchStatus.getItemsRequestedDetails().forEach(detail -> detail.setTitle(fetchedTitle));
+              batchStatus.getItemsFailedDetails().forEach(detail -> detail.setTitle(fetchedTitle));
 
-        return batchStatus;
+              return batchStatus;
+            });
+        }
+        return CompletableFuture.completedFuture(batchStatus);
       });
   }
 
@@ -136,30 +144,32 @@ public class MediatedRequestsService {
   }
 
   private List<ItemsPendingDetail> extractPendingItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
-                                                              String instanceId) {
+                                                              String instanceId, String title) {
     return detailsDtoList.stream()
       .filter(detail -> isPendingOrInProgress(detail.getMediatedRequestStatus()))
       .map(detail -> new ItemsPendingDetail()
         .withItemId(detail.getItemId())
         .withPickUpLocationId(detail.getPickupServicePointId())
-        .withInstanceId(instanceId))
+        .withInstanceId(instanceId)
+        .withTitle(title))
       .toList();
   }
 
   private List<ItemsFailedDetail> extractFailedItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
-                                                            String instanceId) {
+                                                            String instanceId, String title) {
     return detailsDtoList.stream()
       .filter(detail -> FAILED.getValue().equals(detail.getMediatedRequestStatus()))
       .map(detail -> new ItemsFailedDetail()
         .withItemId(detail.getItemId())
         .withPickUpLocationId(detail.getPickupServicePointId())
         .withInstanceId(instanceId)
+        .withTitle(title)
         .withErrorDetails(detail.getErrorDetails()))
       .toList();
   }
 
   private List<ItemsRequestedDetail> extractRequestedItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
-                                                                  String instanceId) {
+                                                                  String instanceId, String title) {
     return detailsDtoList.stream()
       .filter(detail -> COMPLETED.getValue().equals(detail.getMediatedRequestStatus()))
       .filter(detail -> Objects.nonNull(detail.getConfirmedRequestId()))
@@ -167,6 +177,7 @@ public class MediatedRequestsService {
         .withItemId(detail.getItemId())
         .withPickUpLocationId(detail.getPickupServicePointId())
         .withInstanceId(instanceId)
+        .withTitle(title)
         .withConfirmedRequestId(detail.getConfirmedRequestId()))
       .toList();
   }

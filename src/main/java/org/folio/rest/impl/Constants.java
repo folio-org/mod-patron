@@ -34,4 +34,5 @@ public class Constants {
   static final String JSON_FIELD_REQUESTER_ID = "requesterId";
   static final String JSON_FIELD_FULFILLMENT_PREFERENCE = "fulfillmentPreference";
   public static final String JSON_FIELD_BATCH_REQUEST_ID = "batchId";
+  public static final String JSON_FIELD_BATCH_REQUEST_INFO = "batchRequestInfo";
 }
