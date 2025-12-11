@@ -39,7 +39,7 @@ public class PatronSettingsException extends RuntimeException {
    */
   public static PatronSettingsException notFoundByKey(String key) {
     var err = new Error()
-      .withMessage("Setting entity not found by ikey: " + key)
+      .withMessage("Setting entity not found by key: " + key)
       .withCode("not_found_error")
       .withParameters(List.of(new Parameter().withKey("key").withValue(key)));
     return new PatronSettingsException(err, Response.Status.NOT_FOUND);

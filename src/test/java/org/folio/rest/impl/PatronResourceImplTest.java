@@ -40,6 +40,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTI_ITEM_REQUESTING_FEATURE_ENABLED_SETTING_NOT_FOUND_BY_KEY;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
@@ -331,6 +332,33 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       var expectedHold = expectedJson.getJsonArray("holds").getJsonObject(i);
       assertEquals(expectedHold.getJsonObject("batchRequestInfo"), actualHold.getJsonObject("batchRequestInfo"));
     }
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  public final void testSettingNotFoundErrorOnGetPatronAccountByIdWithBatchRequestInfo() {
+    logger.info("Testing for batch request feature enabled setting not found error in patron account retrieval by id");
+
+    var errors = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("includeHolds", "true")
+      .queryParam("includeBatches", "true")
+      .queryParam("sortBy", sortByParam)
+      .when()
+      .get(accountPath)
+      .then()
+      .contentType(ContentType.JSON)
+      .statusCode(422)
+      .extract().response().as(Errors.class);
+
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(MULTI_ITEM_REQUESTING_FEATURE_ENABLED_SETTING_NOT_FOUND_BY_KEY.value(), errors.getErrors().getFirst().getMessage());
 
     // Test done
     logger.info("Test done");

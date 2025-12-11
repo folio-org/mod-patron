@@ -19,6 +19,7 @@ import org.folio.integration.http.ResponseInterpreter;
 import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
+import org.folio.patron.rest.exceptions.PatronSettingsException;
 import org.folio.patron.rest.exceptions.ValidationException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Account;
@@ -1004,6 +1005,14 @@ public class PatronServicesResourceImpl implements Patron {
       return succeededFuture(GetPatronAccountByIdResponse.respond422WithApplicationJson(
         validationException.getErrors()));
     }
+
+    if (t instanceof PatronSettingsException patronSettingsException) {
+      return succeededFuture(GetPatronAccountByIdResponse.respond422WithApplicationJson(
+        new Errors()
+          .withErrors(List.of(patronSettingsException.getError()))
+          .withTotalRecords(1)));
+    }
+
     if (t instanceof HttpException httpException) {
       final int code = httpException.getCode();
       final String message = httpException.getMessage();
