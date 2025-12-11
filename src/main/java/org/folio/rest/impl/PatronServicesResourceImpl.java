@@ -28,6 +28,7 @@ import org.folio.rest.jaxrs.model.AllowedServicePointsPerItem;
 import org.folio.rest.jaxrs.model.AllowedServicePointsPerItems;
 import org.folio.rest.jaxrs.model.Batch;
 import org.folio.rest.jaxrs.model.BatchRequest;
+import org.folio.rest.jaxrs.model.BatchRequestInfo;
 import org.folio.rest.jaxrs.model.Charge;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -49,6 +50,7 @@ import org.joda.time.DateTimeZone;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -275,7 +277,7 @@ public class PatronServicesResourceImpl implements Patron {
 
             Map<String, String> queryParameters = buildRequestsGetQueryParams(id, sortBy, limit, offset, includeHolds);
             final CompletableFuture<Account> cf2 = getRequests(queryParameters, includeBatches, patronSettingsService, okapiHeaders, httpClient)
-              .thenApply(requestsResponse -> addHolds(account, requestsResponse, includeHolds))
+              .thenApply(requestsResponse -> addHolds(account, requestsResponse, includeHolds, includeBatches))
               .thenCompose(requestsResponse -> addBatchRequestsStatuses(account, requestsResponse, includeBatches, mediatedRequestsService, okapiHeaders));
 
             final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, okapiHeaders, httpClient)
@@ -781,7 +783,7 @@ public class PatronServicesResourceImpl implements Patron {
         .withLoanDate(new DateTime(loan.getString("loanDate"), DateTimeZone.UTC).toDate());
   }
 
-  private JsonObject addHolds(Account account, JsonObject requestsJsonBody, boolean includeHolds) {
+  private JsonObject addHolds(Account account, JsonObject requestsJsonBody, boolean includeHolds, boolean includeBatches) {
     final int totalHolds = requestsJsonBody.getInteger(JSON_FIELD_TOTAL_RECORDS, Integer.valueOf(0)).intValue();
     final List<Hold> holds = new ArrayList<>();
 
@@ -791,16 +793,33 @@ public class PatronServicesResourceImpl implements Patron {
     if (totalHolds > 0 && includeHolds) {
       final JsonArray holdsJson = requestsJsonBody.getJsonArray("requests");
       for (Object o : holdsJson) {
-        if (o instanceof JsonObject) {
-          JsonObject holdJson = (JsonObject) o;
+        if (o instanceof JsonObject holdJson) {
           final Item item = getItem(holdJson);
           final Hold hold = getHold(holdJson, item);
+          getBatchInfo(holdJson, includeBatches)
+            .ifPresent(hold::setBatchRequestInfo);
           holds.add(hold);
         }
       }
     }
 
     return requestsJsonBody;
+  }
+
+  private Optional<BatchRequestInfo> getBatchInfo(JsonObject holdJson, boolean includeBatches) {
+    if (!includeBatches) {
+      return Optional.empty();
+    }
+
+    var batchInfo = holdJson.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO);
+    if (batchInfo == null || !batchInfo.containsKey("batchRequestId") || !batchInfo.containsKey("batchRequestSubmittedAt")) {
+      return Optional.empty();
+    }
+
+    var batchRequestInfo = new BatchRequestInfo()
+      .withBatchRequestId(batchInfo.getString("batchRequestId"))
+      .withBatchRequestSubmittedAt(Date.from(Instant.parse(batchInfo.getString("batchRequestSubmittedAt"))));
+    return Optional.of(batchRequestInfo);
   }
 
   private CompletableFuture<Account> addBatchRequestsStatuses(Account account, JsonObject requestsJson, boolean includeBatches,

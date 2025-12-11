@@ -292,6 +292,51 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
+  public final void testGetPatronAccountByIdSortedByItemIdWithBatchRequestInfo() {
+    logger.info("Testing for successful patron services account retrieval by id, sorted by title, with batch info");
+    var setting = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("key", "isMultiItemRequestingFeatureEnabled")
+      .put("value", "true")
+      .put("scope", "mod-patron");
+    createSetting(setting);
+
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("includeLoans", "true")
+      .queryParam("includeHolds", "true")
+      .queryParam("includeCharges", "true")
+      .queryParam("includeBatches", "true")
+      .queryParam("sortBy", sortByParam)
+      .when()
+      .get(accountPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(
+      readMockFile(MOCK_DATA_FOLDER + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"));
+
+    verifyAccount(json, expectedJson);
+    for(int i = 0; i < 3; i++) {
+      var actualHold = json.getJsonArray("holds").getJsonObject(i);
+      var expectedHold = expectedJson.getJsonArray("holds").getJsonObject(i);
+      assertEquals(expectedHold.getJsonObject("batchRequestInfo"), actualHold.getJsonObject("batchRequestInfo"));
+    }
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
   public final void testGetPatronAccountByIdWithLimitAndOffset() {
     logger.info("Testing for successful patron services account retrieval by id");
 
@@ -2086,6 +2131,19 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     }
   }
 
+  private void createSetting(JsonObject setting) {
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(setting.encode())
+      .when()
+      .post("/patron/settings")
+      .then()
+      .statusCode(201)
+      .extract().response();
+  }
+
   public void mockData(HttpServerRequest req) {
       if (req.path().equals(String.format("/users/%s", goodUserId))) {
         req.response()
@@ -2645,6 +2703,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         }
       } else if (req.path().startsWith(CIRCULATION_BFF_BATCH_REQUESTS)) {
         mockBatchRequestsEndpoints(req);
+      } else if (req.path().startsWith("/circulation-bff/requests") && req.method() == HttpMethod.GET) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/holds_all_active_and_sorted_with_batch_request_info.json"));
       } else if (req.path().equals("/inventory/instances/" + GOOD_INSTANCE_ID)) {
         req.response()
           .setStatusCode(200)
