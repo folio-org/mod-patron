@@ -22,7 +22,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 public abstract class BaseResourceServiceTest {
   private static final Logger logger = LogManager.getLogger();
-  private static final int okapiPort = NetworkUtils.nextFreePort();
+  private static final int OKAPI_PORT = NetworkUtils.nextFreePort();
   private static final String OKAPI_TENANT = "patronresourceimpltest";
 
   protected static final String MOCK_DATA_FOLDER = "PatronServicesResourceImpl";
@@ -57,11 +57,11 @@ public abstract class BaseResourceServiceTest {
   @SneakyThrows
   static void setUpClass(Vertx vertx, VertxTestContext context) {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
-    okapiUrl = new OkapiUrl("http://localhost:" + okapiPort);
+    okapiUrl = new OkapiUrl("http://localhost:" + OKAPI_PORT);
     okapiHeaders = new OkapiHeaders(okapiUrl, OKAPI_TENANT, null);
     module = new VertxModule(vertx);
 
-    module.deployModule(okapiPort)
+    module.deployModule(OKAPI_PORT)
       .compose(res -> module.enableModule(okapiHeaders, false, false))
       .onComplete(result -> {
         if (result.failed()) {
@@ -69,11 +69,11 @@ public abstract class BaseResourceServiceTest {
           return;
         }
         postgresClient = PostgresClient.getInstance(vertx, OKAPI_TENANT);
-        RestAssured.port = okapiPort;
+        RestAssured.port = OKAPI_PORT;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         context.completeNow();
       });
-    logger.info("Patron Services Test Setup Done using port {}", okapiPort);
+    logger.info("Patron Services Test Setup Done using port {}", OKAPI_PORT);
   }
 
   @AfterAll

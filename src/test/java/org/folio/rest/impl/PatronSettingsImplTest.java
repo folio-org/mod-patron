@@ -42,7 +42,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
  */
 @ExtendWith({VertxExtension.class, SystemStubsExtension.class})
 @DisplayName("PatronSettings Integration Tests")
-public class PatronSettingsImplTest extends BaseResourceServiceTest {
+class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   private static final Logger logger = LogManager.getLogger();
 
@@ -59,7 +59,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
   }
 
   @BeforeEach
-  public void setUp(Vertx vertx, VertxTestContext context) {
+  void setUp(Vertx vertx, VertxTestContext context) {
     postgresClient.delete(SETTINGS_TABLE, new Criterion(),
       event -> {
         if (event.failed()) {
@@ -76,7 +76,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
   }
 
   @AfterEach
-  public void tearDown(Vertx vertx, VertxTestContext context) {
+  void tearDown(Vertx vertx, VertxTestContext context) {
     context.completeNow();
   }
 
@@ -134,7 +134,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("GET /patron-settings should return collection successfully")
-  public void testGetPatronSettingsCollection() {
+  void testGetPatronSettingsCollection() {
     logger.info("Testing GET /patron-settings collection");
 
     var response = getRequestSpecification()
@@ -157,7 +157,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("GET /patron-settings with query parameter should filter results")
-  public void testGetPatronSettingsWithQuery() {
+  void testGetPatronSettingsWithQuery() {
     logger.info("Testing GET /patron-settings with query parameter");
 
     String query = "scope==mod-patron";
@@ -179,7 +179,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
   @ParameterizedTest
   @ValueSource(ints = {5, 10, 20, 50})
   @DisplayName("GET /patron-settings with different limit values")
-  public void testGetPatronSettingsWithDifferentLimits(int limit) {
+  void testGetPatronSettingsWithDifferentLimits(int limit) {
     logger.info("Testing GET /patron-settings with limit={}", limit);
 
     var response = getRequestSpecification()
@@ -200,7 +200,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("GET /patron-settings with pagination should work correctly")
-  public void testGetPatronSettingsWithPagination() {
+  void testGetPatronSettingsWithPagination() {
     logger.info("Testing pagination for GET /patron-settings");
 
     // First page
@@ -229,7 +229,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("GET /patron-settings/{id} should return setting by ID successfully")
-  public void testGetPatronSettingById() {
+  void testGetPatronSettingById() {
     logger.info("Testing GET /patron/settings/{id} for existing setting");
 
     // First create a setting
@@ -258,7 +258,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("GET /patron/settings/{id} should return 404 for non-existent ID")
-  public void testGetPatronSettingByIdNotFound() {
+  void testGetPatronSettingByIdNotFound() {
     logger.info("Testing GET /patron/settings/{id} for non-existent setting");
 
     getRequestSpecification()
@@ -273,7 +273,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("GET /patron/settings/{id} should return 400 for invalid UUID")
-  public void testGetPatronSettingByInvalidId() {
+  void testGetPatronSettingByInvalidId() {
     logger.info("Testing GET /patron/settings/{id} with invalid UUID");
 
     getRequestSpecification()
@@ -289,7 +289,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("POST /patron/settings should create new setting successfully")
-  public void testPostPatronSetting() {
+  void testPostPatronSetting() {
     logger.info("Testing POST /patron/settings");
 
     var testData = SettingTestData.createDefault();
@@ -316,7 +316,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("POST /patron/settings without required fields should return 422")
-  public void testPostPatronSettingWithoutRequiredFields() {
+  void testPostPatronSettingWithoutRequiredFields() {
     logger.info("Testing POST /patron/settings without required fields");
 
     var incompleteSetting = new JsonObject()
@@ -335,7 +335,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("POST /patron/settings with invalid JSON should return 400")
-  public void testPostPatronSettingWithInvalidJson() {
+  void testPostPatronSettingWithInvalidJson() {
     logger.info("Testing POST /patron/settings with invalid JSON");
 
     getRequestSpecification()
@@ -351,7 +351,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
   @ParameterizedTest
   @MethodSource("provideSettingTestData")
   @DisplayName("POST /patron/settings with various valid data")
-  public void testPostPatronSettingWithVariousData(String key, Object value, String description) {
+  void testPostPatronSettingWithVariousData(String key, Object value, String description) {
     logger.info("Testing POST with {}", description);
 
     var testData = new SettingTestData(
@@ -391,7 +391,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("PUT /patron/settings/{id} should update setting successfully")
-  public void testPutPatronSettingById() {
+  void testPutPatronSettingById() {
     logger.info("Testing PUT /patron/settings/{id}");
 
     // Create initial setting
@@ -430,7 +430,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("PUT /patron/settings/{id} should return 404 for non-existent ID")
-  public void testPutPatronSettingByIdNotFound() {
+  void testPutPatronSettingByIdNotFound() {
     logger.info("Testing PUT /patron/settings/{id} for non-existent setting");
 
     var setting = new JsonObject()
@@ -451,7 +451,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("PUT /patron/settings/{id} with mismatched ID should return 422")
-  public void testPutPatronSettingWithMismatchedId() {
+  void testPutPatronSettingWithMismatchedId() {
     logger.info("Testing PUT with mismatched ID in path and body");
 
     var testData = SettingTestData.createDefault();
@@ -474,7 +474,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("DELETE /patron/settings/{id} should delete setting successfully")
-  public void testDeletePatronSettingById() {
+  void testDeletePatronSettingById() {
     logger.info("Testing DELETE /patron/settings/{id}");
 
     // Create a setting to delete
@@ -499,7 +499,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("DELETE /patron/settings/{id} should return 404 for non-existent ID")
-  public void testDeletePatronSettingByIdNotFound() {
+  void testDeletePatronSettingByIdNotFound() {
     logger.info("Testing DELETE /patron/settings/{id} for non-existent setting");
 
     getRequestSpecification()
@@ -513,7 +513,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("DELETE /patron/settings/{id} should be idempotent")
-  public void testDeletePatronSettingIdempotency() {
+  void testDeletePatronSettingIdempotency() {
     logger.info("Testing DELETE idempotency");
 
     // Create a setting
@@ -539,7 +539,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("Complete CRUD lifecycle test")
-  public void testCompleteCrudLifecycle() {
+  void testCompleteCrudLifecycle() {
     logger.info("Testing complete CRUD lifecycle");
 
     // CREATE
@@ -602,7 +602,7 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
 
   @Test
   @DisplayName("Concurrent POST operations should succeed")
-  public void testConcurrentPostOperations() throws InterruptedException {
+  void testConcurrentPostOperations() throws InterruptedException {
     logger.info("Testing concurrent POST operations");
 
     int numberOfThreads = 5;
