@@ -1,9 +1,7 @@
 package org.folio.service;
 
-import static org.folio.patron.rest.models.MediatedBatchRequestStatus.COMPLETED;
-import static org.folio.patron.rest.models.MediatedBatchRequestStatus.FAILED;
-import static org.folio.patron.rest.models.MediatedBatchRequestStatus.IN_PROGRESS;
-import static org.folio.patron.rest.models.MediatedBatchRequestStatus.PENDING;
+import static org.folio.rest.jaxrs.model.Batch.Status.COMPLETED;
+import static org.folio.rest.jaxrs.model.Batch.Status.IN_PROGRESS;
 
 import java.time.Instant;
 import java.util.Date;
@@ -18,9 +16,9 @@ import org.folio.integration.http.VertxOkapiHttpClient;
 import org.folio.patron.rest.models.BatchRequestDetailsDto;
 import org.folio.patron.rest.models.BatchRequestDto;
 import org.folio.patron.rest.models.BatchRequestPostDto;
+import org.folio.patron.rest.models.MediatedBatchRequestStatus;
 import org.folio.repository.MediatedRequestsRepository;
 import org.folio.repository.InstanceRepository;
-import org.folio.rest.jaxrs.model.Batch;
 import org.folio.rest.jaxrs.model.BatchRequest;
 import org.folio.patron.rest.models.BatchRequestStatus;
 import org.folio.rest.jaxrs.model.BatchRequestSubmitResult;
@@ -70,7 +68,7 @@ public class MediatedRequestsService {
         batchStatus.setSubmittedAt(Date.from(Instant.parse(batchRequestDto.getRequestDate())));
 
         if (COMPLETED_MEDIATED_BATCH_REQUEST_STATUSES.contains(batchRequestDto.getMediatedRequestStatus())) {
-          batchStatus.setStatus(BatchRequestStatus.Status.COMPLETED);
+          batchStatus.setStatus(COMPLETED);
           Optional.ofNullable(batchRequestDto.getMetadata())
             .map(Metadata::getUpdatedDate)
             .ifPresent(batchStatus::setCompletedAt);
@@ -82,7 +80,7 @@ public class MediatedRequestsService {
               batchStatus.setItemsRequested(stats.getCompleted());
             });
         } else {
-          batchStatus.setStatus(BatchRequestStatus.Status.IN_PROGRESS);
+          batchStatus.setStatus(IN_PROGRESS);
         }
         return batchStatus;
       });
@@ -107,7 +105,7 @@ public class MediatedRequestsService {
         var completedItemsDetails = extractRequestedItemsDetails(detailsDtoList, instanceId, title);
         batchStatus.setItemsRequestedDetails(completedItemsDetails);
 
-        if (batchStatus.getStatus() == Batch.Status.IN_PROGRESS) {
+        if (batchStatus.getStatus() == IN_PROGRESS) {
           // if batch request processing is still in progress, then data from /details is the most up-to-date
           batchStatus.setItemsTotal(detailsDtoList.size());
           batchStatus.setItemsRequested(completedItemsDetails.size());
@@ -159,7 +157,7 @@ public class MediatedRequestsService {
   private List<ItemsFailedDetail> extractFailedItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
                                                             String instanceId, String title) {
     return detailsDtoList.stream()
-      .filter(detail -> FAILED.getValue().equals(detail.getMediatedRequestStatus()))
+      .filter(detail -> MediatedBatchRequestStatus.FAILED.getValue().equals(detail.getMediatedRequestStatus()))
       .map(detail -> new ItemsFailedDetail()
         .withItemId(detail.getItemId())
         .withPickUpLocationId(detail.getPickupServicePointId())
@@ -172,7 +170,7 @@ public class MediatedRequestsService {
   private List<ItemsRequestedDetail> extractRequestedItemsDetails(List<BatchRequestDetailsDto> detailsDtoList,
                                                                   String instanceId, String title) {
     return detailsDtoList.stream()
-      .filter(detail -> COMPLETED.getValue().equals(detail.getMediatedRequestStatus()))
+      .filter(detail -> MediatedBatchRequestStatus.COMPLETED.getValue().equals(detail.getMediatedRequestStatus()))
       .filter(detail -> Objects.nonNull(detail.getConfirmedRequestId()))
       .map(detail -> new ItemsRequestedDetail()
         .withItemId(detail.getItemId())
@@ -235,6 +233,7 @@ public class MediatedRequestsService {
   }
 
   private boolean isPendingOrInProgress(String status) {
-    return PENDING.getValue().equals(status) || IN_PROGRESS.getValue().equals(status);
+    return MediatedBatchRequestStatus.PENDING.getValue().equals(status)
+      || MediatedBatchRequestStatus.IN_PROGRESS.getValue().equals(status);
   }
 }

@@ -831,7 +831,7 @@ public class PatronServicesResourceImpl implements Patron {
     }
 
     var futures = requestsJson.getJsonArray("requests").stream()
-      .map(obj -> (JsonObject) obj)
+      .map(JsonObject.class::cast)
       .filter(jsonRequest -> jsonRequest.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO) != null)
       .map(jsonRequest -> {
         var batchRequestInfo = jsonRequest.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO);

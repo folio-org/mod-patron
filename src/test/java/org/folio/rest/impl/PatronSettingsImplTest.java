@@ -66,7 +66,6 @@ public class PatronSettingsImplTest extends BaseResourceServiceTest {
           logger.error(event.cause());
           context.failNow(event.cause());
         } else {
-          //var mockOkapiStarted = context.checkpoint(1);
           var host = "localhost";
           var server = vertx.createHttpServer();
           server.requestHandler(this::mockData);
