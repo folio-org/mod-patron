@@ -20,8 +20,9 @@ import org.folio.patron.rest.models.BatchRequestDto;
 import org.folio.patron.rest.models.BatchRequestPostDto;
 import org.folio.repository.MediatedRequestsRepository;
 import org.folio.repository.InstanceRepository;
+import org.folio.rest.jaxrs.model.Batch;
 import org.folio.rest.jaxrs.model.BatchRequest;
-import org.folio.rest.jaxrs.model.BatchRequestStatus;
+import org.folio.patron.rest.models.BatchRequestStatus;
 import org.folio.rest.jaxrs.model.BatchRequestSubmitResult;
 import org.folio.rest.jaxrs.model.ItemRequestsStats;
 import org.folio.rest.jaxrs.model.ItemsFailedDetail;
@@ -64,9 +65,9 @@ public class MediatedRequestsService {
     return repository.getBatchRequestById(batchId, okapiHeaders)
       .thenApply(batchRequestJson -> batchRequestJson.mapTo(BatchRequestDto.class))
       .thenApply(batchRequestDto -> {
-        BatchRequestStatus batchStatus = new BatchRequestStatus()
-          .withBatchRequestId(batchId)
-          .withSubmittedAt(Date.from(Instant.parse(batchRequestDto.getRequestDate())));
+        BatchRequestStatus batchStatus = new BatchRequestStatus();
+        batchStatus.setBatchRequestId(batchId);
+        batchStatus.setSubmittedAt(Date.from(Instant.parse(batchRequestDto.getRequestDate())));
 
         if (COMPLETED_MEDIATED_BATCH_REQUEST_STATUSES.contains(batchRequestDto.getMediatedRequestStatus())) {
           batchStatus.setStatus(BatchRequestStatus.Status.COMPLETED);
@@ -106,7 +107,7 @@ public class MediatedRequestsService {
         var completedItemsDetails = extractRequestedItemsDetails(detailsDtoList, instanceId, title);
         batchStatus.setItemsRequestedDetails(completedItemsDetails);
 
-        if (batchStatus.getStatus() == BatchRequestStatus.Status.IN_PROGRESS) {
+        if (batchStatus.getStatus() == Batch.Status.IN_PROGRESS) {
           // if batch request processing is still in progress, then data from /details is the most up-to-date
           batchStatus.setItemsTotal(detailsDtoList.size());
           batchStatus.setItemsRequested(completedItemsDetails.size());

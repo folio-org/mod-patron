@@ -26,6 +26,7 @@ import org.folio.rest.jaxrs.model.AllowedServicePoint;
 import org.folio.rest.jaxrs.model.AllowedServicePoints;
 import org.folio.rest.jaxrs.model.AllowedServicePointsPerItem;
 import org.folio.rest.jaxrs.model.AllowedServicePointsPerItems;
+import org.folio.rest.jaxrs.model.Batch;
 import org.folio.rest.jaxrs.model.BatchRequest;
 import org.folio.rest.jaxrs.model.Charge;
 import org.folio.rest.jaxrs.model.Error;
@@ -829,10 +830,10 @@ public class PatronServicesResourceImpl implements Patron {
 
     return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]))
       .thenApply(v -> futures.stream()
-        .map(future -> future.join())
+        .map(future -> (Batch) future.join())
         .toList())
       .thenApply(batchRequestStatuses -> {
-        account.setBatchRequestStatuses(batchRequestStatuses);
+        account.setBatches(batchRequestStatuses);
         return account;
       });
   }
