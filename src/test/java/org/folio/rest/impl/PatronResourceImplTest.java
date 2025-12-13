@@ -298,7 +298,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     var setting = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("key", "isMultiItemRequestingFeatureEnabled")
-      .put("value", "true")
+      .put("value", new JsonObject().put("enabled", true).encode())
       .put("scope", "mod-patron");
     createSetting(setting);
 

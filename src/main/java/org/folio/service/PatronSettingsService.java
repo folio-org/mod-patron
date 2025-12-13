@@ -2,6 +2,7 @@ package org.folio.service;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import io.vertx.core.json.JsonObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -31,8 +32,8 @@ public class PatronSettingsService {
       .map(results -> getFirstExceptionally(MULTI_ITEM_REQUESTING_FEATURE_SETTING_KEY, results))
       .map(Setting::getValue)
       .map(value -> Optional.ofNullable(value)
-        .map(Object::toString)
-        .map(Boolean::valueOf)
+        .map(valueObj -> new JsonObject(valueObj.toString()))
+        .map(valueJson -> valueJson.getBoolean("enabled"))
         .orElseThrow(() -> PatronSettingsException.invalidSettingValue(MULTI_ITEM_REQUESTING_FEATURE_SETTING_KEY, value)))
       .onSuccess(enabled -> log.info("isMultiItemRequestingFeatureEnabled:: found value for setting[key={}]={}",
         MULTI_ITEM_REQUESTING_FEATURE_SETTING_KEY, enabled))
