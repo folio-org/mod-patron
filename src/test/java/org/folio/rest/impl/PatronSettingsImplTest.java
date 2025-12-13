@@ -308,10 +308,44 @@ class PatronSettingsImplTest extends BaseResourceServiceTest {
 
     assertNotNull(createdSetting);
     assertNotNull(createdSetting.getString("id"));
+    assertEquals(testData.id(), createdSetting.getString("id"));
     assertEquals(testData.scope(), createdSetting.getString("scope"));
     assertEquals(testData.key(), createdSetting.getString("key"));
 
     logger.info("POST test completed successfully");
+  }
+
+  @Test
+  @DisplayName("POST /patron/settings should create new setting successfully without provided ID")
+  void testPostPatronSettingWithoutProvidedId() {
+    logger.info("Testing POST /patron/settings withoit provided ID");
+
+    var testData = new SettingTestData(
+      null,
+      "mod-patron",
+      "test.setting.key",
+      "test-value",
+      null
+    );
+    var newSetting = testData.toJson();
+
+    var response = getRequestSpecification()
+      .body(newSetting.encode())
+      .post(SETTINGS_PATH)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(201)
+      .extract().response();
+
+    var createdSetting = new JsonObject(response.getBody().asString());
+
+    assertNotNull(createdSetting);
+    assertNotNull(createdSetting.getString("id"));
+    assertEquals(testData.scope(), createdSetting.getString("scope"));
+    assertEquals(testData.key(), createdSetting.getString("key"));
+
+    logger.info("POST test without provided ID completed successfully");
   }
 
   @Test

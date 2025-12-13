@@ -35,4 +35,6 @@ public class Constants {
   static final String JSON_FIELD_FULFILLMENT_PREFERENCE = "fulfillmentPreference";
   public static final String JSON_FIELD_BATCH_REQUEST_ID = "batchId";
   public static final String JSON_FIELD_BATCH_REQUEST_INFO = "batchRequestInfo";
+  public static final String JSON_COLLECTION_FIELD_REQUESTS = "requests";
+  public static final String JSON_FIELD_BATCH_INFO_BATCH_ID = "batchRequestId";
 }

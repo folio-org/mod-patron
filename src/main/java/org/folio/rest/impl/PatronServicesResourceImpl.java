@@ -21,6 +21,7 @@ import org.folio.patron.rest.exceptions.HttpException;
 import org.folio.patron.rest.exceptions.ModuleGeneratedHttpException;
 import org.folio.patron.rest.exceptions.PatronSettingsException;
 import org.folio.patron.rest.exceptions.ValidationException;
+import org.folio.patron.rest.models.BatchRequestStatus;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Account;
 import org.folio.rest.jaxrs.model.AllowedServicePoint;
@@ -55,6 +56,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,6 +78,8 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.*;
 import static org.folio.rest.impl.CirculationRequestService.createItemLevelRequest;
 import static org.folio.rest.impl.CirculationRequestService.createTitleLevelRequest;
+import static org.folio.rest.impl.Constants.JSON_COLLECTION_FIELD_REQUESTS;
+import static org.folio.rest.impl.Constants.JSON_FIELD_BATCH_INFO_BATCH_ID;
 import static org.folio.rest.impl.Constants.JSON_FIELD_BATCH_REQUEST_INFO;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTORS;
 import static org.folio.rest.impl.Constants.JSON_FIELD_CONTRIBUTOR_NAMES;
@@ -279,7 +283,7 @@ public class PatronServicesResourceImpl implements Patron {
             Map<String, String> queryParameters = buildRequestsGetQueryParams(id, sortBy, limit, offset, includeHolds);
             final CompletableFuture<Account> cf2 = getRequests(queryParameters, includeBatches, patronSettingsService, okapiHeaders, httpClient)
               .thenApply(requestsResponse -> addHolds(account, requestsResponse, includeHolds, includeBatches))
-              .thenCompose(requestsResponse -> addBatchRequestsStatuses(account, requestsResponse, includeBatches, mediatedRequestsService, okapiHeaders));
+              .thenCompose(requestsResponse -> addBatches(account, requestsResponse, includeBatches, mediatedRequestsService, okapiHeaders));
 
             final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges, code))
@@ -792,7 +796,7 @@ public class PatronServicesResourceImpl implements Patron {
     account.setHolds(holds);
 
     if (totalHolds > 0 && includeHolds) {
-      final JsonArray holdsJson = requestsJsonBody.getJsonArray("requests");
+      final JsonArray holdsJson = requestsJsonBody.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS);
       for (Object o : holdsJson) {
         if (o instanceof JsonObject holdJson) {
           final Item item = getItem(holdJson);
@@ -813,24 +817,25 @@ public class PatronServicesResourceImpl implements Patron {
     }
 
     var batchInfo = holdJson.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO);
-    if (batchInfo == null || !batchInfo.containsKey("batchRequestId") || !batchInfo.containsKey("batchRequestSubmittedAt")) {
+    if (batchInfo == null || !batchInfo.containsKey(JSON_FIELD_BATCH_INFO_BATCH_ID) || !batchInfo.containsKey("batchRequestSubmittedAt")) {
       return Optional.empty();
     }
 
     var batchRequestInfo = new BatchRequestInfo()
-      .withBatchRequestId(batchInfo.getString("batchRequestId"))
+      .withBatchRequestId(batchInfo.getString(JSON_FIELD_BATCH_INFO_BATCH_ID))
       .withBatchRequestSubmittedAt(Date.from(Instant.parse(batchInfo.getString("batchRequestSubmittedAt"))));
     return Optional.of(batchRequestInfo);
   }
 
-  private CompletableFuture<Account> addBatchRequestsStatuses(Account account, JsonObject requestsJson, boolean includeBatches,
-                                                              MediatedRequestsService mediatedRequestsService,
-                                                              Map<String, String> okapiHeaders) {
-    if (requestsJson == null || requestsJson.getJsonArray("requests") == null || !includeBatches) {
+  private CompletableFuture<Account> addBatches(Account account, JsonObject requestsJson, boolean includeBatches,
+                                                MediatedRequestsService mediatedRequestsService,
+                                                Map<String, String> okapiHeaders) {
+    if (requestsJson == null || requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS) == null || !includeBatches) {
       return CompletableFuture.completedFuture(account);
     }
 
-    var futures = requestsJson.getJsonArray("requests").stream()
+    Map<String, CompletableFuture<BatchRequestStatus>> batchRequestsById = new HashMap<>();
+    var futures = requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS).stream()
       .map(JsonObject.class::cast)
       .filter(jsonRequest -> jsonRequest.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO) != null)
       .map(jsonRequest -> {
@@ -844,7 +849,8 @@ public class PatronServicesResourceImpl implements Patron {
           .put(JSON_FIELD_INSTANCE_ID, instanceId)
           .put(JSON_FIELD_TITLE, title);
 
-        return mediatedRequestsService.getBatchRequestStatus(batchRequestId, instance, okapiHeaders);
+        return batchRequestsById.computeIfAbsent(batchRequestId,
+          batchId -> mediatedRequestsService.getBatchRequestStatus(batchId, instance, okapiHeaders));
       })
       .toList();
 

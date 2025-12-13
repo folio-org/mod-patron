@@ -36,7 +36,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "id",
     "scope",
     "key",
     "value"
