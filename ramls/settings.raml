@@ -1,0 +1,155 @@
+#%RAML 1.0
+
+title: "Settings"
+baseUri: http://localhost
+version: v1.0
+
+documentation:
+  - title: Settings
+    content: <b>CRUD APIs used to manage settings for mod-patron.</b>
+
+types:
+  setting: !include setting.json
+  setting_collection: !include setting_collection.json
+  errors: !include raml-util/schemas/errors.schema
+  error: !include raml-util/schemas/error.schema
+  UUID:
+    type: string
+    pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+
+traits:
+  orderable: !include raml-util/traits/orderable.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/patron/settings:
+  type:
+    collection:
+      exampleCollection: !include examples/setting_collection.json
+      exampleItem: !include examples/setting_post.json
+      schemaCollection: setting_collection
+      schemaItem: setting
+  get:
+    description: Get a list of settings
+    is: [
+      searchable: { description: "CQL query", example: "key==isMultiItemRequestingFeatureEnabled" },
+      pageable
+    ]
+  post:
+    description: Add a new setting
+    body:
+      application/json:
+        type: setting
+        example:
+          strict: false
+          value: !include examples/setting_post.json
+    responses:
+      201:
+        description: Setting added
+        body:
+          application/json:
+            example: !include examples/setting_get.json
+      400:
+        description: Bad Request
+        body:
+          application/json:
+            type: error
+      500:
+        description: Internal error
+        body:
+          application/json:
+            type: error
+  /{id}:
+    uriParameters:
+      id:
+        description: The UUID of a setting
+        type: string
+        pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+    displayName: Settings
+    description: Get, Delete or Update a specific setting
+#    get:
+#      description: Retrieve Patron Setting with given Id
+#      responses:
+#        200:
+#          description: "Returns setting with a given ID"
+#          body:
+#            application/json:
+#              type: setting
+#              example: !include examples/setting_get.json
+#        400:
+#          description: Bad request
+#          body:
+#            text/plain:
+#              example: unable to process request -- constraint violation
+#        404:
+#          description: "Setting with a given ID not found"
+#          body:
+#            text/plain:
+#              example: setting not found
+#        500:
+#          description: "Internal server error, e.g. due to misconfiguration"
+#          body:
+#            text/plain:
+#              example: "internal server error, contact administrator"
+#    delete:
+#      description: Delete Patron Setting item with given Id
+#      responses:
+#        204:
+#          description: "Setting deleted successfully"
+#        404:
+#          description: "Setting with a given ID not found"
+#          body:
+#            text/plain:
+#              example: "Setting not found"
+#        400:
+#          description: "Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response."
+#          body:
+#            text/plain:
+#              example: |
+#                "unable to delete Setting -- constraint violation"
+#        500:
+#          description: "Internal server error, e.g. due to misconfiguration"
+#          body:
+#            text/plain:
+#              example: "Internal server error, contact administrator"
+#    put:
+#      description: |
+#        Update Patron Setting item with given Id
+#      body:
+#        application/json:
+#          type: setting
+#          example: !include examples/setting_get.json
+#      responses:
+#        204:
+#          description: "Setting successfully updated"
+#        404:
+#          description: "Setting with a given ID not found"
+#          body:
+#            text/plain:
+#              example: |
+#                "Setting not found"
+#        400:
+#          description: "Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response."
+#          body:
+#            text/plain:
+#              example: |
+#                "unable to update Setting -- malformed JSON at 13:4"
+#        409:
+#          description: "Optimistic locking version conflict"
+#          body:
+#            text/plain:
+#              example: "version conflict"
+#        500:
+#          description: "Internal server error, e.g. due to misconfiguration"
+#          body:
+#            text/plain:
+#              example: "internal server error, contact administrator"
+    type:
+      collection-item:
+        exampleItem: !include examples/setting_get.json
+        schema: setting

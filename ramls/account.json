@@ -46,6 +46,14 @@
         "$ref": "hold.json"
       }
     },
+    "batches": {
+      "type": "array",
+      "description": "Batch requests for each requests from holds created within a batch request",
+      "items": {
+        "type": "object",
+        "$ref": "batch-request-status-response.json"
+      }
+    },
     "loans": {
       "type": "array",
       "description": "A list of the patron's item checked out items",

@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Multi-Item Request Processing Status",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "batchRequestId": {
       "type": "string",

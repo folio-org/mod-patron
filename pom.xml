@@ -206,6 +206,12 @@
       <version>${system-stubs-jupiter.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>postgres-testing</artifactId>
+      <version>${raml-module-builder.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

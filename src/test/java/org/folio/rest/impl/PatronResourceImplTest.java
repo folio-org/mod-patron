@@ -11,7 +11,6 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
@@ -26,7 +25,6 @@ import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +40,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static io.restassured.http.ContentType.TEXT;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTIPLE_USER_WITH_EMAIL;
+import static org.folio.patron.rest.models.ExternalPatronErrorCode.MULTI_ITEM_REQUESTING_FEATURE_ENABLED_SETTING_NOT_FOUND_BY_KEY;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_INACTIVE;
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
@@ -136,18 +135,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @BeforeEach
-  public void setUp(Vertx vertx, VertxTestContext context) {
-    setUpConnectionForTest(vertx, context);
-    final Checkpoint mockOkapiStarted = context.checkpoint(1);
-    final String host = "localhost";
+  void setUp(Vertx vertx, VertxTestContext context) {
     final HttpServer server = vertx.createHttpServer();
     server.requestHandler(this::mockData);
-    server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
-  }
-
-  @AfterEach
-  public void tearDown(Vertx vertx, VertxTestContext context) {
-    closeConnectionForTest(vertx, context);
+    server.listen(serverPort, "localhost");
+    context.completeNow();
   }
 
   private boolean accountParametersMatchForInvalidStatusRequest(HttpServerRequest request) {
@@ -237,7 +229,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testGetPatronAccountById() {
+  void testGetPatronAccountById() {
     logger.info("Testing for successful patron services account retrieval by id");
 
     final Response r = given()
@@ -268,7 +260,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testGetPatronAccountByIdSortedByItemId() {
+  void testGetPatronAccountByIdSortedByItemId() {
     logger.info("Testing for successful patron services account retrieval by id and sorted by item title");
 
     final Response r = given()
@@ -301,7 +293,79 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testGetPatronAccountByIdWithLimitAndOffset() {
+  void testGetPatronAccountByIdSortedByItemIdWithBatchRequestInfo() {
+    logger.info("Testing for successful patron services account retrieval by id, sorted by title, with batch info");
+    var setting = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("key", "isMultiItemRequestingFeatureEnabled")
+      .put("value", new JsonObject().put("enabled", "true"))
+      .put("scope", "mod-patron");
+    createSetting(setting);
+
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("includeLoans", "true")
+      .queryParam("includeHolds", "true")
+      .queryParam("includeCharges", "true")
+      .queryParam("includeBatches", "true")
+      .queryParam("sortBy", sortByParam)
+      .when()
+      .get(accountPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(
+      readMockFile(MOCK_DATA_FOLDER + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"));
+
+    verifyAccount(json, expectedJson);
+    for(int i = 0; i < 3; i++) {
+      var actualHold = json.getJsonArray("holds").getJsonObject(i);
+      var expectedHold = expectedJson.getJsonArray("holds").getJsonObject(i);
+      assertEquals(expectedHold.getJsonObject("batchRequestInfo"), actualHold.getJsonObject("batchRequestInfo"));
+    }
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  void testSettingNotFoundErrorOnGetPatronAccountByIdWithBatchRequestInfo() {
+    logger.info("Testing for batch request feature enabled setting not found error in patron account retrieval by id");
+
+    var errors = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("includeHolds", "true")
+      .queryParam("includeBatches", "true")
+      .queryParam("sortBy", sortByParam)
+      .when()
+      .get(accountPath)
+      .then()
+      .contentType(ContentType.JSON)
+      .statusCode(422)
+      .extract().response().as(Errors.class);
+
+    assertEquals(1, errors.getErrors().size());
+    assertEquals(MULTI_ITEM_REQUESTING_FEATURE_ENABLED_SETTING_NOT_FOUND_BY_KEY.value(), errors.getErrors().getFirst().getMessage());
+
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  void testGetPatronAccountByIdWithLimitAndOffset() {
     logger.info("Testing for successful patron services account retrieval by id");
 
     final Response response = given()
@@ -346,7 +410,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testGetPatronAccountByIdNoLists() {
+  void testGetPatronAccountByIdNoLists() {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
 
     final Response r = given()
@@ -520,7 +584,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testGetPatronAccountByIdNoListsWhenLimitZero() {
+  void testGetPatronAccountByIdNoListsWhenLimitZero() {
     logger.info("Testing for successful patron services account retrieval by id without item lists");
 
     final Response r = given()
@@ -556,7 +620,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testGetPatronAccountByIdUserNotActive() {
+  void testGetPatronAccountByIdUserNotActive() {
     logger.info("Testing successful patron services account retrieval by id for inactive patron");
 
     final Response r = given()
@@ -592,7 +656,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testGetPatronAccountById404() {
+  void testGetPatronAccountById404() {
     logger.info("Testing for 404 due to unknown user id");
 
     given()
@@ -635,7 +699,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdRenew() {
+  void testPostPatronAccountByIdItemByItemIdRenew() {
     logger.info("Testing renew for 201");
 
     final Response r = given()
@@ -663,7 +727,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdRenew422BadUserId() {
+  void testPostPatronAccountByIdItemByItemIdRenew422BadUserId() {
     logger.info("Testing renew for 422 due to a bad user id");
 
     final Response r = given()
@@ -698,7 +762,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testPostPatronAccountByIdItemByItemIdRenew422BadItemId() {
+  void testPostPatronAccountByIdItemByItemIdRenew422BadItemId() {
     logger.info("Testing renew for 422 due to a bad item id");
 
     final Response r = given()
@@ -734,7 +798,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("itemRequestsParams")
-  final void testPostPatronAccountByIdItemByItemIdRequests(
+  void testPostPatronAccountByIdItemByItemIdRequests(
     boolean isEcsTlrFeatureEnabledInTlr, boolean isEcsTlrFeatureEnabledInCirculation) {
 
     ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
@@ -771,7 +835,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("nonPageRequestsParams")
-  final void testPostPatronAccountByItemNonPageRequests(
+  void testPostPatronAccountByItemNonPageRequests(
     boolean isEcsTlrFeatureEnabledInTlr, String expectedHoldFile) {
 
     ecsTlrFeatureEnabledInTlr = isEcsTlrFeatureEnabledInTlr;
@@ -853,7 +917,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
 
   @Test
-  public final void testCannotPostPatronAccountItemHoldByIdAndItemIdMissingField() {
+  void testCannotPostPatronAccountItemHoldByIdAndItemIdMissingField() {
     logger.info("Testing creating a hold on an item for the specified user");
 
     final Response r = given()
@@ -891,7 +955,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
 
   @Test
-  public final void testCannotPostPatronAccountItemHoldByIdAndItemIdIfItemIsNullInModInventory() {
+  void testCannotPostPatronAccountItemHoldByIdAndItemIdIfItemIsNullInModInventory() {
     logger.info("Testing creating a hold on an item for the specified user");
 
     final Response r = given()
@@ -999,7 +1063,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   This test checks the negative case of not being able to place a request due to request policy and whitelist restrictions
    */
   @Test
-  public final void testCannotPostPatronAccountByIdItemByItemIdRequest() {
+  void testCannotPostPatronAccountByIdItemByItemIdRequest() {
     logger.info("Testing creating a page request on an item for the specified user");
 
     final Response r = given()
@@ -1039,7 +1103,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testSuccessfulCancelPatronRequestByHoldId() {
+  void testSuccessfulCancelPatronRequestByHoldId() {
     logger.info("Testing cancellation hold by id");
 
     String aBody = readMockFile(MOCK_DATA_FOLDER + "/hold_cancel_request.json");
@@ -1071,7 +1135,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testSuccessfulCancelPatronRequestByHoldIdWithoutCancelDate() {
+  void testSuccessfulCancelPatronRequestByHoldIdWithoutCancelDate() {
     logger.info("Testing cancellation hold by id");
 
     String aBody = readMockFile(MOCK_DATA_FOLDER + "/hold_cancel_request.json");
@@ -1107,7 +1171,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void testCancelPatronRequestByHoldIdFailure422() {
+  void testCancelPatronRequestByHoldIdFailure422() {
     logger.info("Testing cancellation hold by id");
 
     String aBody = readMockFile(MOCK_DATA_FOLDER + "/hold_cancel_request.json");
@@ -1145,7 +1209,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void cancelRequestShouldNotFailWithoutItem() {
+  void cancelRequestShouldNotFailWithoutItem() {
     logger.info("Testing cancelling request without item");
 
     String aBody = readMockFile(MOCK_DATA_FOLDER + "/hold_cancel_request.json");
@@ -1179,7 +1243,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("tlrFeatureStates")
-  final void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean tlrState,
+  void testPostPatronAccountByIdInstanceByInstanceIdHold(boolean tlrState,
     boolean noItemId, boolean isEcsTlrFeatureEnabledInTlr,
     boolean isEcsTlrFeatureEnabledInCirculation) {
 
@@ -1236,7 +1300,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("instanceHoldsFailureCodes")
-  public final void testPostPatronAccountByIdInstanceByInstanceIdHoldWithErrors(
+  void testPostPatronAccountByIdInstanceByInstanceIdHoldWithErrors(
       String codeString, int expectedCode, ContentType contentType) {
     logger.info("Testing creating a hold on an instance for the specified user with a {} error",
         codeString);
@@ -1260,7 +1324,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void postToCreateInstanceHoldRequestShouldForwardOn422Error() {
+  void postToCreateInstanceHoldRequestShouldForwardOn422Error() {
     logger.info("Testing creating a hold on an instance for the specified user with bad instance id error");
 
     final var holdErrorResponse = given()
@@ -1291,7 +1355,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  public final void postToCreateItemHoldRequestShouldForwardOn422Error() {
+  void postToCreateItemHoldRequestShouldForwardOn422Error() {
     logger.info("Testing creating a hold on an item for the specified user with bad item id error");
 
     final var holdErrorResponse = given()
@@ -1322,7 +1386,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("itemHoldsFailureCodes")
-  public final void testPostPatronAccountByIdItemByItemIdHoldWithErrors(
+  void testPostPatronAccountByIdItemByItemIdHoldWithErrors(
       String codeString, int expectedCode, ContentType contentType) {
     logger.info("Testing creating a hold on an item for the specified user with a {} error",
         codeString);
@@ -1347,7 +1411,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("renewFailureCodes")
-  public final void testPostPatronAccountByIdItemByItemIdRenewWithErrors(
+  void testPostPatronAccountByIdItemByItemIdRenewWithErrors(
       String codeString, int expectedCode, String expectedMessage,
       ContentType expectedContentType) {
     logger.info("Testing renew for with a {} error", codeString);
@@ -1370,7 +1434,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("itemHoldsCancelFailureCodes")
-  public final void testDeletePatronAccountByIdItemByItemIdHoldByHoldIdWithErrors(
+  void testDeletePatronAccountByIdItemByItemIdHoldByHoldIdWithErrors(
       String codeString, int expectedCode, String errorText) {
     logger.info("Testing cancelling a hold on an item for the specified user with a {} error",
         codeString);
@@ -1396,7 +1460,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void allowedServicePointsForItemShouldSucceed() {
+  void allowedServicePointsForItemShouldSucceed() {
     logger.info("Testing allowed service points for Item");
 
     var response = given()
@@ -1423,7 +1487,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testPostAllowedServicePointsPerItemsShouldSucceed() {
+  void testPostAllowedServicePointsPerItemsShouldSucceed() {
     logger.info("Testing POST allowed service points for Items");
 
     var response = given()
@@ -1451,7 +1515,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testPostMultiItemBatchRequestShouldSucceed() {
+  void testPostMultiItemBatchRequestShouldSucceed() {
     logger.info("Testing POST Multi-Item Batch Request");
 
     var response = given()
@@ -1508,7 +1572,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("batchRequestStatus")
-  final void testGetMultiItemBatchRequestStatusShouldSucceed(String expectedResponseFile, String batchId) {
+  void testGetMultiItemBatchRequestStatusShouldSucceed(String expectedResponseFile, String batchId) {
     logger.info("Testing Get Completed Batch Request Status");
 
     var response = given()
@@ -1536,7 +1600,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   @ParameterizedTest
   @MethodSource("failedBatchRequestStatus")
-  final void getMultiItemBatchRequestStatusShouldFailInvalidFetchedRecords(int expectedStatus, String expectedResponseFile,
+  void getMultiItemBatchRequestStatusShouldFailInvalidFetchedRecords(int expectedStatus, String expectedResponseFile,
                                                                            String instanceId, String batchId) {
     logger.info("Testing Get Batch Request Status for invalid fetched records");
 
@@ -1563,7 +1627,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void allowedServicePointsForItemShouldFailWhenModCirculationFails() {
+  void allowedServicePointsForItemShouldFailWhenModCirculationFails() {
     logger.info("Testing allowed service points for item");
 
     given()
@@ -1588,7 +1652,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void allowedServicePointsForItemShouldProxyModCirculationErrors() {
+  void allowedServicePointsForItemShouldProxyModCirculationErrors() {
     logger.info("Testing allowed service points for item");
 
     var response = given()
@@ -1616,7 +1680,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     logger.info("Test done");
   }
   @Test
-  final void allowedServicePointsForInstanceShouldSucceed() {
+  void allowedServicePointsForInstanceShouldSucceed() {
     logger.info("Testing allowed service points");
 
     var response = given()
@@ -1643,7 +1707,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void allowedServicePointsForInstanceShouldFailWhenModCirculationFails() {
+  void allowedServicePointsForInstanceShouldFailWhenModCirculationFails() {
     logger.info("Testing allowed service points");
 
     given()
@@ -1668,7 +1732,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void allowedServicePointsForInstanceShouldProxyModCirculationErrors() {
+  void allowedServicePointsForInstanceShouldProxyModCirculationErrors() {
     logger.info("Testing allowed service points");
 
     var response = given()
@@ -1697,7 +1761,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testSuccessCreateStagingUser() {
+  void testSuccessCreateStagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_201");
@@ -1715,7 +1779,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testSuccessUpdateStagingUser() {
+  void testSuccessUpdateStagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_200");
@@ -1733,7 +1797,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testSuccess250StagingUser() {
+  void testSuccess250StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_250");
@@ -1750,7 +1814,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testFailure400StagingUser() {
+  void testFailure400StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_400");
@@ -1769,7 +1833,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testFailure404PutStagingUser() {
+  void testFailure404PutStagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_404");
@@ -1787,7 +1851,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testFailure422StagingUser() {
+  void testFailure422StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_422");
@@ -1809,7 +1873,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testFailure500StagingUser() {
+  void testFailure500StagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_STATUS_CODE_500");
@@ -1828,7 +1892,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testExceptionStagingUser() {
+  void testExceptionStagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_EXCEPTIONALLY_PART");
@@ -1846,7 +1910,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  final void testExceptionPutStagingUser() {
+  void testExceptionPutStagingUser() {
     String body = readMockFile(MOCK_DATA_FOLDER + "/staging-users-post-request.json");
     JsonObject jsonObject = new JsonObject(body);
     jsonObject.getJsonObject("generalInfo").put("firstName", "TEST_EXCEPTIONALLY_PART");
@@ -2093,6 +2157,19 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       verifyAllowedServicePoints(expectedItemServicePoints, actualItemServicePoints);
       assertEquals(expectedFirstItemObj.getString("itemId"), actualFirstItemObj.getString("itemId"));
     }
+  }
+
+  private void createSetting(JsonObject setting) {
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .body(setting.encode())
+      .when()
+      .post("/patron/settings")
+      .then()
+      .statusCode(201)
+      .extract().response();
   }
 
   public void mockData(HttpServerRequest req) {
@@ -2654,6 +2731,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         }
       } else if (req.path().startsWith(CIRCULATION_BFF_BATCH_REQUESTS)) {
         mockBatchRequestsEndpoints(req);
+      } else if (req.path().startsWith("/circulation-bff/requests") && req.method() == HttpMethod.GET) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/holds_all_active_and_sorted_with_batch_request_info.json"));
       } else if (req.path().equals("/inventory/instances/" + GOOD_INSTANCE_ID)) {
         req.response()
           .setStatusCode(200)

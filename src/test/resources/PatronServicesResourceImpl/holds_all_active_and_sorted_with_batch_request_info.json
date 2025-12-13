@@ -1,0 +1,82 @@
+{
+  "requests": [
+    {
+      "id": "24a5de73-859b-491f-825d-a96ea47297fb",
+      "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "itemId": "dbdcb2b5-b302-4254-a55d-3c429794a4bb",
+      "instanceId": "0b559683-9059-4b6d-bb6a-c55aa3518df3",
+      "requestLevel": "Item",
+      "requestType": "Hold",
+      "requestDate": "2018-05-01T05:01:15Z",
+      "fulfillmentPreference": "Hold Shelf",
+      "status": "Open - Awaiting pickup",
+      "position": 3,
+      "instance": {
+        "title": "Hold On",
+        "contributorNames": [
+          {
+            "name": "Jon Anderson"
+          },
+          {
+            "name": "Trevor Rabin"
+          },
+          {
+            "name": "Chris Squire"
+          }
+        ]
+      },
+      "batchRequestInfo": {
+        "batchRequestId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+        "batchRequestSubmittedAt": "2024-06-15T10:30:00Z"
+      }
+    },
+    {
+      "id": "69273dca-eacf-4225-9065-c05bbffc9d7d",
+      "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "instanceId": "4bb0fffc-fe55-4445-819d-9bc5b8cd47ef",
+      "itemId": "c3cfcb01-4f5d-40df-856a-c86ffe8f2d5f",
+      "requestType": "Hold",
+      "requestDate": "2018-04-01T15:22:12Z",
+      "requestLevel": "Item",
+      "fulfillmentPreference": "Hold Shelf",
+      "status": "Open - Not yet filled",
+      "requestExpirationDate": "2020-01-31T15:22:12Z",
+      "position": 5,
+      "instance": {
+        "title": "Hold On, I'm Comin'",
+        "contributorNames": [
+          {"name": "Isaac Hayes"},
+          {"name": "David Porter"}
+        ]
+      },
+      "batchRequestInfo": {
+        "batchRequestId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+        "batchRequestSubmittedAt": "2024-06-15T10:30:00Z"
+      }
+    },
+    {
+      "id": "8bbac557-d66f-4571-bbbf-47a107cc1589",
+      "instanceId": "255f82f3-5b1b-4239-93e4-ec6acf03ad9d",
+      "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "itemId": "26670295-716a-4f84-8f65-2ef31707c017",
+      "requestLevel": "Item",
+      "requestType": "Hold",
+      "requestDate": "2018-06-02T08:16:30Z",
+      "fulfillmentPreference": "Hold Shelf",
+      "status": "Open - Not yet filled",
+      "position": 1,
+      "instance": {
+        "title": "I Want to Hold Your Hand",
+        "contributorNames": [
+          {"name": "John Lennon"},
+          {"name": "Paul McCartney"}
+        ]
+      },
+      "batchRequestInfo": {
+        "batchRequestId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+        "batchRequestSubmittedAt": "2024-06-15T10:30:00Z"
+      }
+    }
+  ],
+  "totalRecords": 3
+}

@@ -23,7 +23,7 @@ types:
   itemIds: !include itemIds.json
   batchRequest: !include batch-request.json
   batchRequestSubmitResult: !include batch-request-response.json
-  batchRequestStatus: !include batch-request-status-response.json
+  batch: !include batch-request-status-response.json
   allowedServicePointsPerItems: !include allowed-service-points-per-item-response.json
   errors: !include raml-util/schemas/errors.schema
   error: !include raml-util/schemas/error.schema
@@ -123,6 +123,13 @@ traits:
             default: 2147483647
             minimum: 0
             maximum: 2147483647
+          includeBatches:
+            description: |
+              Indicates whether or not to include the batch requests info in
+              the response
+            required: false
+            type: boolean
+            default: false
         responses:
           200:
             description: Returns the user account info
@@ -466,7 +473,7 @@ traits:
                         Successfully returns the status of a batch request
                       body:
                         application/json:
-                          type: batchRequestStatus
+                          type: batch
                           example: !include examples/batch-request-status-response.json
                     404:
                       description: Batch request with a given ID not found
