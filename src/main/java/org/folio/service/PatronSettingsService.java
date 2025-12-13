@@ -33,7 +33,8 @@ public class PatronSettingsService {
       .map(Setting::getValue)
       .map(value -> Optional.ofNullable(value)
         .map(JsonObject::mapFrom)
-        .map(valueJson -> valueJson.getBoolean("enabled"))
+        .map(valueJson -> valueJson.getString("enabled"))
+        .map(Boolean::valueOf)
         .orElseThrow(() -> PatronSettingsException.invalidSettingValue(MULTI_ITEM_REQUESTING_FEATURE_SETTING_KEY, value)))
       .onSuccess(enabled -> log.info("isMultiItemRequestingFeatureEnabled:: found value for setting[key={}]={}",
         MULTI_ITEM_REQUESTING_FEATURE_SETTING_KEY, enabled))
