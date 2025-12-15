@@ -852,7 +852,7 @@ public class PatronServicesResourceImpl implements Patron {
         return batchRequestsById.computeIfAbsent(batchRequestId,
           batchId -> mediatedRequestsService.getBatchRequestStatus(batchId, instance, okapiHeaders));
       })
-      .toList();
+      .collect(Collectors.toSet());
 
     return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]))
       .thenApply(v -> futures.stream()
