@@ -10,6 +10,44 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 Microservice to allow 3rd party discovery services to perform FOLIO patron
 actions via the discovery service's UI.
 
+## Configuration
+
+Some of the features of mod-patron may rely on specific configurations. mod-patron stores such configurations in its own 
+database using local settings API with interface: `patron.settings`. The module provides CRUD API for managing it.
+
+### Configuration using `patron.settings` interface
+
+Required parameters:
+* `key`
+* `scope`
+* `value`
+
+### Supported configuration settings
+
+| Configuration name                           | Key                                   | Scope        | Value                                                           | Description                                                                            |
+|----------------------------------------------|---------------------------------------|--------------|-----------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| Multi-Item Requesting Feature enable/disable | `isMultiItemRequestingFeatureEnabled` | `mod-patron` | Object with property name `enabled` and value `true` or `false` | Allows to query batch request details using `GET /patron/account/{accountId}` endpoint |
+
+
+Multi-Item Requesting Feature configuration example:
+
+Request body that can be used to enable the Multi-Item Requesting Feature using `POST /patron/settings` endpoint:
+
+```json
+{
+  "id": "65de6432-be11-48ba-9686-a65101634040",
+  "scope": "mod-patron",
+  "key": "isMultiItemRequestingFeatureEnabled",
+  "value": {
+    "enabled": "true"
+  },
+  "_version": 1
+}
+```
+
+When modifying the configuration setting using `PUT /patron/settings/{id}`, ensure that the `value` property is a valid JSON object
+and `_version` property is provided with the correct version number.
+
 ## Additional information
 The endpoint GET '/patron/account/{accountId}' has optional query parameter 'sortBy'
 that indicates the order of records within the lists of holds, charges, loans.
@@ -19,7 +57,7 @@ Often, a given value of 'sortBy' will only work with one type of record (holds, 
 or charges), e.g. item.title works for holds, but not loans/charges.  The expectation is
 that when using the 'sortBy' parameter, separate calls will be made for retrieving
 holds, loans, and charges.  In cases where multiple 'include*' parameters are 'true' and
-'sortBy' is used, it's possibile (if not probable) that some of those lists will not be sorted
+'sortBy' is used, it's possible (if not probable) that some of those lists will not be sorted
 as desired.
 
 Examples of requests: 

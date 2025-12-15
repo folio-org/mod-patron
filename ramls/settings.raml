@@ -1,0 +1,78 @@
+#%RAML 1.0
+
+title: "Settings"
+baseUri: http://localhost
+version: v1.0
+
+documentation:
+  - title: Settings
+    content: <b>CRUD APIs used to manage settings for mod-patron.</b>
+
+types:
+  setting: !include setting.json
+  setting_collection: !include setting_collection.json
+  errors: !include raml-util/schemas/errors.schema
+  error: !include raml-util/schemas/error.schema
+  UUID:
+    type: string
+    pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+
+traits:
+  orderable: !include raml-util/traits/orderable.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/patron/settings:
+  type:
+    collection:
+      exampleCollection: !include examples/setting_collection.json
+      exampleItem: !include examples/setting_post.json
+      schemaCollection: setting_collection
+      schemaItem: setting
+  get:
+    description: Get a list of settings
+    is: [
+      searchable: { description: "CQL query", example: "key==isMultiItemRequestingFeatureEnabled" },
+      pageable
+    ]
+  post:
+    description: Add a new setting
+    body:
+      application/json:
+        type: setting
+        example:
+          strict: false
+          value: !include examples/setting_post.json
+    responses:
+      201:
+        description: Setting added
+        body:
+          application/json:
+            example: !include examples/setting_get.json
+      400:
+        description: Bad Request
+        body:
+          application/json:
+            type: error
+      500:
+        description: Internal error
+        body:
+          application/json:
+            type: error
+  /{id}:
+    uriParameters:
+      id:
+        description: The UUID of a setting
+        type: string
+        pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$
+    displayName: Settings
+    description: Get, Delete or Update a specific setting
+    type:
+      collection-item:
+        exampleItem: !include examples/setting_get.json
+        schema: setting

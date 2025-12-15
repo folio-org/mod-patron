@@ -37,6 +37,7 @@
             "queuePosition":3
         }
     ],
+    "batches" : [],
     "loans": [
         {
             "id": "76d957eb-df99-41b8-a495-d03541d079fb",

@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "patron",
-      "version": "6.5",
+      "version": "6.6",
       "handlers": [
         {
           "methods": ["POST"],
@@ -53,7 +53,10 @@
             "inventory.items.item.get",
             "inventory.instances.item.get",
             "inventory.instances.collection.get",
-            "feefines.item.get"
+            "feefines.item.get",
+            "circulation-bff.requests.collection.get",
+            "circulation-bff.batch-request.item.get",
+            "circulation-bff.batch-request.details.collection.get"
           ]
         },
         {
@@ -147,6 +150,77 @@
           ]
         }
       ]
+    },
+    {
+      "id": "patron.settings",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/patron/settings",
+          "permissionsRequired": [
+            "patron.settings.collection.get"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/patron/settings/{id}",
+          "permissionsRequired": [
+            "patron.settings.item.get"
+          ]
+        },
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/patron/settings",
+          "permissionsRequired": [
+            "patron.settings.item.post"
+          ]
+        },
+        {
+          "methods": [
+            "PUT"
+          ],
+          "pathPattern": "/patron/settings/{id}",
+          "permissionsRequired": [
+            "patron.settings.item.put"
+          ]
+        },
+        {
+          "methods": [
+            "DELETE"
+          ],
+          "pathPattern": "/patron/settings/{id}",
+          "permissionsRequired": [
+            "patron.settings.item.delete"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "_tenant",
+      "version": "2.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/_/tenant"
+        },
+        {
+          "methods": [
+            "GET",
+            "DELETE"
+          ],
+          "pathPattern": "/_/tenant/{id}"
+        }
+      ]
     }
   ],
   "requires": [
@@ -194,7 +268,7 @@
     },
     {
       "id": "circulation-bff-requests",
-      "version": "1.3"
+      "version": "1.4"
     },
     {
       "id": "allowed-service-points",
@@ -284,6 +358,43 @@
       "description": "Get status of a multi-item batch request"
     },
     {
+      "permissionName" : "patron.settings.collection.get",
+      "displayName" : "mod-patron - retrieve settings by cql",
+      "description" : "Get a collection of settings"
+    },
+    {
+      "permissionName" : "patron.settings.item.get",
+      "displayName" : "mod-patron - retrieve a setting by id",
+      "description" : "Fetch a setting"
+    },
+    {
+      "permissionName" : "patron.settings.item.put",
+      "displayName" : "mod-patron - Update a setting by id",
+      "description" : "Update a setting"
+    },
+    {
+      "permissionName" : "patron.settings.item.post",
+      "displayName" : "mod-patron - Save a setting",
+      "description" : "Add a setting"
+    },
+    {
+      "permissionName" : "patron.settings.item.delete",
+      "displayName" : "mod-patron - Remove a setting by id",
+      "description" : "Delete a setting"
+    },
+    {
+      "permissionName" : "patron.settings.all",
+      "displayName" : "mod-patron - settings all",
+      "description" : "All permissions for setting",
+      "subPermissions" : [
+        "patron.settings.collection.get",
+        "patron.settings.item.get",
+        "patron.settings.item.post",
+        "patron.settings.item.put",
+        "patron.settings.item.delete"
+      ]
+    },
+    {
       "permissionName": "patron.all",
       "displayName": "patron - all permissions",
       "description": "Entire set of permissions needed to use patron",
@@ -304,7 +415,8 @@
         "patron.registration-status.item.get",
         "patron.account.instance-allowed-service-points-multi-item.collection.post",
         "patron.account.instance-batch-request.item.post",
-        "patron.account.instance-batch-request-status.item.get"
+        "patron.account.instance-batch-request-status.item.get",
+        "patron.settings.all"
       ]
     }
   ],
@@ -320,7 +432,15 @@
     "env": [
       { "name": "JAVA_OPTIONS",
         "value": "-XX:MaxRAMPercentage=66.0"
-      }
+      },
+      { "name": "DB_HOST", "value": "postgres" },
+      { "name": "DB_PORT", "value": "5432" },
+      { "name": "DB_USERNAME", "value": "folio_admin" },
+      { "name": "DB_PASSWORD", "value": "folio_admin" },
+      { "name": "DB_DATABASE", "value": "okapi_modules" },
+      { "name": "DB_QUERYTIMEOUT", "value": "60000" },
+      { "name": "DB_CHARSET", "value": "UTF-8" },
+      { "name": "DB_MAXPOOLSIZE", "value": "5" }
     ]
   }
 }

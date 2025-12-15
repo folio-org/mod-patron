@@ -33,7 +33,7 @@
     "errorDetails": "Everything failed here, and no one knows why"
     }
   ],
-  "itemsCompletedDetails": [
+  "itemsRequestedDetails": [
     {
       "instanceId": "9d1b77e4-f02e-4b7f-b296-3f2042ddac54",
       "itemId": "0faa1eec-bdef-4d5e-a458-bceca8e04855",

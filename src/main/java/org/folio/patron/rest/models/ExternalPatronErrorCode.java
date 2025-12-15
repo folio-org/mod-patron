@@ -10,7 +10,8 @@ public enum ExternalPatronErrorCode {
   STAGING_USER_NOT_FOUND("Staging user does not exist"),
   EMAIL_ALREADY_EXIST("User already exist with email provided in payload"),
   INVALID_PATRON_GROUP("User does not belong to the required patron group"),
-  PATRON_GROUP_NOT_APPLICABLE("Required Patron group not applicable for user");
+  PATRON_GROUP_NOT_APPLICABLE("Required Patron group not applicable for user"),
+  MULTI_ITEM_REQUESTING_FEATURE_ENABLED_SETTING_NOT_FOUND_BY_KEY("Setting entity not found by key: isMultiItemRequestingFeatureEnabled");
 
   private String value;
 
