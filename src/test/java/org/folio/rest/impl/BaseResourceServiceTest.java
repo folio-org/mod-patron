@@ -1,25 +1,29 @@
 package org.folio.rest.impl;
 
-import io.restassured.specification.RequestSpecification;
-import io.vertx.core.Future;
-import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.patron.utils.Utils;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.persist.PostgresClient;
-import io.restassured.RestAssured;
-import io.restassured.http.Header;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.junit5.VertxTestContext;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.support.OkapiHeaders;
 import org.folio.support.OkapiUrl;
 import org.folio.support.VertxModule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+import io.restassured.RestAssured;
+import io.restassured.http.Header;
+import io.restassured.specification.RequestSpecification;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import lombok.SneakyThrows;
+
+@ExtendWith({VertxExtension.class})
 public abstract class BaseResourceServiceTest {
   private static final Logger logger = LogManager.getLogger();
   private static final int OKAPI_PORT = NetworkUtils.nextFreePort();

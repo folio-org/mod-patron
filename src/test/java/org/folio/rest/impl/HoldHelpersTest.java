@@ -1,18 +1,17 @@
 package org.folio.rest.impl;
 
+import static org.folio.patron.utils.Utils.readMockFile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import io.vertx.core.json.JsonObject;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.folio.rest.jaxrs.model.Hold;
 import org.joda.time.DateTime;
 import org.junit.jupiter.api.Test;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.Date;
-
-import static org.folio.patron.utils.Utils.readMockFile;
+import io.vertx.core.json.JsonObject;
 
 class HoldHelpersTest {
 

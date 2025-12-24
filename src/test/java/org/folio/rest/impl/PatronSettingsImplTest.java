@@ -12,14 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.UUID;
 import java.util.stream.Stream;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.UrlDecoder;
@@ -33,6 +26,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 
@@ -76,7 +78,7 @@ class PatronSettingsImplTest extends BaseResourceServiceTest {
   }
 
   @AfterEach
-  void tearDown(Vertx vertx, VertxTestContext context) {
+  void tearDown(VertxTestContext context) {
     context.completeNow();
   }
 
