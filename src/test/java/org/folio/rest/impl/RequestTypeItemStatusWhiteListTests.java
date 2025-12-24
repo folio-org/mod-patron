@@ -1,9 +1,9 @@
 package org.folio.rest.impl;
 
-import org.junit.Test;
-
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 public class RequestTypeItemStatusWhiteListTests {
 

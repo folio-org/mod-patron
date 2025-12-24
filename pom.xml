@@ -43,18 +43,18 @@
     <ramlfiles_util_path>${ramlfiles_path}/raml-util</ramlfiles_util_path>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <aspectj.version>1.9.22.1</aspectj.version>
-    <raml-module-builder.version>35.4.0</raml-module-builder.version> <!-- also update vertx.version -->
-    <vertx.version>4.5.13</vertx.version>
+    <raml-module-builder.version>36.0.0-SNAPSHOT</raml-module-builder.version> <!-- also update vertx.version -->
+    <vertx.version>5.0.5</vertx.version>
 
     <!--Dependencies properties-->
     <lombok.version>1.18.36</lombok.version>
-    <commons-lang3.version>3.17.0</commons-lang3.version>
+    <commons-lang3.version>3.19.0</commons-lang3.version>
     <slf4j.version>1.7.30</slf4j.version>
     <joda-time.version>2.10.9</joda-time.version>
     <rest-assured.version>5.5.1</rest-assured.version>
-    <junit.version>4.13.2</junit.version>
+<!--    <junit.version>4.13.2</junit.version>-->
     <hamcrest.version>3.0</hamcrest.version>
-    <wiremock.version>2.25.1</wiremock.version>
+    <wiremock.version>3.0.1</wiremock.version>
     <system-stubs-jupiter.version>2.1.6</system-stubs-jupiter.version>
 
     <!--Dependencies management properties-->
@@ -177,12 +177,12 @@
       <version>${rest-assured.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>junit</groupId>-->
+<!--      <artifactId>junit</artifactId>-->
+<!--      <version>${junit.version}</version>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -500,6 +500,7 @@
                     <Multi-Release>true</Multi-Release>
                   </manifestEntries>
                 </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
               </transformers>
               <filters>
                 <filter>
