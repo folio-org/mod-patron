@@ -17,7 +17,7 @@ import io.vertx.junit5.VertxTestContext;
 
 public abstract class BaseResourceServiceTest {
   protected static final String MOCK_DATA_FOLDER = "PatronServicesResourceImpl";
-  protected final int serverPort = Utils.getRandomPort();
+  protected static final int serverPort = Utils.getRandomPort();
   private final int okapiPort = Utils.getRandomPort();
   protected final Header urlHeader = new Header("X-Okapi-Url", "http://localhost:" +
     serverPort);

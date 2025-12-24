@@ -70,11 +70,11 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
     "org.folio.patron.rest.exceptions.UnexpectedFetchingException: " +
       "java.util.concurrent.CompletionException: " +
       "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
-      "exceeded while executing GET /tlr/settings for server null";
+      "exceeded while executing GET /tlr/settings for server localhost:" + serverPort;
   private static final String CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED =
     "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
       "exceeded while executing GET /circulation-settings-storage/circulation-settings for server " +
-      "null";
+      "localhost:" + serverPort;
   public static final String EMPTY_STUB_RESPONSE = "null";
 
   @BeforeEach
