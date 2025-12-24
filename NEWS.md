@@ -1,3 +1,7 @@
+# 6.2.13 2025-12-24
+
+* Upgrade to RMB 35.3.2 and Vertx 4.5.23 (MODPATRON-256)
+
 # 6.2.12 2025-05-07
 
 * [LOC Locate requirement] Allowed Service points should return discovery display name. (MODPATRON-233)
