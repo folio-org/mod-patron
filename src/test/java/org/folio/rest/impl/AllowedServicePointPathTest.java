@@ -64,15 +64,15 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   private static final String NOT_FOUND_STATUS_HEADER_VALUE = "status 404";
   private static final String INTERNAL_SERVER_ERROR_STATUS_LINE =
     "HTTP/1.1 500 Internal Server Error";
-  private static final String ECS_TLR_RESPONSE_WITH_ERROR_EXPECTED =
+  private final String ECS_TLR_RESPONSE_WITH_ERROR_EXPECTED =
     "org.folio.patron.rest.exceptions.UnexpectedFetchingException: " +
       "java.util.concurrent.CompletionException: " +
       "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
-      "exceeded while executing GET /tlr/settings for server null";
-  private static final String CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED =
+      "exceeded while executing GET /tlr/settings for server localhost:" + serverPort;
+  private final String CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED =
     "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
       "exceeded while executing GET /circulation-settings-storage/circulation-settings for server " +
-      "null";
+    "localhost:" + serverPort;
   public static final String EMPTY_STUB_RESPONSE = "null";
 
   @BeforeEach
@@ -80,8 +80,8 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
     final String host = "localhost";
     final HttpServer server = vertx.createHttpServer();
     server.requestHandler(this::mockData);
-    server.listen(serverPort, host);
-    context.completeNow();
+    server.listen(serverPort, host)
+      .onComplete(context.succeedingThenComplete());
   }
 
   @ParameterizedTest
@@ -188,21 +188,22 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
         .end(readMockFile(MOCK_DATA_FOLDER +
           ALLOWED_SERVICE_POINTS_CIRCULATION_BFF_JSON_FILE_PATH));
     } else if (req.path().equals(ECS_TLR_SETTINGS_PATH)) {
-      if (req.getHeader(ECS_TLR_HEADER_NAME).equals(INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE)) {
+      String tlrHeader = req.getHeader(ECS_TLR_HEADER_NAME);
+      if (INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE.equals(tlrHeader)) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
           .end(EMPTY_STUB_RESPONSE);
-      } else if (req.getHeader(ECS_TLR_HEADER_NAME).equals(NOT_FOUND_STATUS_HEADER_VALUE)) {
+      } else if (NOT_FOUND_STATUS_HEADER_VALUE.equals(tlrHeader)) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_NOT_FOUND.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER);
-      } else if (req.getHeader(ECS_TLR_HEADER_NAME).isEmpty()) {
+      } else if (tlrHeader == null || tlrHeader.isEmpty()) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_OK.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
           .end(readMockFile(null));
-      } else if (req.getHeader(ECS_TLR_HEADER_NAME).equals(ECS_TLR_ENABLED_HEADER)) {
+      } else if (ECS_TLR_ENABLED_HEADER.equals(tlrHeader)) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_OK.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
@@ -214,14 +215,23 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
           .end(readMockFile(MOCK_DATA_FOLDER + ECS_TLR_MOD_DISABLED_JSON_FILE_PATH));
       }
     } else if (req.path().equals(CIRCULATION_SETTINGS_STORAGE_PATH)) {
-      if (req.getHeader(CIRCULATION_STORAGE_HEADER_NAME)
-        .equals(CIRCULATION_STORAGE_ENABLED_HEADER)) {
+      String circulationHeader = req.getHeader(CIRCULATION_STORAGE_HEADER_NAME);
+      String tlrHeader = req.getHeader(ECS_TLR_HEADER_NAME);
+
+      // If TLR request failed with 500, also fail this request to propagate the error
+      if (INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE.equals(tlrHeader)) {
+        // Don't respond - let it timeout to simulate error scenario
+        // This will cause the overall request to fail with 500
+        return;
+      }
+
+      if (CIRCULATION_STORAGE_ENABLED_HEADER.equals(circulationHeader)) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_OK.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
           .end(readMockFile(MOCK_DATA_FOLDER +
             CIRCULATION_STORAGE_MOD_ENABLED_JSON_FILE_PATH));
-      } else if (req.getHeader(CIRCULATION_STORAGE_HEADER_NAME).isEmpty()) {
+      } else if (circulationHeader == null || circulationHeader.isEmpty()) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_OK.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
@@ -233,6 +243,12 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
           .end(readMockFile(MOCK_DATA_FOLDER +
             CIRCULATION_STORAGE_MOD_DISABLED_JSON_FILE_PATH));
       }
+    } else {
+      // Default 404 for unknown endpoints
+      req.response()
+        .setStatusCode(404)
+        .putHeader(CONTENT_TYPE_HEADER_NAME, "text/plain")
+        .end("Not Found: " + req.path());
     }
   }
 }
