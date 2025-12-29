@@ -64,12 +64,12 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   private static final String NOT_FOUND_STATUS_HEADER_VALUE = "status 404";
   private static final String INTERNAL_SERVER_ERROR_STATUS_LINE =
     "HTTP/1.1 500 Internal Server Error";
-  private static final String ECS_TLR_RESPONSE_WITH_ERROR_EXPECTED =
+  private final String ECS_TLR_RESPONSE_WITH_ERROR_EXPECTED =
     "org.folio.patron.rest.exceptions.UnexpectedFetchingException: " +
       "java.util.concurrent.CompletionException: " +
       "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
       "exceeded while executing GET /tlr/settings for server localhost:" + serverPort;
-  private static final String CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED =
+  private final String CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED =
     "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
       "exceeded while executing GET /circulation-settings-storage/circulation-settings for server " +
     "localhost:" + serverPort;

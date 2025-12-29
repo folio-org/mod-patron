@@ -30,7 +30,7 @@ public abstract class BaseResourceServiceTest {
   private static final String OKAPI_TENANT = "patronresourceimpltest";
 
   protected static final String MOCK_DATA_FOLDER = "PatronServicesResourceImpl";
-  protected static final int serverPort = Utils.getRandomPort();
+  protected final int serverPort = Utils.getRandomPort();
   protected final Header urlHeader = new Header("X-Okapi-Url", "http://localhost:" +
     serverPort);
   protected final Header contentTypeHeader =
