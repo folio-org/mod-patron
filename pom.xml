@@ -43,8 +43,8 @@
     <ramlfiles_util_path>${ramlfiles_path}/raml-util</ramlfiles_util_path>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <aspectj.version>1.9.22.1</aspectj.version>
-    <raml-module-builder.version>35.4.0</raml-module-builder.version> <!-- also update vertx.version -->
-    <vertx.version>4.5.13</vertx.version>
+    <raml-module-builder.version>35.4.2</raml-module-builder.version> <!-- also update vertx.version -->
+    <vertx.version>4.5.23</vertx.version>
 
     <!--Dependencies properties-->
     <lombok.version>1.18.36</lombok.version>
