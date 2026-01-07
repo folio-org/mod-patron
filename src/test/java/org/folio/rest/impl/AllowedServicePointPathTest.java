@@ -198,21 +198,21 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
         .end(readMockFile(MOCK_DATA_FOLDER +
           ALLOWED_SERVICE_POINTS_CIRCULATION_BFF_JSON_FILE_PATH));
     } else if (req.path().equals(ECS_TLR_SETTINGS_PATH)) {
-      String ecsTlrHeader = req.getHeader(ECS_TLR_HEADER_NAME);
-      if (INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE.equals(ecsTlrHeader)) {
+      if (req.getHeader(ECS_TLR_HEADER_NAME).equals(INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE)) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
           .end(EMPTY_STUB_RESPONSE);
-      } else if (NOT_FOUND_STATUS_HEADER_VALUE.equals(ecsTlrHeader)) {
-        // Don't respond - this will cause a timeout
-        return;
-      } else if (ecsTlrHeader == null || ecsTlrHeader.isEmpty()) {
+      } else if (req.getHeader(ECS_TLR_HEADER_NAME).equals(NOT_FOUND_STATUS_HEADER_VALUE)) {
+        req.response()
+          .setStatusCode(HttpStatus.HTTP_NOT_FOUND.toInt())
+          .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER);
+      } else if (req.getHeader(ECS_TLR_HEADER_NAME).isEmpty()) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_OK.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
           .end(readMockFile(null));
-      } else if (ECS_TLR_ENABLED_HEADER.equals(ecsTlrHeader)) {
+      } else if (req.getHeader(ECS_TLR_HEADER_NAME).equals(ECS_TLR_ENABLED_HEADER)) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_OK.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
@@ -224,21 +224,14 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
           .end(readMockFile(MOCK_DATA_FOLDER + ECS_TLR_MOD_DISABLED_JSON_FILE_PATH));
       }
     } else if (req.path().equals(CIRCULATION_SETTINGS_STORAGE_PATH)) {
-      String ecsTlrHeader = req.getHeader(ECS_TLR_HEADER_NAME);
-      // If the TLR header is "status 500", don't respond to cause a timeout
-      if (INTERNAL_SERVER_ERROR_STATUS_HEADER_VALUE.equals(ecsTlrHeader)) {
-        // Don't respond - this will cause a timeout
-        return;
-      }
-
-      String circulationStorageHeader = req.getHeader(CIRCULATION_STORAGE_HEADER_NAME);
-      if (CIRCULATION_STORAGE_ENABLED_HEADER.equals(circulationStorageHeader)) {
+      if (req.getHeader(CIRCULATION_STORAGE_HEADER_NAME)
+        .equals(CIRCULATION_STORAGE_ENABLED_HEADER)) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_OK.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
           .end(readMockFile(MOCK_DATA_FOLDER +
             CIRCULATION_STORAGE_MOD_ENABLED_JSON_FILE_PATH));
-      } else if (circulationStorageHeader == null || circulationStorageHeader.isEmpty()) {
+      } else if (req.getHeader(CIRCULATION_STORAGE_HEADER_NAME).isEmpty()) {
         req.response()
           .setStatusCode(HttpStatus.HTTP_OK.toInt())
           .putHeader(CONTENT_TYPE_HEADER_NAME, CONTENT_TYPE_APPLICATION_JSON_HEADER)
