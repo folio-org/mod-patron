@@ -1,3 +1,6 @@
+# 6.3.4 2026-01-07
+* Update to Vertx 4.5.23 and RMB 35.4.2 (MODPATRON-257)
+
 # 6.3.3 2025-12-03
 * Evaluate item's temporary loan type when placing holds (MODPATRON-249)
 
