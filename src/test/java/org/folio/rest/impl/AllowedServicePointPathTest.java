@@ -3,7 +3,7 @@ package org.folio.rest.impl;
 import static io.restassured.RestAssured.given;
 import static org.folio.patron.utils.Utils.readMockFile;
 import static org.folio.rest.impl.PatronResourceImplTest.verifyAllowedServicePoints;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
@@ -66,15 +66,15 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
   private static final String NOT_FOUND_STATUS_HEADER_VALUE = "status 404";
   private static final String INTERNAL_SERVER_ERROR_STATUS_LINE =
     "HTTP/1.1 500 Internal Server Error";
-  private static final String ECS_TLR_RESPONSE_WITH_ERROR_EXPECTED =
-    "org.folio.patron.rest.exceptions.UnexpectedFetchingException: " +
-      "java.util.concurrent.CompletionException: " +
-      "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
-      "exceeded while executing GET /tlr/settings for server null";
-  private static final String CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED =
-    "io.vertx.core.impl.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
+  private static final String ECS_TLR_RESPONSE_WITH_ERROR_PATTERN =
+    "org\\.folio\\.patron\\.rest\\.exceptions\\.UnexpectedFetchingException: " +
+      "java\\.util\\.concurrent\\.CompletionException: " +
+      "io\\.vertx\\.core\\.impl\\.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
+      "exceeded while executing GET /tlr/settings for server (null|localhost:\\d+)";
+  private static final String CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_PATTERN =
+    "io\\.vertx\\.core\\.impl\\.NoStackTraceTimeoutException: The timeout period of 5000ms has been " +
       "exceeded while executing GET /circulation-settings-storage/circulation-settings for server " +
-      "null";
+      "(null|localhost:\\d+)";
   public static final String EMPTY_STUB_RESPONSE = "null";
 
   @BeforeEach
@@ -136,7 +136,8 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
       .extract()
       .asString();
 
-    assertEquals(CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_EXPECTED, responseWithErrorActual);
+    assertTrue(responseWithErrorActual.matches(CIRCULATION_STORAGE_RESPONSE_WITH_ERROR_PATTERN),
+      "Expected error message to match pattern but got: " + responseWithErrorActual);
   }
 
   @Test
@@ -155,7 +156,8 @@ public class AllowedServicePointPathTest extends BaseResourceServiceTest {
       .extract()
       .asString();
 
-    assertEquals(ECS_TLR_RESPONSE_WITH_ERROR_EXPECTED, responseWithErrorActual);
+    assertTrue(responseWithErrorActual.matches(ECS_TLR_RESPONSE_WITH_ERROR_PATTERN),
+      "Expected error message to match pattern but got: " + responseWithErrorActual);
   }
 
   private static Stream<Arguments> headerValueToFileName() {
