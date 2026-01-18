@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.integration.http.Response;
 import org.folio.integration.http.ResponseInterpreter;
@@ -18,10 +20,9 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Parameter;
 
 import io.vertx.core.json.JsonObject;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class ItemRepository {
+  private static final Logger log = LogManager.getLogger();
   private static final String INVENTORY_ITEMS_URL = "/inventory/items/";
   private static final String CIRCULATION_ITEMS_URL = "/circulation-item/";
   private final VertxOkapiHttpClient client;
