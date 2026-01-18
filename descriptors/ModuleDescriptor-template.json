@@ -56,7 +56,9 @@
             "feefines.item.get",
             "circulation-bff.requests.collection.get",
             "circulation-bff.batch-request.item.get",
-            "circulation-bff.batch-request.details.collection.get"
+            "circulation-bff.batch-request.details.collection.get",
+            "circulation-item.item.get",
+            "circulation-item.collection.get"
           ]
         },
         {
@@ -251,6 +253,10 @@
     {
       "id": "holdings-storage",
       "version": "8.0"
+    },
+    {
+      "id": "circulation-item",
+      "version": "1.0"
     }
   ],
   "optional": [
