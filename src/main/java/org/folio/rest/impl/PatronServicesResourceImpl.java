@@ -292,7 +292,7 @@ public class PatronServicesResourceImpl implements Patron {
                     List<CompletableFuture<Account>> cfs = new ArrayList<>();
 
                     for (Charge charge: account.getCharges()) {
-                      if (charge.getItem() != null) {
+                      if (charge.getItem() != null && charge.getItem().getItemId() != null) {
                         cfs.add(lookupItem(charge, account, okapiHeaders,
                           httpClient));
                       }
