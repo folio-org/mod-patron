@@ -153,10 +153,6 @@
     {
       "id": "holdings-storage",
       "version": "8.0"
-    },
-    {
-      "id": "circulation-item",
-      "version": "1.0"
     }
   ],
   "optional": [
@@ -175,6 +171,10 @@
     {
       "id": "circulation-bff-requests",
       "version": "1.1"
+    },
+    {
+      "id": "circulation-item",
+      "version": "1.0"
     }
   ],
   "permissionSets": [
