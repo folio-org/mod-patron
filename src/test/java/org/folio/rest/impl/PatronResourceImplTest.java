@@ -51,6 +51,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -124,6 +125,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private boolean tlrEnabled;
   private boolean ecsTlrFeatureEnabledInTlr = false;
   private boolean ecsTlrFeatureEnabledInCirculation = false;
+  private boolean inventoryItemSearchShouldReturn404 = false;
 
   @SystemStub
   private EnvironmentVariables environmentVariables;
@@ -141,6 +143,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     final HttpServer server = vertx.createHttpServer();
     server.requestHandler(this::mockData);
     server.listen(serverPort, host, context.succeeding(id -> mockOkapiStarted.flag()));
+    inventoryItemSearchShouldReturn404 = false;
   }
 
   @AfterEach
@@ -991,6 +994,46 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     assertTrue(foundNullItem, "At least one charge should have item set to null for missing item");
 
     logger.info("Test done");
+  }
+
+  @Test
+  void testGetPatronAccountByIdFetchesItemDataFromCirculationItem() {
+    inventoryItemSearchShouldReturn404 = true;
+
+    final Response r = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("includeCharges", "true")
+      .when()
+      .get(accountPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+
+    final JsonObject response = new JsonObject(r.getBody().asString());
+    assertTrue(response.containsKey("charges"));
+    JsonArray charges = response.getJsonArray("charges");
+    assertFalse(charges.isEmpty());
+
+    JsonObject actualItem = charges.stream()
+      .map(JsonObject.class::cast)
+      .map(charge -> charge.getJsonObject("item"))
+      .filter(Objects::nonNull)
+      .filter(item -> itemBook1Id.equals(item.getString("itemId")))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Expected item not found in charges"));
+
+    JsonObject expectedItem = new JsonObject()
+      .put("itemId", itemBook1Id)
+      .put("instanceId", "6e024cd5-c19a-4fe0-a2cd-64ce5814c694")
+      .put("title", "Some Book About Something")
+      .put("author", "Some Guy; Another Guy");
+
+    assertEquals(expectedItem, actualItem);
   }
 
   /*
@@ -2347,6 +2390,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
           .putHeader("content-type", "application/json")
           .end(instances.encodePrettily());
 
+      } else if (req.path().matches("/inventory/items/.*") && inventoryItemSearchShouldReturn404) {
+        req.response()
+          .setStatusCode(404)
+          .putHeader("content-type", "application/json")
+          .end();
       } else if (req.path().equals("/inventory/items/" + nullItemId)) {
         req.response()
           .setStatusCode(200)
@@ -2687,8 +2735,12 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
             }
           }
         });
-      }
-      else {
+      } else if (req.method() == HttpMethod.GET && req.path().equals("/circulation-item/" + itemBook1Id)) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/item_book1.json"));
+      } else {
         req.response().setStatusCode(500).end("Unexpected call: " + req.path());
       }
   }

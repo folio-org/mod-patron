@@ -53,7 +53,9 @@
             "inventory.items.item.get",
             "inventory.instances.item.get",
             "inventory.instances.collection.get",
-            "feefines.item.get"
+            "feefines.item.get",
+            "circulation-item.item.get",
+            "circulation-item.collection.get"
           ]
         },
         {
@@ -151,6 +153,10 @@
     {
       "id": "holdings-storage",
       "version": "8.0"
+    },
+    {
+      "id": "circulation-item",
+      "version": "1.0"
     }
   ],
   "optional": [
