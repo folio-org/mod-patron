@@ -1,3 +1,7 @@
+# 6.3.5 2026-01-22
+* Fix fines/fees lookup failing for missing item records (MODPATRON-260)
+* Look for circulation item when inventory item was not found (MODPATRON-258)
+
 # 6.3.4 2026-01-07
 * Update to Vertx 4.5.23 and RMB 35.4.2 (MODPATRON-257)
 
