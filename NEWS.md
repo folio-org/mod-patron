@@ -1,3 +1,6 @@
+# 6.3.6 2026-02-10
+* [LOC Locate requirement] Allowed Service points should return discovery display name. (MODPATRON-233)
+
 # 6.3.5 2026-01-22
 * Fix fines/fees lookup failing for missing item records (MODPATRON-260)
 * Look for circulation item when inventory item was not found (MODPATRON-258)
