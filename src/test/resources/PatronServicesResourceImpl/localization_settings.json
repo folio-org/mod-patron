@@ -1,18 +1,6 @@
 {
-  "items": [
-    {
-      "id": "d467435b-2faa-4dc8-a82c-644d2df60c44",
-      "scope": "stripes-core.prefs.manage",
-      "key": "tenantLocaleSettings",
-      "value": {
-        "locale": "en-US",
-        "currency": "UYU",
-        "timezone": "Pacific/Wallis"
-      }
-    }
-  ],
-  "resultInfo": {
-    "totalRecords": 1,
-    "diagnostics": []
-  }
+  "locale": "en-US",
+  "currency": "UYU",
+  "timezone": "Pacific/Wallis",
+  "numberingSystem": "latn"
 }
