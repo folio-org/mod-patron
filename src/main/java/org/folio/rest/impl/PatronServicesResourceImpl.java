@@ -327,12 +327,16 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<String> getCurrencyCode(Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
+    logger.info("getCurrencyCode:: Trying to get currency code for tenant");
 
     return httpClient.get("/locale", okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
-      .thenApply(response -> Optional.ofNullable(response)
-        .map(json -> json.getString("currency"))
-        .orElse("USD"));
+      .thenApply(response -> {
+        logger.info("getCurrencyCode:: Received response from locale API: {}", response);
+        return Optional.ofNullable(response)
+          .map(json -> json.getString("currency"))
+          .orElse("USD");
+      });
   }
 
   private CompletableFuture<JsonObject> getAccounts(String id,
