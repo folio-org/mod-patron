@@ -117,7 +117,6 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String USERS_FILED = "users";
   private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
-  private static final String VALUE_KEY = "value";
 
   private static final ExecutorService ITEMS_ALLOWED_SERVICE_POINTS_EXECUTOR = Executors.newFixedThreadPool(4);
 
@@ -327,18 +326,11 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<String> getCurrencyCode(Map<String, String> okapiHeaders, VertxOkapiHttpClient httpClient) {
-    String path = "/settings/entries";
-    Map<String, String> queryParameters = Maps.newLinkedHashMap();
-    queryParameters.put(QUERY, "(scope==stripes-core.prefs.manage and key==tenantLocaleSettings)");
 
-    return httpClient.get(path, queryParameters, okapiHeaders)
+    return httpClient.get("/locale", okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(response -> Optional.ofNullable(response)
-        .map(json -> json.getJsonArray("items"))
-        .filter(items -> !items.isEmpty())
-        .map(arr -> arr.getJsonObject(0))
-        .map(obj -> obj.getJsonObject(VALUE_KEY))
-        .map(value -> value.getString("currency"))
+        .map(json -> json.getString("currency"))
         .orElse("USD"));
   }
 
