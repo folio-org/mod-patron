@@ -117,7 +117,6 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String USERS_FILED = "users";
   private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
-  private static final String VALUE_KEY = "value";
 
   private static final ExecutorService ITEMS_ALLOWED_SERVICE_POINTS_EXECUTOR = Executors.newFixedThreadPool(4);
 
