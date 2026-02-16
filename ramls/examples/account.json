@@ -37,6 +37,23 @@
       "requestDate": "2018-06-02T08:16:30Z",
       "pickupLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
       "status": "Open - Not yet filled"
+    },
+    {
+      "requestId": "8bbac557-d66f-4571-bbbf-47a107cc1588",
+      "item": {
+        "instanceId": "255f82f3-5b1b-4239-93e4-ec6acf03ad9d",
+        "itemId": "26670295-716a-4f84-8f65-2ef31707c017",
+        "title": "I Want to Hold Your Hand",
+        "author": "John Lennon; Paul McCartney"
+      },
+      "queuePosition": 1,
+      "requestDate": "2018-06-03T08:16:30Z",
+      "pickupLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
+      "status": "Open - Not yet filled",
+      "batchRequestInfo" : {
+        "batchRequestId" : "5203c035-005e-4a70-b555-ddaa3094c51c",
+        "batchRequestSubmittedAt" : "2024-06-15T10:30:00.000+00:00"
+      }
     }
   ],
   "loans": [
@@ -51,6 +68,33 @@
       "loanDate": "2018-06-01T11:12:00Z",
       "dueDate": "2525-01-01T11:12:00Z",
       "overdue": false
+    }
+  ],
+  "batches": [
+    {
+      "batchRequestId": "5203c035-005e-4a70-b555-ddaa3094c51c",
+      "status": "Completed",
+      "submittedAt": "2025-09-08T12:27:33.822+00:00",
+      "completedAt": "2025-09-08T12:29:33.822+00:00",
+      "itemsTotal": 1,
+      "itemsRequested": 1,
+      "itemsPending": 0,
+      "itemsFailed": 0,
+      "itemsPendingDetails": [
+
+      ],
+      "itemsFailedDetails": [
+
+      ],
+      "itemsRequestedDetails": [
+        {
+          "instanceId": "255f82f3-5b1b-4239-93e4-ec6acf03ad9d",
+          "itemId": "26670295-716a-4f84-8f65-2ef31707c017",
+          "title": "I Want to Hold Your Hand",
+          "pickUpLocationId": "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
+          "confirmedRequestId": "8bbac557-d66f-4571-bbbf-47a107cc1588"
+        }
+      ]
     }
   ]
 }
