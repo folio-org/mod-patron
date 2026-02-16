@@ -296,14 +296,15 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
-  void testGetPatronAccountByIdSortedByItemIdWithBatchRequestInfo() {
+  void testGetPatronAccountByIdSortedByItemIdWithBatchRequestFields() {
     logger.info("Testing for successful patron services account retrieval by id, sorted by title, with batch info");
     var setting = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("key", "isMultiItemRequestingFeatureEnabled")
       .put("value", new JsonObject().put("enabled", "true"))
       .put("scope", "mod-patron");
-    createSetting(setting);
+    var response = createSetting(setting);
+    var createdSetting = new JsonObject(response.getBody().asString());
 
     final Response r = given()
       .log().all()
@@ -330,12 +331,61 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       readMockFile(MOCK_DATA_FOLDER + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"));
 
     verifyAccount(json, expectedJson);
+    assertEquals(expectedJson.getJsonArray("batches"), json.getJsonArray("batches"));
     for(int i = 0; i < 3; i++) {
       var actualHold = json.getJsonArray("holds").getJsonObject(i);
       var expectedHold = expectedJson.getJsonArray("holds").getJsonObject(i);
       assertEquals(expectedHold.getJsonObject("batchRequestInfo"), actualHold.getJsonObject("batchRequestInfo"));
     }
 
+    deleteSetting(createdSetting.getString("id"));
+    // Test done
+    logger.info("Test done");
+  }
+
+  @Test
+  void testGetPatronAccountByIdSortedByItemIdWithOnlyBatchesSection() {
+    logger.info("Testing for successful patron services account retrieval by id, sorted by title, with batch info");
+    var setting = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("key", "isMultiItemRequestingFeatureEnabled")
+      .put("value", new JsonObject().put("enabled", "true"))
+      .put("scope", "mod-patron");
+    var response = createSetting(setting);
+    var createdSetting = new JsonObject(response.getBody().asString());
+
+    final Response r = given()
+      .log().all()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("includeLoans", "false")
+      .queryParam("includeHolds", "false")
+      .queryParam("includeCharges", "false")
+      .queryParam("includeBatches", "true")
+      .queryParam("sortBy", sortByParam)
+      .when()
+      .get(accountPath)
+      .then()
+      .log().all()
+      .contentType(ContentType.JSON)
+      .statusCode(200)
+      .extract().response();
+
+    final String body = r.getBody().asString();
+    final JsonObject json = new JsonObject(body);
+    final JsonObject expectedJson = new JsonObject(
+      readMockFile(MOCK_DATA_FOLDER + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"));
+
+    assertEquals(expectedJson.getJsonArray("batches"), json.getJsonArray("batches"));
+    assertEquals(3, json.getInteger("totalLoans"));
+    assertEquals(0, json.getJsonArray("loans").size());
+
+    assertEquals(3, json.getInteger("totalHolds"));
+    assertEquals(0, json.getJsonArray("holds").size());
+
+    deleteSetting(createdSetting.getString("id"));
     // Test done
     logger.info("Test done");
   }
@@ -2202,8 +2252,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     }
   }
 
-  private void createSetting(JsonObject setting) {
-    given()
+  private Response createSetting(JsonObject setting) {
+    return given()
       .header(tenantHeader)
       .header(urlHeader)
       .header(contentTypeHeader)
@@ -2213,6 +2263,18 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .then()
       .statusCode(201)
       .extract().response();
+  }
+
+  private void deleteSetting(String id) {
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("id", id)
+      .when()
+      .delete("/patron/settings/{id}")
+      .then()
+      .statusCode(204);
   }
 
   public void mockData(HttpServerRequest req) {
