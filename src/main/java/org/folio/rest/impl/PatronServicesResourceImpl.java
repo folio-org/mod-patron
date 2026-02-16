@@ -279,7 +279,7 @@ public class PatronServicesResourceImpl implements Patron {
               httpClient)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            Map<String, String> queryParameters = buildRequestsGetQueryParams(id, sortBy, limit, offset, includeHolds);
+            Map<String, String> queryParameters = buildRequestsGetQueryParams(id, sortBy, limit, offset, includeHolds, includeBatches);
             final CompletableFuture<Account> cf2 = getRequests(queryParameters, includeBatches, patronSettingsService, okapiHeaders, httpClient)
               .thenApply(requestsResponse -> addHolds(account, requestsResponse, includeHolds, includeBatches))
               .thenCompose(requestsResponse -> addBatches(account, requestsResponse, mediatedRequestsService, okapiHeaders));
@@ -375,9 +375,10 @@ public class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private Map<String, String> buildRequestsGetQueryParams(String id, String sortBy, int limit, int offset, boolean includeHolds) {
+  private Map<String, String> buildRequestsGetQueryParams(String id, String sortBy, int limit, int offset,
+                                                          boolean includeHolds, boolean includeBatches) {
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
-    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds));
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds || includeBatches));
     queryParameters.put(QUERY, buildQueryWithRequesterId(id, sortBy));
     return queryParameters;
   }
