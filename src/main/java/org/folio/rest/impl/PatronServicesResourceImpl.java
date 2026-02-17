@@ -279,10 +279,10 @@ public class PatronServicesResourceImpl implements Patron {
               httpClient)
                 .thenApply(body -> addLoans(account, body, includeLoans));
 
-            Map<String, String> queryParameters = buildRequestsGetQueryParams(id, sortBy, limit, offset, includeHolds);
+            Map<String, String> queryParameters = buildRequestsGetQueryParams(id, sortBy, limit, offset, includeHolds, includeBatches);
             final CompletableFuture<Account> cf2 = getRequests(queryParameters, includeBatches, patronSettingsService, okapiHeaders, httpClient)
               .thenApply(requestsResponse -> addHolds(account, requestsResponse, includeHolds, includeBatches))
-              .thenCompose(requestsResponse -> addBatches(account, requestsResponse, includeBatches, mediatedRequestsService, okapiHeaders));
+              .thenCompose(requestsResponse -> addBatches(account, requestsResponse, mediatedRequestsService, okapiHeaders));
 
             final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges, code))
@@ -375,9 +375,10 @@ public class PatronServicesResourceImpl implements Patron {
       });
   }
 
-  private Map<String, String> buildRequestsGetQueryParams(String id, String sortBy, int limit, int offset, boolean includeHolds) {
+  private Map<String, String> buildRequestsGetQueryParams(String id, String sortBy, int limit, int offset,
+                                                          boolean includeHolds, boolean includeBatches) {
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
-    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds));
+    queryParameters.putAll(getLimitAndOffsetParams(limit, offset, includeHolds || includeBatches));
     queryParameters.put(QUERY, buildQueryWithRequesterId(id, sortBy));
     return queryParameters;
   }
@@ -819,10 +820,10 @@ public class PatronServicesResourceImpl implements Patron {
     return Optional.of(batchRequestInfo);
   }
 
-  private CompletableFuture<Account> addBatches(Account account, JsonObject requestsJson, boolean includeBatches,
+  private CompletableFuture<Account> addBatches(Account account, JsonObject requestsJson,
                                                 MediatedRequestsService mediatedRequestsService,
                                                 Map<String, String> okapiHeaders) {
-    if (requestsJson == null || requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS) == null || !includeBatches) {
+    if (requestsJson == null || requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS) == null) {
       return CompletableFuture.completedFuture(account);
     }
 

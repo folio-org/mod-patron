@@ -125,6 +125,35 @@
             }
         }
     ],
+    "batches": [
+      {
+        "batchRequestId" : "5203c035-005e-4a70-b555-ddaa3094c51c",
+        "status" : "In progress",
+        "submittedAt" : "2025-09-08T12:27:33.822+00:00",
+        "itemsTotal" : 2,
+        "itemsRequested" : 0,
+        "itemsPending" : 1,
+        "itemsFailed" : 1,
+        "itemsPendingDetails" : [
+          {
+            "instanceId" : "0b559683-9059-4b6d-bb6a-c55aa3518df3",
+            "itemId" : "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+            "title" : "Hold On",
+            "pickUpLocationId" : "ebab9ccc-4ece-4f35-bc82-01f3325abed8"
+          }
+        ],
+        "itemsFailedDetails" : [
+          {
+            "instanceId" : "0b559683-9059-4b6d-bb6a-c55aa3518df3",
+            "itemId" : "7e881333-3a3a-501c-a6d4-03b81e3c7e79",
+            "title" : "Hold On",
+            "pickUpLocationId" : "ebab9ccc-4ece-4f35-bc82-01f3325abed8",
+            "errorDetails" : "Failed due to some internal issue"
+          }
+        ],
+        "itemsRequestedDetails" : [ ]
+      }
+    ],
     "loans": [
         {
           "id": "947b9387-892a-4d60-a854-a6395d0f03f0",

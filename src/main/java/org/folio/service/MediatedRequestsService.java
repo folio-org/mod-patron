@@ -171,7 +171,6 @@ public class MediatedRequestsService {
                                                                   String instanceId, String title) {
     return detailsDtoList.stream()
       .filter(detail -> MediatedBatchRequestStatus.COMPLETED.getValue().equals(detail.getMediatedRequestStatus()))
-      .filter(detail -> Objects.nonNull(detail.getConfirmedRequestId()))
       .map(detail -> new ItemsRequestedDetail()
         .withItemId(detail.getItemId())
         .withPickUpLocationId(detail.getPickupServicePointId())
