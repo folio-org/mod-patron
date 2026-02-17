@@ -1,6 +1,7 @@
 # 6.4.0 2025-XX-XX
 * Extend the POST /patron and PUT /patron/{id} APIs to support an optional "minor" Boolean property. (MODPATRON-241)
 * Add APIs for Multi-Item Batch request management ([MODPATRON-246](https://issues.folio.org/browse/MODPATRON-246))
+* Adjust Multi-Item Batch request APIs to support secure tenant ([MODPATRON-267](https://issues.folio.org/browse/MODPATRON-267))
 
 # 6.3.0 2025-03-13
 
