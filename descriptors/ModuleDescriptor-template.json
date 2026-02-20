@@ -46,6 +46,7 @@
           "modulePermissions": [
             "mod-settings.entries.item.get",
             "mod-settings.entries.collection.get",
+            "locale.item.get",
             "users.item.get",
             "circulation.loans.collection.get",
             "circulation.requests.collection.get",
