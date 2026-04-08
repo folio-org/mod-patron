@@ -197,7 +197,7 @@ public class PatronServicesResourceImpl implements Patron {
     final int totalRecords = userResponse.getJsonArray(USERS_FILED).size();
 
     if (totalRecords > 1) {
-      logger.warn("handleGetUserResponse:: Multiple user record found for identifier {}", identifier);
+      logger.warn("handleGetUserResponse:: Multiple user record found for identifier");
       asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse.
         respond400WithApplicationJson(createError(MULTIPLE_USER_WITH_EMAIL.value(), MULTIPLE_USER_WITH_EMAIL.name()))));
     } else if (totalRecords == 1) {
@@ -207,12 +207,12 @@ public class PatronServicesResourceImpl implements Patron {
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
           .respond200WithApplicationJson(user)));
       } else {
-        logger.warn("handleGetUserResponse:: Inactive user record found for identifier {}", identifier);
+        logger.warn("handleGetUserResponse:: Inactive user record found for identifier");
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
           .respond404WithApplicationJson(createError(USER_ACCOUNT_INACTIVE.value(), USER_ACCOUNT_INACTIVE.name()))));
       }
     } else {
-      logger.warn("handleGetUserResponse:: user record not found for identifier {}", identifier);
+      logger.warn("handleGetUserResponse:: user record not found for identifier");
       asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
         .respond404WithApplicationJson(createError(USER_NOT_FOUND.value(), USER_NOT_FOUND.name()))));
     }
@@ -229,7 +229,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<JsonObject> getUserByEmailOrESIDWithPatronType(String identifier, Map<String, String> okapiHeaders, UserRepository userRepository) {
-    logger.info("getUserByEmailOrESIDWithPatronType:: Trying to get user by identifier {}", identifier);
+    logger.info("getUserByEmailOrESIDWithPatronType:: Trying to get user by identifier");
 
     boolean isUuid = identifier != null && identifier.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$");
 
@@ -512,15 +512,15 @@ public class PatronServicesResourceImpl implements Patron {
 
   @Override
   public void getPatronRegistrationStatusByIdentifier(String identifier, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    logger.debug("getPatronRegistrationStatusByIdentifier:: Fetching patron details with identifier {}", identifier);
+    logger.debug("getPatronRegistrationStatusByIdentifier:: Fetching patron details by identifier");
     final var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
     final var userRepository = new UserRepository(httpClient);
 
     getUserByEmailOrESIDWithPatronType(identifier, okapiHeaders, userRepository)
       .thenAccept(userResponse -> handleGetUserResponse(identifier, userResponse, asyncResultHandler))
       .exceptionally(throwable -> {
-        logger.error("getPatronRegistrationStatusByEmailIdAndExternalSystemId:: Failed to get patron details by identifier {}",
-          identifier, throwable);
+        logger.error("getPatronRegistrationStatusByEmailIdAndExternalSystemId:: Failed to get patron details by identifier",
+          throwable);
         asyncResultHandler.handle(Future.succeededFuture(GetPatronRegistrationStatusByIdentifierResponse
           .respond500WithTextPlain(throwable.getCause().getMessage())));
         return null;
@@ -553,7 +553,7 @@ public class PatronServicesResourceImpl implements Patron {
         .thenCompose(isEcsTlrFeatureEnabled -> createTitleLevelRequest(isEcsTlrFeatureEnabled, holdJSON, httpClient, okapiHeaders))
         .thenApply(ResponseInterpreter::verifyAndExtractBody)
         .thenAccept(body -> {
-          logger.info("postPatronAccountInstanceHoldByIdAndInstanceId:: body: {}", body);
+          logger.info("postPatronAccountInstanceHoldByIdAndInstanceId:: hold request created successfully");
           final Item item = getItem(body);
           final Hold hold = getHold(body, item);
           asyncResultHandler.handle(succeededFuture(PostPatronAccountInstanceHoldByIdAndInstanceIdResponse.respond201WithApplicationJson(hold)));

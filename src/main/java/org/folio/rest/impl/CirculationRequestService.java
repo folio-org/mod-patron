@@ -28,8 +28,7 @@ public class CirculationRequestService {
     boolean isEcsTlrFeatureEnabled, JsonObject hold,
     VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
 
-    log.info("createItemLevelRequest:: parameters isEcsTlrFeatureEnabled: {}, hold: {}",
-      isEcsTlrFeatureEnabled, hold);
+    log.info("createItemLevelRequest:: parameters isEcsTlrFeatureEnabled: {}", isEcsTlrFeatureEnabled);
 
     return httpClient.postExtendedTimeout(defineUrlForRequest(isEcsTlrFeatureEnabled,
       isTenantSecure(okapiHeaders), false), hold, okapiHeaders);
@@ -39,8 +38,7 @@ public class CirculationRequestService {
     boolean isEcsTlrFeatureEnabled, JsonObject hold,
     VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
 
-    log.info("createTitleLevelRequest:: parameters isEcsTlrFeatureEnabled: {}, hold: {}",
-      isEcsTlrFeatureEnabled, hold);
+    log.info("createTitleLevelRequest:: parameters isEcsTlrFeatureEnabled: {}", isEcsTlrFeatureEnabled);
 
     if (isEcsTlrFeatureEnabled) {
       hold
