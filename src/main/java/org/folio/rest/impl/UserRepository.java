@@ -31,21 +31,21 @@ public class UserRepository {
   }
 
   public CompletableFuture<JsonObject> getUserByCql(String cqlQuery, Map<String, String> okapiHeaders) {
-    logger.info("getUserByCql::Retrieving user by cqlQuery {}", cqlQuery);
+    logger.info("getUserByCql::Retrieving user by CQL query");
     Map<String, String> queryParameters = Maps.newLinkedHashMap();
     queryParameters.put(QUERY, cqlQuery);
     return client.get(USERS, queryParameters, okapiHeaders)
       .thenApply(response -> {
-        logger.info("getUserByCql::Successfully retrieved user by query: {}", cqlQuery);
+        logger.info("getUserByCql::Successfully retrieved user by CQL query");
         return ResponseInterpreter.verifyAndExtractBody(response);
       });
   }
 
   public CompletableFuture<JsonObject> createUser(User user, Map<String, String> okapiHeaders) {
-    logger.info("createUser::Creating user: {}", user);
+    logger.info("createUser::Creating user");
     return client.post(USERS, JsonObject.mapFrom(user), okapiHeaders)
       .thenApply(response -> {
-        logger.info("createUser::Successfully created user: {}", user);
+        logger.info("createUser::Successfully created user");
         return ResponseInterpreter.verifyAndExtractBody(response);
       });
   }
