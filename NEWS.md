@@ -1,7 +1,23 @@
-# 6.4.0 2025-XX-XX
-* Extend the POST /patron and PUT /patron/{id} APIs to support an optional "minor" Boolean property. (MODPATRON-241)
-* Add APIs for Multi-Item Batch request management ([MODPATRON-246](https://issues.folio.org/browse/MODPATRON-246))
-* Adjust Multi-Item Batch request APIs to support secure tenant ([MODPATRON-267](https://issues.folio.org/browse/MODPATRON-267))
+# 6.4.0 2025-04-16
+
+* Sensitive data in logs cleanup (MODPATRON-218)
+* Enable GitHub Maven workflow (MODPATRON-268)
+* Use GET /locale for tenant language and locale (MODPATRON-265)
+* Adjust multi-item request endpoints for secure tenant (MODPATRON-267)
+* Make circulation-item interface optional (MODPATRON-261)
+* Look for circulation item when inventory item is missing (MODPATRON-258)
+* Upgrade to Vert.x 5.0 (MODPATRON-244)
+* Add patron settings CRUD and batch section to patron endpoint (MODPATRON-253)
+* Evaluate temporary loan type when placing holds (MODPATRON-249)
+* Expand multi-item batch request support (MODPATRON-246)
+* Fix fines/fees lookup when item records are missing (MODPATRON-248)
+* Migrate from mod-configuration to mod-settings (MODPATRON-240)
+* Hotfix to resolve test failure issue (MODPATRON-245)
+* Add minor flag in StagingUser for PUT/POST (MODPATRON-241)
+* Add discoveryDisplayName to allowed service point response (MODPATRON-233)
+* Add holdings storage dependency and fix interface name (MODPATRON-229)
+* Add missing permission (MODPATRON-230)
+* Fix circulation-bff-request-external dependency (MODPATRON-225)
 
 # 6.3.0 2025-03-13
 
