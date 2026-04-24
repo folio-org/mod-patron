@@ -1608,6 +1608,45 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
+  void testPostAllowedServicePointsMultiItemForSecureTenantShouldUseBffPath() {
+    logger.info("Testing POST allowed service points for Items in Secure tenant should use BFF path");
+
+    environmentVariables.set(SECURE_TENANT_VARIABLE, TENANT);
+    assertThat(System.getenv(SECURE_TENANT_VARIABLE), is(TENANT));
+    ecsTlrFeatureEnabledInTlr = false;
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
+      .body(new JsonObject().put("itemIds", new JsonArray().add(goodItemId)).encode())
+      .when()
+      .contentType(ContentType.JSON)
+      .post(accountPath + instancePath + ALLOWED_SERVICE_POINTS_MULTI_ITEM_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    var responseJson = new JsonObject(response);
+    var itemServicePointsArray = responseJson.getJsonArray("allowedServicePointsPerItem");
+    assertNotNull(itemServicePointsArray);
+    assertFalse(itemServicePointsArray.isEmpty());
+
+    var allowedSPs = itemServicePointsArray.getJsonObject(0).getJsonArray("allowedServicePoints");
+    boolean hasBffServicePoint = allowedSPs.stream()
+      .map(JsonObject.class::cast)
+      .anyMatch(sp -> "3a40852d-49fd-4df2-a1f9-6e2641a66666".equals(sp.getString("id")));
+
+    assertTrue(hasBffServicePoint);
+
+    logger.info("Test done");
+  }
+
+  @Test
   void testPostMultiItemBatchRequestShouldSucceed() {
     logger.info("Testing POST Multi-Item Batch Request");
 
@@ -2841,6 +2880,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         }
       } else if (req.path().startsWith(CIRCULATION_BFF_BATCH_REQUESTS)) {
         mockBatchRequestsEndpoints(req);
+      } else if (req.path().equals("/circulation-bff/requests/allowed-service-points") && req.method() == HttpMethod.GET) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/allowed_service_points_circulation_bff.json"));
       } else if (req.path().startsWith("/circulation-bff/requests") && req.method() == HttpMethod.GET) {
         req.response()
           .setStatusCode(200)
