@@ -73,7 +73,7 @@ public class CirculationRequestService {
     return url;
   }
 
-  private static boolean isTenantSecure(Map<String, String> okapiHeaders) {
+  public static boolean isTenantSecure(Map<String, String> okapiHeaders) {
     String secureTenantId = System.getenv().getOrDefault(SECURE_TENANT_ID, EMPTY);
     log.info("isTenantSecure:: SECURE_TENANT_ID: {}", secureTenantId);
     String tenantFromHeaders = okapiHeaders.get(OKAPI_TENANT);
