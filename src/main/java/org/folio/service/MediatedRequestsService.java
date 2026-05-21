@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import io.vertx.core.json.JsonObject;
@@ -18,7 +17,6 @@ import org.folio.patron.rest.models.BatchRequestDto;
 import org.folio.patron.rest.models.BatchRequestPostDto;
 import org.folio.patron.rest.models.MediatedBatchRequestStatus;
 import org.folio.repository.MediatedRequestsRepository;
-import org.folio.repository.InstanceRepository;
 import org.folio.rest.jaxrs.model.BatchRequest;
 import org.folio.patron.rest.models.BatchRequestStatus;
 import org.folio.rest.jaxrs.model.BatchRequestSubmitResult;
@@ -35,11 +33,9 @@ public class MediatedRequestsService {
   private static final List<String> COMPLETED_MEDIATED_BATCH_REQUEST_STATUSES = List.of("Completed", "Failed");
 
   private final MediatedRequestsRepository repository;
-  private final InstanceRepository instanceRepository;
 
   public MediatedRequestsService(VertxOkapiHttpClient httpClient) {
     repository = new MediatedRequestsRepository(httpClient);
-    instanceRepository = new InstanceRepository(httpClient);
   }
 
   public CompletableFuture<BatchRequestSubmitResult> createBatchRequest(BatchRequest batchRequest,
@@ -92,10 +88,12 @@ public class MediatedRequestsService {
     var instanceId = Optional.ofNullable(instance.getString("instanceId"))
       .orElseThrow(() -> new IllegalArgumentException(
         "Instance ID is missing for the provided batch request with ID: " + batchId));
-    var title = instance.getString("title");
-    return repository.getBatchRequestDetails(batchId, okapiHeaders)
-      .thenApply(detailsJson -> mapBatchRequestDetailsJsonToDto(detailsJson, batchId))
-      .thenAccept(detailsDtoList -> {
+    var titleFromInstance = instance.getString("title");
+    return repository.getBatchRequestDetails(instanceId, batchId, okapiHeaders)
+      .thenApply(detailsJson -> {
+        var title = resolveTitle(titleFromInstance, detailsJson);
+        var detailsDtoList = mapBatchRequestDetailsJsonToDto(detailsJson, batchId);
+
         var pendingItemsDetails = extractPendingItemsDetails(detailsDtoList, instanceId, title);
         batchStatus.setItemsPendingDetails(pendingItemsDetails);
 
@@ -112,21 +110,19 @@ public class MediatedRequestsService {
           batchStatus.setItemsFailed(failedItemsDetails.size());
           batchStatus.setItemsPending(pendingItemsDetails.size());
         }
-      })
-      .thenCompose(voidArg -> {
-        if (title == null) {
-          return instanceRepository.getInstance(instanceId, okapiHeaders)
-            .thenApply(instanceJson -> instanceJson.getString("title"))
-            .thenApply(fetchedTitle -> {
-              batchStatus.getItemsPendingDetails().forEach(detail -> detail.setTitle(fetchedTitle));
-              batchStatus.getItemsRequestedDetails().forEach(detail -> detail.setTitle(fetchedTitle));
-              batchStatus.getItemsFailedDetails().forEach(detail -> detail.setTitle(fetchedTitle));
 
-              return batchStatus;
-            });
-        }
-        return CompletableFuture.completedFuture(batchStatus);
+        return batchStatus;
       });
+  }
+
+  private String resolveTitle(String titleFromInstance, JsonObject detailsJson) {
+    if (titleFromInstance != null) {
+      return titleFromInstance;
+    }
+
+    return Optional.ofNullable(detailsJson.getJsonObject("instance"))
+      .map(inst -> inst.getString("title"))
+      .orElse(null);
   }
 
   private List<BatchRequestDetailsDto> mapBatchRequestDetailsJsonToDto(JsonObject detailsJson, String batchId) {
