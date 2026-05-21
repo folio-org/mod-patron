@@ -1,5 +1,6 @@
 # 6.5.0-SNAPSHOT In progress
 * Fix cross-tenant item lookup for Secure tenant multi-item allowed service points (MODPATRON-272)
+* Fix 404 on GET /patron/.../batch-request/{id}/status for Shared instances in ECS (MODPATRON-271)
 
 # 6.4.0 2025-04-16
 
