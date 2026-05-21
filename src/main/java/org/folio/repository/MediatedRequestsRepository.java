@@ -23,6 +23,7 @@ public class MediatedRequestsRepository {
   private final VertxOkapiHttpClient client;
 
   public static final String CIRCULATION_BFF_BATCH_REQUESTS = "/circulation-bff/batch-requests";
+  public static final String CIRCULATION_BFF_INSTANCE = "/circulation-bff/instance";
 
   public MediatedRequestsRepository(VertxOkapiHttpClient client) {
     this.client = client;
@@ -64,10 +65,10 @@ public class MediatedRequestsRepository {
       });
   }
 
-  public CompletableFuture<JsonObject> getBatchRequestDetails(String batchId, Map<String, String> okapiHeaders) {
+  public CompletableFuture<JsonObject> getBatchRequestDetails(String instanceId, String batchId, Map<String, String> okapiHeaders) {
     logger.info("getBatchRequestDetails:: Retrieving Batch Request Details for batchId: {}", batchId);
 
-    var endpoint = CIRCULATION_BFF_BATCH_REQUESTS + "/" + batchId + "/details";
+    var endpoint = "%s/%s/batch-requests/%s/details".formatted(CIRCULATION_BFF_INSTANCE, instanceId, batchId);
     return client.get(endpoint, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(result -> {
