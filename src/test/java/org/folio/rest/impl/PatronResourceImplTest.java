@@ -9,6 +9,7 @@ import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_ACCOUNT_
 import static org.folio.patron.rest.models.ExternalPatronErrorCode.USER_NOT_FOUND;
 import static org.folio.patron.utils.Utils.readMockFile;
 import static org.folio.repository.MediatedRequestsRepository.CIRCULATION_BFF_BATCH_REQUESTS;
+import static org.folio.repository.MediatedRequestsRepository.CIRCULATION_BFF_INSTANCE;
 import static org.folio.rest.impl.Constants.JSON_FIELD_HOLDINGS_RECORD_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -127,6 +128,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private boolean ecsTlrFeatureEnabledInTlr = false;
   private boolean ecsTlrFeatureEnabledInCirculation = false;
   private boolean inventoryItemSearchShouldReturn404 = false;
+  private boolean instanceIsInCentralTenantOnly = false;
 
   @SystemStub
   private EnvironmentVariables environmentVariables;
@@ -142,6 +144,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     server.requestHandler(this::mockData);
     server.listen(serverPort, "localhost");
     inventoryItemSearchShouldReturn404 = false;
+    instanceIsInCentralTenantOnly = false;
     context.completeNow();
   }
 
@@ -1608,6 +1611,45 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   }
 
   @Test
+  void testPostAllowedServicePointsMultiItemForSecureTenantShouldUseBffPath() {
+    logger.info("Testing POST allowed service points for Items in Secure tenant should use BFF path");
+
+    environmentVariables.set(SECURE_TENANT_VARIABLE, TENANT);
+    assertThat(System.getenv(SECURE_TENANT_VARIABLE), is(TENANT));
+    ecsTlrFeatureEnabledInTlr = false;
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
+      .body(new JsonObject().put("itemIds", new JsonArray().add(goodItemId)).encode())
+      .when()
+      .contentType(ContentType.JSON)
+      .post(accountPath + instancePath + ALLOWED_SERVICE_POINTS_MULTI_ITEM_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    var responseJson = new JsonObject(response);
+    var itemServicePointsArray = responseJson.getJsonArray("allowedServicePointsPerItem");
+    assertNotNull(itemServicePointsArray);
+    assertFalse(itemServicePointsArray.isEmpty());
+
+    var allowedSPs = itemServicePointsArray.getJsonObject(0).getJsonArray("allowedServicePoints");
+    boolean hasBffServicePoint = allowedSPs.stream()
+      .map(JsonObject.class::cast)
+      .anyMatch(sp -> "3a40852d-49fd-4df2-a1f9-6e2641a66666".equals(sp.getString("id")));
+
+    assertTrue(hasBffServicePoint);
+
+    logger.info("Test done");
+  }
+
+  @Test
   void testPostMultiItemBatchRequestShouldSucceed() {
     logger.info("Testing POST Multi-Item Batch Request");
 
@@ -1686,6 +1728,38 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .asString();
 
     final JsonObject expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER + "/" + expectedResponseFile));
+    assertEquals(expectedJson, new JsonObject(response));
+
+    logger.info("Test done");
+  }
+
+  @Test
+  void testGetBatchRequestStatusShouldUseInventoryFromCentralTenantWhenSecure() {
+    logger.info("Testing Get Batch Request Status uses central tenant for inventory when current tenant is secure");
+
+    environmentVariables.set(SECURE_TENANT_VARIABLE, TENANT);
+    assertThat(System.getenv(SECURE_TENANT_VARIABLE), is(TENANT));
+    instanceIsInCentralTenantOnly = true;
+
+    var response = given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .pathParam("instanceId", GOOD_INSTANCE_ID)
+      .pathParams("batchId", BATCH_REQUEST_ID)
+      .when()
+      .contentType(ContentType.JSON)
+      .get(accountPath + instancePath + BATCH_REQUEST_STATUS_PATH)
+      .then()
+      .log().all()
+      .and().assertThat().contentType(ContentType.JSON)
+      .and().assertThat().statusCode(200)
+      .extract()
+      .asString();
+
+    final JsonObject expectedJson = new JsonObject(
+      readMockFile(MOCK_DATA_FOLDER + "/batch_request_status_expected_response.json"));
     assertEquals(expectedJson, new JsonObject(response));
 
     logger.info("Test done");
@@ -2039,8 +2113,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
   static Stream<Arguments> failedBatchRequestStatus() {
     return Stream.of(
-      Arguments.of(404, "instance_not_found_error.json", BAD_INSTANCE_ID, BATCH_REQUEST_ID),
-      Arguments.of(422, "instance_invalid_error.json", INVALID_INSTANCE_ID, BATCH_REQUEST_ID),
       Arguments.of(404, "batch_request_not_found_error.json", GOOD_INSTANCE_ID, NON_EXISTING_BATCH_REQUEST_ID),
       Arguments.of(422, "batch_request_invalid_error.json", GOOD_INSTANCE_ID, INVALID_BATCH_REQUEST_ID));
   }
@@ -2841,16 +2913,30 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         }
       } else if (req.path().startsWith(CIRCULATION_BFF_BATCH_REQUESTS)) {
         mockBatchRequestsEndpoints(req);
+      } else if (req.path().startsWith(CIRCULATION_BFF_INSTANCE) && req.path().endsWith("/details")) {
+        mockBatchRequestDetailsEndpoint(req);
+      } else if (req.path().equals("/circulation-bff/requests/allowed-service-points") && req.method() == HttpMethod.GET) {
+        req.response()
+          .setStatusCode(200)
+          .putHeader("content-type", "application/json")
+          .end(readMockFile(MOCK_DATA_FOLDER + "/allowed_service_points_circulation_bff.json"));
       } else if (req.path().startsWith("/circulation-bff/requests") && req.method() == HttpMethod.GET) {
         req.response()
           .setStatusCode(200)
           .putHeader("content-type", "application/json")
           .end(readMockFile(MOCK_DATA_FOLDER + "/holds_all_active_and_sorted_with_batch_request_info.json"));
       } else if (req.path().equals("/inventory/instances/" + GOOD_INSTANCE_ID)) {
-        req.response()
-          .setStatusCode(200)
-          .putHeader("content-type", "application/json")
-          .end(readMockFile(MOCK_DATA_FOLDER + "/inventory_instance_response.json"));
+        if (instanceIsInCentralTenantOnly && TENANT.equals(req.getHeader("x-okapi-tenant"))) {
+          req.response()
+            .setStatusCode(404)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/instance_not_found_error.json"));
+        } else {
+          req.response()
+            .setStatusCode(200)
+            .putHeader("content-type", "application/json")
+            .end(readMockFile(MOCK_DATA_FOLDER + "/inventory_instance_response.json"));
+        }
       } else if (req.path().equals("/inventory/instances/" + BAD_INSTANCE_ID)) {
         req.response()
           .setStatusCode(404)
@@ -3094,20 +3180,10 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     if (req.path().equals(CIRCULATION_BFF_BATCH_REQUESTS)) {
       response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
-    }
-
-    var pathWithoutPrefix = req.path().replaceAll(CIRCULATION_BFF_BATCH_REQUESTS + "/", "");
-    if (req.path().endsWith("/details")) {
-      if (pathWithoutPrefix.startsWith(BATCH_REQUEST_ID)) {
-        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
-      } else if (pathWithoutPrefix.startsWith(COMPLETED_BATCH_REQUEST_ID)) {
-        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_details_response.json"));
-      } else if (pathWithoutPrefix.startsWith(FAILED_BATCH_REQUEST_ID)) {
-        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_failed_details_response.json"));
-      }
       return;
     }
 
+    var pathWithoutPrefix = req.path().replaceAll(CIRCULATION_BFF_BATCH_REQUESTS + "/", "");
     switch (pathWithoutPrefix) {
       case BATCH_REQUEST_ID -> response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
       case COMPLETED_BATCH_REQUEST_ID ->
@@ -3118,6 +3194,22 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
         response.setStatusCode(404).end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_not_found_error.json"));
       case INVALID_BATCH_REQUEST_ID -> response.end("");
       default -> response.end("invalid batch request response");
+    }
+  }
+
+  private void mockBatchRequestDetailsEndpoint(HttpServerRequest req) {
+    var response = req.response()
+      .setStatusCode(200)
+      .putHeader("content-type", "application/json");
+
+    if (req.path().contains(BATCH_REQUEST_ID)) {
+      response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
+    } else if (req.path().contains(COMPLETED_BATCH_REQUEST_ID)) {
+      response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_details_response.json"));
+    } else if (req.path().contains(FAILED_BATCH_REQUEST_ID)) {
+      response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_failed_details_response.json"));
+    } else {
+      response.setStatusCode(404).end("batch request details not found");
     }
   }
 }

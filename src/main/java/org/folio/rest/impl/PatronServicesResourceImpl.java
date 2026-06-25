@@ -575,8 +575,7 @@ public class PatronServicesResourceImpl implements Patron {
                                                                                       Context vertxContext) {
     var httpClient = HttpClientFactory.getHttpClient(vertxContext.owner());
 
-    new EcsTlrSettingsService()
-      .isEcsTlrFeatureEnabled(httpClient, okapiHeaders)
+    shouldUseBff(httpClient, okapiHeaders)
       .thenApply(this::getAllowedServicePointsUrl)
       .thenCompose(path -> getAllowedServicePointsPerItems(
         params -> httpClient.getExtendedTimeout(path, params, okapiHeaders), requesterId, entity.getItemIds()))
@@ -651,6 +650,13 @@ public class PatronServicesResourceImpl implements Patron {
               .respond200WithApplicationJson(submitResult)));
         }
       });
+  }
+
+  private CompletableFuture<Boolean> shouldUseBff(VertxOkapiHttpClient httpClient, Map<String, String> okapiHeaders) {
+    if (CirculationRequestService.isTenantSecure(okapiHeaders)) {
+      return CompletableFuture.completedFuture(true);
+    }
+    return new EcsTlrSettingsService().isEcsTlrFeatureEnabled(httpClient, okapiHeaders);
   }
 
   private CompletableFuture<List<AllowedServicePointsPerItem>> getAllowedServicePointsPerItems(
