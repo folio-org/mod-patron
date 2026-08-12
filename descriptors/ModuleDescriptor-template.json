@@ -240,6 +240,10 @@
       "version": "14.0"
     },
     {
+      "id": "circulation-rules",
+      "version": "1.1"
+    },
+    {
       "id": "feesfines",
       "version": "14.0 15.0 16.0 17.0 18.0 19.0"
     },
@@ -254,6 +258,14 @@
     {
       "id": "holdings-storage",
       "version": "8.0"
+    },
+    {
+      "id": "request-policy-storage",
+      "version": "1.0"
+    },
+    {
+      "id": "locale",
+      "version": "1.0"
     }
   ],
   "optional": [
