@@ -4,11 +4,15 @@ import static org.folio.rest.jaxrs.model.Batch.Status.COMPLETED;
 import static org.folio.rest.jaxrs.model.Batch.Status.IN_PROGRESS;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -32,10 +36,29 @@ public class MediatedRequestsService {
   private static final String MEDIATED_BATCH_WORKFLOW = "Multi-Item request";
   private static final List<String> COMPLETED_MEDIATED_BATCH_REQUEST_STATUSES = List.of("Completed", "Failed");
 
+  private static final List<MediatedBatchRequestStatus> ACTIVE_OR_FAILED_STATUSES = List.of(
+    MediatedBatchRequestStatus.PENDING,
+    MediatedBatchRequestStatus.IN_PROGRESS,
+    MediatedBatchRequestStatus.FAILED);
+
   private final MediatedRequestsRepository repository;
 
   public MediatedRequestsService(VertxOkapiHttpClient httpClient) {
     repository = new MediatedRequestsRepository(httpClient);
+  }
+
+  /**
+   * CQL for mod-requests-mediated batch collection: the requester's batches that are not completed
+   * successfully (pending, in progress or failed) and were requested at or after the cutoff.
+   * The date term is a quoted local date-time without fraction; the upstream parses it with
+   * LocalDateTime.parse.
+   */
+  static String buildActiveOrFailedBatchesQuery(String requesterId, LocalDateTime cutoff) {
+    var statuses = ACTIVE_OR_FAILED_STATUSES.stream()
+      .map(status -> "mediatedRequestStatus==\"%s\"".formatted(status.getValue()))
+      .collect(Collectors.joining(" or "));
+    var cutoffTerm = cutoff.truncatedTo(ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    return "requesterId==\"%s\" and (%s) and requestDate>=\"%s\"".formatted(requesterId, statuses, cutoffTerm);
   }
 
   public CompletableFuture<BatchRequestSubmitResult> createBatchRequest(BatchRequest batchRequest,
