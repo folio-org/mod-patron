@@ -539,8 +539,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     assertNotNull(lastBatchCollectionQuery);
     var matcher = Pattern.compile("requestDate>=\"([^\"]+)\"").matcher(lastBatchCollectionQuery);
     assertTrue(matcher.find());
-    var cutoff = LocalDateTime.parse(matcher.group(1));
-    var expected = LocalDateTime.now(ZoneOffset.UTC).minusDays(days);
+    var cutoff = LocalDateTime.parse(matcher.group(1)).toInstant(ZoneOffset.UTC);
+    var expected = LocalDateTime.now(ZoneOffset.UTC).minusDays(days).toInstant(ZoneOffset.UTC);
     assertTrue(Math.abs(ChronoUnit.SECONDS.between(cutoff, expected)) < 120,
       "cutoff " + cutoff + " should be about " + days + " days before now (" + expected + ")");
   }
