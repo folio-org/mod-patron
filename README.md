@@ -67,6 +67,13 @@ Examples of requests:
      in ascending order: /patron/account/{accountId}?includeCharges=true&&sortBy=title/sort.ascending
    - get loans sorted by loanDate field
      in ascending order: /patron/account/{accountId}?includeCharges=true&&sortBy=loanDate/sort.ascending  
+
+When `includeBatches=true` is passed to `GET /patron/account/{accountId}`, the `batches` section contains the
+batches of the requests returned in the response, plus the user's batches that are pending, in progress or failed
+(for example, a batch where every item failed) and were requested within the last `batchesDaysBack` days
+(default `30`). Batches are ordered by submission date, newest first. Batches found
+without an open request have no `instanceId` or `title` in their item details.
+
 ### Issue tracker
 
 See project [MODPATRON](https://issues.folio.org/browse/MODPATRON)
