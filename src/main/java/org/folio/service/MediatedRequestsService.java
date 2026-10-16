@@ -5,14 +5,17 @@ import static org.folio.rest.jaxrs.model.Batch.Status.IN_PROGRESS;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -70,6 +73,22 @@ public class MediatedRequestsService {
       .thenApply(this::mapToBatchRequestSubmitResult);
   }
 
+  public CompletableFuture<List<String>> findActiveOrFailedBatchIds(String requesterId, int daysBack,
+                                                                    Map<String, String> okapiHeaders) {
+    var cutoff = LocalDateTime.now(ZoneOffset.UTC).minusDays(daysBack);
+    var query = buildActiveOrFailedBatchesQuery(requesterId, cutoff);
+
+    return repository.getBatchRequestsByQuery(query, okapiHeaders)
+      .thenApply(json -> Optional.ofNullable(json.getJsonArray("mediatedBatchRequests"))
+        .orElseGet(JsonArray::new)
+        .stream()
+        .map(JsonObject.class::cast)
+        .map(batch -> batch.getString("batchId"))
+        .filter(Objects::nonNull)
+        .distinct()
+        .toList());
+  }
+
   public CompletableFuture<BatchRequestStatus> getBatchRequestStatus(String batchId, JsonObject instance,
                                                                     Map<String, String> okapiHeaders) {
     return getStatusFromBatchRequest(batchId, okapiHeaders)
@@ -108,11 +127,12 @@ public class MediatedRequestsService {
   private CompletableFuture<BatchRequestStatus> getBatchDetailsAndUpdateStatus(BatchRequestStatus batchStatus,
                                                                                String batchId, JsonObject instance,
                                                                                Map<String, String> okapiHeaders) {
-    var instanceId = Optional.ofNullable(instance.getString("instanceId"))
-      .orElseThrow(() -> new IllegalArgumentException(
-        "Instance ID is missing for the provided batch request with ID: " + batchId));
+    var instanceId = instance.getString("instanceId"); // null for batches found without an open request
     var titleFromInstance = instance.getString("title");
-    return repository.getBatchRequestDetails(instanceId, batchId, okapiHeaders)
+    var detailsFuture = instanceId != null
+      ? repository.getBatchRequestDetails(instanceId, batchId, okapiHeaders)
+      : repository.getBatchRequestDetails(batchId, okapiHeaders);
+    return detailsFuture
       .thenApply(detailsJson -> {
         var title = resolveTitle(titleFromInstance, detailsJson);
         var detailsDtoList = mapBatchRequestDetailsJsonToDto(detailsJson, batchId);
