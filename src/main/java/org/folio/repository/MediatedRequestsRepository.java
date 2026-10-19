@@ -118,7 +118,7 @@ public class MediatedRequestsRepository {
 
   private CompletableFuture<JsonObject> fetchBatchRequestDetails(String endpoint, String batchId,
     Map<String, String> okapiHeaders) {
-    logger.info("getBatchRequestDetails:: Retrieving Batch Request Details for batchId: {}", batchId);
+    logger.info("fetchBatchRequestDetails:: Retrieving Batch Request Details for batchId: {}", batchId);
 
     return client.get(endpoint, UNPAGED_DETAILS, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
