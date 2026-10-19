@@ -102,7 +102,7 @@ public class MediatedRequestsRepository {
   }
 
   public CompletableFuture<JsonObject> getBatchRequestDetails(String instanceId, String batchId,
-                                                              Map<String, String> okapiHeaders) {
+    Map<String, String> okapiHeaders) {
     var endpoint = "%s/%s/batch-requests/%s/details".formatted(CIRCULATION_BFF_INSTANCE, instanceId, batchId);
     return fetchBatchRequestDetails(endpoint, batchId, okapiHeaders);
   }
