@@ -851,7 +851,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private void collectBatchesFromRequests(JsonObject requestsJson,
-                                          Map<String, CompletableFuture<BatchRequestStatus>> batchesById,
+    Map<String, CompletableFuture<BatchRequestStatus>> batchesById,
                                           MediatedRequestsService mediatedRequestsService,
                                           Map<String, String> okapiHeaders) {
     if (requestsJson == null || requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS) == null) {
