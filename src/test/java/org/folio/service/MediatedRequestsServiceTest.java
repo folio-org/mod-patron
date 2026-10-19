@@ -24,7 +24,7 @@ class MediatedRequestsServiceTest {
   }
 
   @Test
-  void buildActiveOrFailedBatchesQuery_shouldDropFractionalSeconds() {
+  void buildActiveOrFailedBatchesQueryShouldDropFractionalSeconds() {
     var cutoff = LocalDateTime.of(2026, 9, 16, 10, 15, 0, 123_000_000);
 
     var query = MediatedRequestsService.buildActiveOrFailedBatchesQuery(
