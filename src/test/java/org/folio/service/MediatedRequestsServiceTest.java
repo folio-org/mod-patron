@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class MediatedRequestsServiceTest {
 
   @Test
-  void buildActiveOrFailedBatchesQuery_shouldFilterByRequesterStatusesAndRequestDate() {
+  void buildActiveOrFailedBatchesQueryShouldFilterByRequesterStatusesAndRequestDate() {
     var cutoff = LocalDateTime.of(2026, 9, 16, 10, 15, 30);
 
     var query = MediatedRequestsService.buildActiveOrFailedBatchesQuery(
