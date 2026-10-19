@@ -878,7 +878,7 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> resolveBatches(Account account,
-                                                    Map<String, CompletableFuture<BatchRequestStatus>> batchesById) {
+    Map<String, CompletableFuture<BatchRequestStatus>> batchesById) {
     var futures = new ArrayList<>(batchesById.values());
     return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
       .thenApply(v -> {
