@@ -844,14 +844,20 @@ public class PatronServicesResourceImpl implements Patron {
     // batches with no open request (all items failed, or still pending) are not reachable via requests
     return mediatedRequestsService.findActiveOrFailedBatchIds(requesterId, batchesDaysBack, okapiHeaders)
       .thenCompose(batchIds -> {
+        // computeIfAbsent: a batch already collected from the requests must not trigger upstream calls again
         batchIds.forEach(batchId -> batchesById.computeIfAbsent(batchId,
-          id -> mediatedRequestsService.getBatchRequestStatus(id, new JsonObject(), okapiHeaders)));
+          id -> mediatedRequestsService.getBatchRequestStatus(id, new JsonObject(), okapiHeaders)
+            .exceptionally(t -> {
+              // a failure of a single failed/pending batch must not fail the whole account, log the reason and skip it
+              logger.warn("addBatches:: skipping batch {}: {}", id, t.getMessage());
+              return null;
+            })));
         return resolveBatches(account, batchesById);
       });
   }
 
   private void collectBatchesFromRequests(JsonObject requestsJson,
-    Map<String, CompletableFuture<BatchRequestStatus>> batchesById,
+                                          Map<String, CompletableFuture<BatchRequestStatus>> batchesById,
                                           MediatedRequestsService mediatedRequestsService,
                                           Map<String, String> okapiHeaders) {
     if (requestsJson == null || requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS) == null) {
@@ -878,12 +884,13 @@ public class PatronServicesResourceImpl implements Patron {
   }
 
   private CompletableFuture<Account> resolveBatches(Account account,
-    Map<String, CompletableFuture<BatchRequestStatus>> batchesById) {
+                                                    Map<String, CompletableFuture<BatchRequestStatus>> batchesById) {
     var futures = new ArrayList<>(batchesById.values());
     return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
       .thenApply(v -> {
         List<Batch> batches = futures.stream()
           .<Batch>map(CompletableFuture::join)
+          .filter(Objects::nonNull)
           .sorted(NEWEST_SUBMITTED_FIRST)
           .toList();
         account.setBatches(batches);

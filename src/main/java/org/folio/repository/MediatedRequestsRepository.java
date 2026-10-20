@@ -81,13 +81,13 @@ public class MediatedRequestsRepository {
       });
   }
 
-  public CompletableFuture<JsonObject> getBatchRequestsByQuery(String query, Map<String, String> okapiHeaders) {
+  public CompletableFuture<JsonObject> getBatchRequestsByQuery(String query, int limit, Map<String, String> okapiHeaders) {
     // The query contains the requester id, so it is deliberately not logged.
     logger.info("getBatchRequestsByQuery:: Retrieving Batch Requests collection");
 
     var params = Map.of(
       "query", query,
-      "limit", String.valueOf(Integer.MAX_VALUE),
+      "limit", String.valueOf(limit),
       "offset", "0");
     return client.get(CIRCULATION_BFF_BATCH_REQUESTS, params, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
@@ -102,7 +102,7 @@ public class MediatedRequestsRepository {
   }
 
   public CompletableFuture<JsonObject> getBatchRequestDetails(String instanceId, String batchId,
-    Map<String, String> okapiHeaders) {
+                                                              Map<String, String> okapiHeaders) {
     var endpoint = "%s/%s/batch-requests/%s/details".formatted(CIRCULATION_BFF_INSTANCE, instanceId, batchId);
     return fetchBatchRequestDetails(endpoint, batchId, okapiHeaders);
   }
@@ -117,7 +117,7 @@ public class MediatedRequestsRepository {
   }
 
   private CompletableFuture<JsonObject> fetchBatchRequestDetails(String endpoint, String batchId,
-    Map<String, String> okapiHeaders) {
+                                                                 Map<String, String> okapiHeaders) {
     logger.info("fetchBatchRequestDetails:: Retrieving Batch Request Details for batchId: {}", batchId);
 
     return client.get(endpoint, UNPAGED_DETAILS, okapiHeaders)

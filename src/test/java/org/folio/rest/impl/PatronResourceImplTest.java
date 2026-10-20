@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -137,6 +138,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private static final String EMPTY_BATCH_COLLECTION = "/batch_requests_empty_collection.json";
   private String batchCollectionResponseFile = EMPTY_BATCH_COLLECTION;
   private String lastBatchCollectionQuery;
+  private boolean pendingBatchDetailsShouldFail = false;
   @SystemStub
   private EnvironmentVariables environmentVariables;
 
@@ -154,6 +156,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     instanceIsInCentralTenantOnly = false;
     batchCollectionResponseFile = EMPTY_BATCH_COLLECTION;
     lastBatchCollectionQuery = null;
+    pendingBatchDetailsShouldFail = false;
     context.completeNow();
   }
 
@@ -438,12 +441,7 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     var expectedHoldBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
       + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"))
       .getJsonArray("batches").getJsonObject(0);
-    // batches found only via the collection are loaded without instance, so instanceId is not known
-    var expectedFailedBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
-      + "/batch_request_completed_with_fail_status_expected_response.json"));
-    for (var details : List.of("itemsFailedDetails", "itemsRequestedDetails")) {
-      expectedFailedBatch.getJsonArray(details).forEach(item -> ((JsonObject) item).remove("instanceId"));
-    }
+    var expectedFailedBatch = expectedFailedBatchFoundWithoutOpenRequest();
     var expectedPendingBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
       + "/batch_pending_account_expected.json"));
     // newest submittedAt first; the hold-derived and the failed batch have the same submittedAt,
@@ -458,6 +456,23 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     assertTrue(lastBatchCollectionQuery.contains("mediatedRequestStatus==\"Pending\""));
     assertTrue(lastBatchCollectionQuery.contains("mediatedRequestStatus==\"In progress\""));
     assertTrue(lastBatchCollectionQuery.contains("mediatedRequestStatus==\"Failed\""));
+  }
+
+  @Test
+  void testGetPatronAccountByIdSkipsBatchWithoutOpenRequestWhenItsDetailsCallFails() {
+    batchCollectionResponseFile = "/batch_requests_collection_pending_and_failed.json";
+    pendingBatchDetailsShouldFail = true;
+
+    var json = getAccountWithBatches(null);
+
+    var expectedHoldBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
+      + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"))
+      .getJsonArray("batches").getJsonObject(0);
+    // the pending batch is skipped, the batch derived from the open request and the failed one are kept
+    var expectedBatches = new JsonArray()
+      .add(expectedHoldBatch)
+      .add(expectedFailedBatchFoundWithoutOpenRequest());
+    assertEquals(expectedBatches, json.getJsonArray("batches"));
   }
 
   @Test
@@ -499,7 +514,17 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .then()
       .statusCode(200);
 
-    assertEquals(null, lastBatchCollectionQuery);
+    assertNull(lastBatchCollectionQuery);
+  }
+
+  /** Batches found only via the collection are loaded without instance, so instanceId is not known. */
+  private JsonObject expectedFailedBatchFoundWithoutOpenRequest() {
+    var expectedFailedBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
+      + "/batch_request_completed_with_fail_status_expected_response.json"));
+    for (var details : List.of("itemsFailedDetails", "itemsRequestedDetails")) {
+      expectedFailedBatch.getJsonArray(details).forEach(item -> ((JsonObject) item).remove("instanceId"));
+    }
+    return expectedFailedBatch;
   }
 
   private JsonObject getAccountWithBatches(Integer batchesDaysBack) {
@@ -3304,7 +3329,6 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .putHeader("content-type", "application/json");
 
     if (req.path().endsWith("/details")) {
-      // legacy GET /circulation-bff/batch-requests/{id}/details (no instance in path)
       mockBatchRequestDetailsEndpoint(req);
       return;
     }
@@ -3341,7 +3365,9 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .setStatusCode(200)
       .putHeader("content-type", "application/json");
 
-    if (req.path().contains(PENDING_BATCH_REQUEST_ID)) {
+    if (req.path().contains(PENDING_BATCH_REQUEST_ID) && pendingBatchDetailsShouldFail) {
+      response.setStatusCode(500).end("batch request details failure");
+    } else if (req.path().contains(PENDING_BATCH_REQUEST_ID)) {
       response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_pending_details_response.json"));
     } else if (req.path().contains(BATCH_REQUEST_ID)) {
       response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));

@@ -1,7 +1,7 @@
 # 6.5.0-SNAPSHOT In progress
 * Fix cross-tenant item lookup for Secure tenant multi-item allowed service points (MODPATRON-272)
 * Fix 404 on GET /patron/.../batch-request/{id}/status for Shared instances in ECS (MODPATRON-271)
-* Return in progress and failed batches with no open requests from GET /patron/account/{id} with new batchesDaysBack parameter (MODPATRON-284)
+* Return in progress and failed batches with no open requests from GET /patron/account/{id} with new `batchesDaysBack` parameter (MODPATRON-284)
 
 # 6.4.0 2025-04-16
 
