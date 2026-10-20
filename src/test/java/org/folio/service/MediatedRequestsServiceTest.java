@@ -63,8 +63,8 @@ class MediatedRequestsServiceTest {
 
     var matcher = Pattern.compile("requestDate>=\"([^\"]+)\"").matcher(repository.query);
     assertTrue(matcher.find());
-    var expectedCutoff = LocalDateTime.now(ZoneOffset.UTC).minusDays(7);
-    var actualCutoff = LocalDateTime.parse(matcher.group(1));
+    var expectedCutoff = LocalDateTime.now(ZoneOffset.UTC).minusDays(7).toInstant(ZoneOffset.UTC);
+    var actualCutoff = LocalDateTime.parse(matcher.group(1)).toInstant(ZoneOffset.UTC);
     assertTrue(Math.abs(ChronoUnit.SECONDS.between(actualCutoff, expectedCutoff)) < 10);
   }
 
