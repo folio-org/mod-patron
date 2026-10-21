@@ -49,6 +49,7 @@ public abstract class BaseResourceServiceTest {
   protected static final String FAILED_BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51g";
   protected static final String NON_EXISTING_BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51d";
   protected static final String INVALID_BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c51e";
+  protected static final String PENDING_BATCH_REQUEST_ID = "5203c035-005e-4a70-b555-ddaa3094c521";
 
   protected static PostgresClient postgresClient;
   protected static OkapiUrl okapiUrl;

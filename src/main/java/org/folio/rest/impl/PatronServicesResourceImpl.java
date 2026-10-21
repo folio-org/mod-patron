@@ -55,8 +55,9 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,6 +118,8 @@ public class PatronServicesResourceImpl implements Patron {
   private static final String CIRCULATION_REQUESTS = "/circulation/requests/%s";
   private static final String USERS_FILED = "users";
   private static final String BAD_REQUEST_CODE = "BAD_REQUEST";
+  private static final Comparator<Batch> NEWEST_SUBMITTED_FIRST =
+    Comparator.comparing(Batch::getSubmittedAt, Comparator.nullsLast(Comparator.reverseOrder()));
 
   private static final ExecutorService ITEMS_ALLOWED_SERVICE_POINTS_EXECUTOR = Executors.newFixedThreadPool(4);
 
@@ -249,7 +252,7 @@ public class PatronServicesResourceImpl implements Patron {
       boolean includeCharges, boolean includeHolds,
       String sortBy,
       int offset,
-      int limit, boolean includeBatches,
+      int limit, boolean includeBatches, int batchesDaysBack,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     logger.debug("getPatronAccountById:: Trying to get PatronAccount with parameters:  id: {}, includeLoans: {}, " +
@@ -282,7 +285,8 @@ public class PatronServicesResourceImpl implements Patron {
             Map<String, String> queryParameters = buildRequestsGetQueryParams(id, sortBy, limit, offset, includeHolds, includeBatches);
             final CompletableFuture<Account> cf2 = getRequests(queryParameters, includeBatches, patronSettingsService, okapiHeaders, httpClient)
               .thenApply(requestsResponse -> addHolds(account, requestsResponse, includeHolds, includeBatches))
-              .thenCompose(requestsResponse -> addBatches(account, requestsResponse, mediatedRequestsService, okapiHeaders));
+              .thenCompose(requestsResponse -> addBatches(account, requestsResponse, includeBatches, id,
+                batchesDaysBack, mediatedRequestsService, okapiHeaders));
 
             final CompletableFuture<Account> cf3 = getAccounts(id, sortBy, limit, offset, okapiHeaders, httpClient)
                 .thenApply(body -> addCharges(account, body, includeCharges, code))
@@ -826,18 +830,44 @@ public class PatronServicesResourceImpl implements Patron {
     return Optional.of(batchRequestInfo);
   }
 
-  private CompletableFuture<Account> addBatches(Account account, JsonObject requestsJson,
+  private CompletableFuture<Account> addBatches(Account account, JsonObject requestsJson, boolean includeBatches,
+                                                String requesterId, int batchesDaysBack,
                                                 MediatedRequestsService mediatedRequestsService,
                                                 Map<String, String> okapiHeaders) {
-    if (requestsJson == null || requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS) == null) {
-      return CompletableFuture.completedFuture(account);
+    Map<String, CompletableFuture<BatchRequestStatus>> batchesById = new LinkedHashMap<>();
+    collectBatchesFromRequests(requestsJson, batchesById, mediatedRequestsService, okapiHeaders);
+
+    if (!includeBatches) {
+      return resolveBatches(account, batchesById);
     }
 
-    Map<String, CompletableFuture<BatchRequestStatus>> batchRequestsById = new HashMap<>();
-    var futures = requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS).stream()
+    // batches with no open request (all items failed, or still pending) are not reachable via requests
+    return mediatedRequestsService.findActiveOrFailedBatchIds(requesterId, batchesDaysBack, okapiHeaders)
+      .thenCompose(batchIds -> {
+        // computeIfAbsent: a batch already collected from the requests must not trigger upstream calls again
+        batchIds.forEach(batchId -> batchesById.computeIfAbsent(batchId,
+          id -> mediatedRequestsService.getBatchRequestStatus(id, new JsonObject(), okapiHeaders)
+            .exceptionally(t -> {
+              // a failure of a single failed/pending batch must not fail the whole account, log the reason and skip it
+              logger.warn("addBatches:: skipping batch {}: {}", id, t.getMessage());
+              return null;
+            })));
+        return resolveBatches(account, batchesById);
+      });
+  }
+
+  private void collectBatchesFromRequests(JsonObject requestsJson,
+                                          Map<String, CompletableFuture<BatchRequestStatus>> batchesById,
+                                          MediatedRequestsService mediatedRequestsService,
+                                          Map<String, String> okapiHeaders) {
+    if (requestsJson == null || requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS) == null) {
+      return;
+    }
+
+    requestsJson.getJsonArray(JSON_COLLECTION_FIELD_REQUESTS).stream()
       .map(JsonObject.class::cast)
       .filter(jsonRequest -> jsonRequest.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO) != null)
-      .map(jsonRequest -> {
+      .forEach(jsonRequest -> {
         var batchRequestInfo = jsonRequest.getJsonObject(JSON_FIELD_BATCH_REQUEST_INFO);
         var batchRequestId = batchRequestInfo.getString("batchRequestId");
         var instanceId = jsonRequest.getString(JSON_FIELD_INSTANCE_ID);
@@ -848,17 +878,22 @@ public class PatronServicesResourceImpl implements Patron {
           .put(JSON_FIELD_INSTANCE_ID, instanceId)
           .put(JSON_FIELD_TITLE, title);
 
-        return batchRequestsById.computeIfAbsent(batchRequestId,
+        batchesById.computeIfAbsent(batchRequestId,
           batchId -> mediatedRequestsService.getBatchRequestStatus(batchId, instance, okapiHeaders));
-      })
-      .collect(Collectors.toSet());
+      });
+  }
 
-    return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]))
-      .thenApply(v -> futures.stream()
-        .map(future -> (Batch) future.join())
-        .toList())
-      .thenApply(batchRequestStatuses -> {
-        account.setBatches(batchRequestStatuses);
+  private CompletableFuture<Account> resolveBatches(Account account,
+                                                    Map<String, CompletableFuture<BatchRequestStatus>> batchesById) {
+    var futures = new ArrayList<>(batchesById.values());
+    return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+      .thenApply(v -> {
+        List<Batch> batches = futures.stream()
+          .<Batch>map(CompletableFuture::join)
+          .filter(Objects::nonNull)
+          .sorted(NEWEST_SUBMITTED_FIRST)
+          .toList();
+        account.setBatches(batches);
         return account;
       });
   }

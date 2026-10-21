@@ -1,0 +1,19 @@
+{
+  "mediatedBatchRequests": [
+    {
+      "batchId": "5203c035-005e-4a70-b555-ddaa3094c51g",
+      "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "mediatedRequestStatus": "Failed",
+      "requestDate": "2025-09-08T12:27:33.822+00:00",
+      "mediatedWorkflow": "Multi-Item request"
+    },
+    {
+      "batchId": "5203c035-005e-4a70-b555-ddaa3094c521",
+      "requesterId": "1ec54964-70f0-44cc-bd19-2a892ea0d336",
+      "mediatedRequestStatus": "Pending",
+      "requestDate": "2025-09-10T10:00:00.123+00:00",
+      "mediatedWorkflow": "Multi-Item request"
+    }
+  ],
+  "totalRecords": 2
+}
