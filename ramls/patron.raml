@@ -130,6 +130,16 @@ traits:
             required: false
             type: boolean
             default: false
+          batchesDaysBack:
+            description: |
+              Number of days to look back when retrieving batch requests that are pending,
+              in progress or failed and may have no open requests. Used only when includeBatches is true
+            required: false
+            type: integer
+            default: 30
+            minimum: 0
+            maximum: 365
+            example: 30
         responses:
           200:
             description: Returns the user account info

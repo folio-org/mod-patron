@@ -81,10 +81,45 @@ public class MediatedRequestsRepository {
       });
   }
 
-  public CompletableFuture<JsonObject> getBatchRequestDetails(String instanceId, String batchId, Map<String, String> okapiHeaders) {
-    logger.info("getBatchRequestDetails:: Retrieving Batch Request Details for batchId: {}", batchId);
+  public CompletableFuture<JsonObject> getBatchRequestsByQuery(String query, int limit, Map<String, String> okapiHeaders) {
+    // The query contains the requester id, so it is deliberately not logged.
+    logger.info("getBatchRequestsByQuery:: Retrieving Batch Requests collection");
 
+    var params = Map.of(
+      "query", query,
+      "limit", String.valueOf(limit),
+      "offset", "0");
+    return client.get(CIRCULATION_BFF_BATCH_REQUESTS, params, okapiHeaders)
+      .thenApply(ResponseInterpreter::verifyAndExtractBody)
+      .thenApply(result -> {
+        if (result == null) {
+          logger.warn("getBatchRequestsByQuery:: null response received from GET {}", CIRCULATION_BFF_BATCH_REQUESTS);
+          throw new ValidationException(
+            buildErrors("Getting Batch Multi-Item requests collection returned null response", List.of()));
+        }
+        return result;
+      });
+  }
+
+  public CompletableFuture<JsonObject> getBatchRequestDetails(String instanceId, String batchId,
+                                                              Map<String, String> okapiHeaders) {
     var endpoint = "%s/%s/batch-requests/%s/details".formatted(CIRCULATION_BFF_INSTANCE, instanceId, batchId);
+    return fetchBatchRequestDetails(endpoint, batchId, okapiHeaders);
+  }
+
+  /**
+   * Details without an instance. Uses the instance-less endpoint, because batches that are
+   * discovered without an open request have no instance id to scope the call with.
+   */
+  public CompletableFuture<JsonObject> getBatchRequestDetails(String batchId, Map<String, String> okapiHeaders) {
+    var endpoint = "%s/%s/details".formatted(CIRCULATION_BFF_BATCH_REQUESTS, batchId);
+    return fetchBatchRequestDetails(endpoint, batchId, okapiHeaders);
+  }
+
+  private CompletableFuture<JsonObject> fetchBatchRequestDetails(String endpoint, String batchId,
+                                                                 Map<String, String> okapiHeaders) {
+    logger.info("fetchBatchRequestDetails:: Retrieving Batch Request Details for batchId: {}", batchId);
+
     return client.get(endpoint, UNPAGED_DETAILS, okapiHeaders)
       .thenApply(ResponseInterpreter::verifyAndExtractBody)
       .thenApply(result -> {

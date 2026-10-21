@@ -18,11 +18,17 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -129,7 +135,10 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
   private boolean ecsTlrFeatureEnabledInCirculation = false;
   private boolean inventoryItemSearchShouldReturn404 = false;
   private boolean instanceIsInCentralTenantOnly = false;
-
+  private static final String EMPTY_BATCH_COLLECTION = "/batch_requests_empty_collection.json";
+  private String batchCollectionResponseFile = EMPTY_BATCH_COLLECTION;
+  private String lastBatchCollectionQuery;
+  private boolean pendingBatchDetailsShouldFail = false;
   @SystemStub
   private EnvironmentVariables environmentVariables;
 
@@ -145,6 +154,9 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     server.listen(serverPort, "localhost");
     inventoryItemSearchShouldReturn404 = false;
     instanceIsInCentralTenantOnly = false;
+    batchCollectionResponseFile = EMPTY_BATCH_COLLECTION;
+    lastBatchCollectionQuery = null;
+    pendingBatchDetailsShouldFail = false;
     context.completeNow();
   }
 
@@ -418,6 +430,144 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
 
     // Test done
     logger.info("Test done");
+  }
+
+  @Test
+  void testGetPatronAccountByIdReturnsPendingAndFailedBatchesWithoutOpenRequests() {
+    batchCollectionResponseFile = "/batch_requests_collection_pending_and_failed.json";
+
+    var json = getAccountWithBatches(null);
+
+    var expectedHoldBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
+      + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"))
+      .getJsonArray("batches").getJsonObject(0);
+    var expectedFailedBatch = expectedFailedBatchFoundWithoutOpenRequest();
+    var expectedPendingBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
+      + "/batch_pending_account_expected.json"));
+    // newest submittedAt first; the hold-derived and the failed batch have the same submittedAt,
+    // so the one found through open requests stays first
+    var expectedBatches = new JsonArray()
+      .add(expectedPendingBatch)
+      .add(expectedHoldBatch)
+      .add(expectedFailedBatch);
+    assertEquals(expectedBatches, json.getJsonArray("batches"));
+
+    assertTrue(lastBatchCollectionQuery.contains("requesterId==\"" + goodUserId + "\""));
+    assertTrue(lastBatchCollectionQuery.contains("mediatedRequestStatus==\"Pending\""));
+    assertTrue(lastBatchCollectionQuery.contains("mediatedRequestStatus==\"In progress\""));
+    assertTrue(lastBatchCollectionQuery.contains("mediatedRequestStatus==\"Failed\""));
+  }
+
+  @Test
+  void testGetPatronAccountByIdSkipsBatchWithoutOpenRequestWhenItsDetailsCallFails() {
+    batchCollectionResponseFile = "/batch_requests_collection_pending_and_failed.json";
+    pendingBatchDetailsShouldFail = true;
+
+    var json = getAccountWithBatches(null);
+
+    var expectedHoldBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
+      + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"))
+      .getJsonArray("batches").getJsonObject(0);
+    // the pending batch is skipped, the batch derived from the open request and the failed one are kept
+    var expectedBatches = new JsonArray()
+      .add(expectedHoldBatch)
+      .add(expectedFailedBatchFoundWithoutOpenRequest());
+    assertEquals(expectedBatches, json.getJsonArray("batches"));
+  }
+
+  @Test
+  void testGetPatronAccountByIdDoesNotDuplicateBatchFoundThroughOpenRequests() {
+    batchCollectionResponseFile = "/batch_requests_collection_already_in_holds.json";
+
+    var json = getAccountWithBatches(null);
+
+    var expectedJson = new JsonObject(readMockFile(MOCK_DATA_FOLDER
+      + "/response_testGetPatronAccountById_sortedByItemTitleWithBatchRequestInfo.json"));
+    assertEquals(expectedJson.getJsonArray("batches"), json.getJsonArray("batches"));
+  }
+
+  @Test
+  void testGetPatronAccountByIdUsesDefaultThirtyDaysBackForBatches() {
+    getAccountWithBatches(null);
+
+    assertCutoffIsDaysBack(30);
+  }
+
+  @Test
+  void testGetPatronAccountByIdUsesBatchesDaysBackParameter() {
+    getAccountWithBatches(7);
+
+    assertCutoffIsDaysBack(7);
+  }
+
+  @Test
+  void testGetPatronAccountByIdDoesNotQueryBatchCollectionWhenBatchesNotIncluded() {
+    given()
+      .header(tenantHeader)
+      .header(urlHeader)
+      .header(contentTypeHeader)
+      .pathParam("accountId", goodUserId)
+      .queryParam("includeHolds", "true")
+      .queryParam("sortBy", sortByParam)
+      .when()
+      .get(accountPath)
+      .then()
+      .statusCode(200);
+
+    assertNull(lastBatchCollectionQuery);
+  }
+
+  /** Batches found only via the collection are loaded without instance, so instanceId is not known. */
+  private JsonObject expectedFailedBatchFoundWithoutOpenRequest() {
+    var expectedFailedBatch = new JsonObject(readMockFile(MOCK_DATA_FOLDER
+      + "/batch_request_completed_with_fail_status_expected_response.json"));
+    for (var details : List.of("itemsFailedDetails", "itemsRequestedDetails")) {
+      expectedFailedBatch.getJsonArray(details).forEach(item -> ((JsonObject) item).remove("instanceId"));
+    }
+    return expectedFailedBatch;
+  }
+
+  private JsonObject getAccountWithBatches(Integer batchesDaysBack) {
+    var setting = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("key", "isMultiItemRequestingFeatureEnabled")
+      .put("value", new JsonObject().put("enabled", "true"))
+      .put("scope", "mod-patron");
+    var createdSetting = new JsonObject(createSetting(setting).getBody().asString());
+    try {
+      var request = given()
+        .header(tenantHeader)
+        .header(urlHeader)
+        .header(contentTypeHeader)
+        .pathParam("accountId", goodUserId)
+        .queryParam("includeLoans", "false")
+        .queryParam("includeHolds", "false")
+        .queryParam("includeCharges", "false")
+        .queryParam("includeBatches", "true")
+        .queryParam("sortBy", sortByParam);
+      if (batchesDaysBack != null) {
+        request.queryParam("batchesDaysBack", batchesDaysBack);
+      }
+      var body = request.when()
+        .get(accountPath)
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .extract().asString();
+      return new JsonObject(body);
+    } finally {
+      deleteSetting(createdSetting.getString("id"));
+    }
+  }
+
+  private void assertCutoffIsDaysBack(int days) {
+    assertNotNull(lastBatchCollectionQuery);
+    var matcher = Pattern.compile("requestDate>=\"([^\"]+)\"").matcher(lastBatchCollectionQuery);
+    assertTrue(matcher.find());
+    var cutoff = LocalDateTime.parse(matcher.group(1)).toInstant(ZoneOffset.UTC);
+    var expected = LocalDateTime.now(ZoneOffset.UTC).minusDays(days).toInstant(ZoneOffset.UTC);
+    assertTrue(Math.abs(ChronoUnit.SECONDS.between(cutoff, expected)) < 120,
+      "cutoff " + cutoff + " should be about " + days + " days before now (" + expected + ")");
   }
 
   @Test
@@ -3178,6 +3328,17 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .setStatusCode(200)
       .putHeader("content-type", "application/json");
 
+    if (req.path().endsWith("/details")) {
+      mockBatchRequestDetailsEndpoint(req);
+      return;
+    }
+
+    if (req.path().equals(CIRCULATION_BFF_BATCH_REQUESTS) && req.method() == HttpMethod.GET) {
+      lastBatchCollectionQuery = req.query() == null ? null : UrlDecoder.decode(req.query());
+      response.end(readMockFile(MOCK_DATA_FOLDER + batchCollectionResponseFile));
+      return;
+    }
+
     if (req.path().equals(CIRCULATION_BFF_BATCH_REQUESTS)) {
       response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
       return;
@@ -3186,6 +3347,8 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
     var pathWithoutPrefix = req.path().replaceAll(CIRCULATION_BFF_BATCH_REQUESTS + "/", "");
     switch (pathWithoutPrefix) {
       case BATCH_REQUEST_ID -> response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_response.json"));
+      case PENDING_BATCH_REQUEST_ID ->
+        response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_pending_response.json"));
       case COMPLETED_BATCH_REQUEST_ID ->
         response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_response.json"));
       case FAILED_BATCH_REQUEST_ID ->
@@ -3202,7 +3365,11 @@ public class PatronResourceImplTest extends BaseResourceServiceTest {
       .setStatusCode(200)
       .putHeader("content-type", "application/json");
 
-    if (req.path().contains(BATCH_REQUEST_ID)) {
+    if (req.path().contains(PENDING_BATCH_REQUEST_ID) && pendingBatchDetailsShouldFail) {
+      response.setStatusCode(500).end("batch request details failure");
+    } else if (req.path().contains(PENDING_BATCH_REQUEST_ID)) {
+      response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_pending_details_response.json"));
+    } else if (req.path().contains(BATCH_REQUEST_ID)) {
       response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_details_response.json"));
     } else if (req.path().contains(COMPLETED_BATCH_REQUEST_ID)) {
       response.end(readMockFile(MOCK_DATA_FOLDER + "/batch_request_completed_details_response.json"));
