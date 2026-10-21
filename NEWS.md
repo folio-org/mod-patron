@@ -1,3 +1,6 @@
+# 6.4.3 2026-10-21
+* Send limit when fetching batch request details (MODPATRON-289)
+
 # 6.4.2 2026-08-20
 * Add missing interface dependencies (MODPATRON-280)
 
