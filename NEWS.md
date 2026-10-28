@@ -1,3 +1,6 @@
+# 6.4.5 WIP
+* PUT /patron/{systemUserId} requires perm staging-users.external-system-id.put (MODPATRON-292)
+
 # 6.4.4 2026-11-04
 * Return in progress and failed batches with no open requests from GET /patron/account/{id} with new `batchesDaysBack` parameter (MODPATRON-291)
 
