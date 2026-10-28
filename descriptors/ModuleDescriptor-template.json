@@ -19,7 +19,7 @@
           "pathPattern": "/patron/{externalSystemId}",
           "permissionsRequired": ["patron.item.put"],
           "modulePermissions": [
-            "staging-users.item.put"
+            "staging-users.external-system-id.put"
           ]
         },
         {
