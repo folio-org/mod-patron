@@ -4,11 +4,18 @@ import static org.folio.rest.jaxrs.model.Batch.Status.COMPLETED;
 import static org.folio.rest.jaxrs.model.Batch.Status.IN_PROGRESS;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.folio.integration.http.VertxOkapiHttpClient;
@@ -32,10 +39,41 @@ public class MediatedRequestsService {
   private static final String MEDIATED_BATCH_WORKFLOW = "Multi-Item request";
   private static final List<String> COMPLETED_MEDIATED_BATCH_REQUEST_STATUSES = List.of("Completed", "Failed");
 
+  private static final List<MediatedBatchRequestStatus> ACTIVE_OR_FAILED_BATCH_REQUEST_STATUSES = List.of(
+    MediatedBatchRequestStatus.PENDING,
+    MediatedBatchRequestStatus.IN_PROGRESS,
+    MediatedBatchRequestStatus.FAILED);
+
+  /**
+   * Upper bound of batches loaded for one account. Every batch costs two upstream calls (batch and details),
+   * all fired concurrently, so this also bounds the burst of calls made by GET /patron/account/{id}.
+   * The query is sorted by requestDate descending, so the oldest batches are the ones dropped.
+   */
+  static final int MAX_ACTIVE_OR_FAILED_BATCHES = 100;
+
   private final MediatedRequestsRepository repository;
 
   public MediatedRequestsService(VertxOkapiHttpClient httpClient) {
-    repository = new MediatedRequestsRepository(httpClient);
+    this(new MediatedRequestsRepository(httpClient));
+  }
+
+  MediatedRequestsService(MediatedRequestsRepository repository) {
+    this.repository = repository;
+  }
+
+  /**
+   * CQL for mod-requests-mediated batch collection: the requester's batches that are not completed
+   * successfully (pending, in progress or failed) and were requested at or after the cutoff.
+   * The date term is a quoted local date-time without fraction; the upstream parses it with
+   * LocalDateTime.parse.
+   */
+  static String buildActiveOrFailedBatchesQuery(String requesterId, LocalDateTime cutoff) {
+    var statuses = ACTIVE_OR_FAILED_BATCH_REQUEST_STATUSES.stream()
+      .map(status -> "mediatedRequestStatus==\"%s\"".formatted(status.getValue()))
+      .collect(Collectors.joining(" or "));
+    var cutoffTerm = cutoff.truncatedTo(ChronoUnit.SECONDS).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    return "requesterId==\"%s\" and (%s) and requestDate>=\"%s\" sortBy requestDate/sort.descending"
+      .formatted(requesterId, statuses, cutoffTerm);
   }
 
   public CompletableFuture<BatchRequestSubmitResult> createBatchRequest(BatchRequest batchRequest,
@@ -45,6 +83,22 @@ public class MediatedRequestsService {
     return repository.createBatchRequest(postDto, okapiHeaders)
       .thenApply(createdJson -> createdJson.mapTo(BatchRequestDto.class))
       .thenApply(this::mapToBatchRequestSubmitResult);
+  }
+
+  public CompletableFuture<List<String>> findActiveOrFailedBatchIds(String requesterId, int daysBack,
+                                                                    Map<String, String> okapiHeaders) {
+    var cutoff = LocalDateTime.now(ZoneOffset.UTC).minusDays(daysBack);
+    var query = buildActiveOrFailedBatchesQuery(requesterId, cutoff);
+
+    return repository.getBatchRequestsByQuery(query, MAX_ACTIVE_OR_FAILED_BATCHES, okapiHeaders)
+      .thenApply(json -> Optional.ofNullable(json.getJsonArray("mediatedBatchRequests"))
+        .orElseGet(JsonArray::new)
+        .stream()
+        .map(JsonObject.class::cast)
+        .map(batch -> batch.getString("batchId"))
+        .filter(Objects::nonNull)
+        .distinct()
+        .toList());
   }
 
   public CompletableFuture<BatchRequestStatus> getBatchRequestStatus(String batchId, JsonObject instance,
@@ -85,11 +139,13 @@ public class MediatedRequestsService {
   private CompletableFuture<BatchRequestStatus> getBatchDetailsAndUpdateStatus(BatchRequestStatus batchStatus,
                                                                                String batchId, JsonObject instance,
                                                                                Map<String, String> okapiHeaders) {
-    var instanceId = Optional.ofNullable(instance.getString("instanceId"))
-      .orElseThrow(() -> new IllegalArgumentException(
-        "Instance ID is missing for the provided batch request with ID: " + batchId));
+    // null for batches found without an open request
+    var instanceId = instance.getString("instanceId");
     var titleFromInstance = instance.getString("title");
-    return repository.getBatchRequestDetails(instanceId, batchId, okapiHeaders)
+    var detailsFuture = instanceId != null
+      ? repository.getBatchRequestDetails(instanceId, batchId, okapiHeaders)
+      : repository.getBatchRequestDetails(batchId, okapiHeaders);
+    return detailsFuture
       .thenApply(detailsJson -> {
         var title = resolveTitle(titleFromInstance, detailsJson);
         var detailsDtoList = mapBatchRequestDetailsJsonToDto(detailsJson, batchId);

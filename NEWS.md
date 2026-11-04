@@ -1,3 +1,6 @@
+# 6.4.4 2026-11-04
+* Return in progress and failed batches with no open requests from GET /patron/account/{id} with new `batchesDaysBack` parameter (MODPATRON-291)
+
 # 6.4.3 2026-10-21
 * Send limit when fetching batch request details (MODPATRON-289)
 
