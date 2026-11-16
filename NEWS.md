@@ -3,6 +3,7 @@
 * Fix 404 on GET /patron/.../batch-request/{id}/status for Shared instances in ECS (MODPATRON-271)
 * Return in progress and failed batches with no open requests from GET /patron/account/{id} with new `batchesDaysBack` parameter (MODPATRON-284)
 * PUT /patron/{systemUserId} requires perm staging-users.external-system-id.put (MODPATRON-292)
+* Bump to Vertx 5.2.3, RMB 36.0.2, Netty 4.2.20 fixing vulns (MODPATRON-295)
 
 # 6.4.0 2025-04-16
 
